@@ -1,0 +1,435 @@
+Starting a Gradle Daemon, 1 busy and 2 stopped Daemons could not be reused, use --status for details
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+
+> Configure project :app
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: API 'applicationVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling applicationVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+WARNING: API 'testVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling testVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+WARNING: API 'unitTestVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling unitTestVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+
+> Configure project :react-native-async-storage_async-storage
+WARNING: API 'libraryVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling libraryVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+
+> Task :app:generateAutolinkingNewArchitectureFiles UP-TO-DATE
+> Task :app:generateAutolinkingPackageList UP-TO-DATE
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generateReactNativeEntryPoint UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-async-storage_async-storage:preBuild UP-TO-DATE
+> Task :react-native-gesture-handler:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-gesture-handler:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-gesture-handler:preBuild UP-TO-DATE
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask
+> Task :react-native-reanimated:assertWorkletsVersionTask
+> Task :react-native-reanimated:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-reanimated:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs UP-TO-DATE
+> Task :react-native-reanimated:preBuild
+> Task :react-native-safe-area-context:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-safe-area-context:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-safe-area-context:preBuild UP-TO-DATE
+> Task :react-native-svg:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-svg:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-svg:preBuild UP-TO-DATE
+> Task :react-native-worklets:assertMinimalReactNativeVersionTask
+> Task :react-native-worklets:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-worklets:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-worklets:prepareWorkletsHeadersForPrefabs UP-TO-DATE
+> Task :react-native-worklets:preBuild
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :react-native-async-storage_async-storage:preDebugBuild UP-TO-DATE
+> Task :react-native-async-storage_async-storage:processDebugNavigationResources
+> Task :react-native-gesture-handler:preDebugBuild UP-TO-DATE
+> Task :react-native-gesture-handler:processDebugNavigationResources
+> Task :react-native-reanimated:preDebugBuild
+> Task :react-native-reanimated:processDebugNavigationResources UP-TO-DATE
+> Task :react-native-safe-area-context:preDebugBuild UP-TO-DATE
+> Task :react-native-safe-area-context:processDebugNavigationResources UP-TO-DATE
+> Task :react-native-svg:preDebugBuild UP-TO-DATE
+> Task :react-native-svg:processDebugNavigationResources
+> Task :react-native-worklets:preDebugBuild
+> Task :react-native-worklets:processDebugNavigationResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :react-native-async-storage_async-storage:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-async-storage_async-storage:generateDebugBuildConfig
+> Task :react-native-async-storage_async-storage:generateDebugResources
+> Task :react-native-async-storage_async-storage:packageDebugResources
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-gesture-handler:generateDebugBuildConfig
+> Task :react-native-gesture-handler:generateDebugResources
+> Task :react-native-gesture-handler:packageDebugResources
+> Task :react-native-reanimated:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-reanimated:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-reanimated:generateDebugResources UP-TO-DATE
+> Task :react-native-async-storage_async-storage:javaPreCompileDebug
+> Task :react-native-reanimated:packageDebugResources UP-TO-DATE
+> Task :react-native-reanimated:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-reanimated:generateDebugRFile UP-TO-DATE
+> Task :react-native-worklets:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-worklets:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-worklets:generateDebugResources UP-TO-DATE
+> Task :react-native-worklets:packageDebugResources UP-TO-DATE
+> Task :react-native-worklets:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-worklets:generateDebugRFile UP-TO-DATE
+> Task :react-native-async-storage_async-storage:parseDebugLocalResources
+> Task :react-native-gesture-handler:parseDebugLocalResources
+> Task :react-native-worklets:compileDebugKotlin UP-TO-DATE
+> Task :react-native-worklets:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-worklets:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-worklets:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateDebugRFile
+> Task :react-native-gesture-handler:generateDebugRFile
+> Task :react-native-reanimated:compileDebugKotlin UP-TO-DATE
+> Task :react-native-reanimated:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-reanimated:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-reanimated:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :react-native-svg:generateDebugBuildConfig
+> Task :react-native-svg:generateDebugResources
+> Task :react-native-svg:packageDebugResources
+> Task :react-native-svg:javaPreCompileDebug
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-svg:parseDebugLocalResources
+> Task :react-native-gesture-handler:javaPreCompileDebug
+> Task :react-native-safe-area-context:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-safe-area-context:generateDebugResources UP-TO-DATE
+> Task :react-native-safe-area-context:packageDebugResources UP-TO-DATE
+> Task :react-native-safe-area-context:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-safe-area-context:generateDebugRFile UP-TO-DATE
+> Task :react-native-svg:generateDebugRFile
+> Task :react-native-safe-area-context:compileDebugKotlin UP-TO-DATE
+
+> Task :react-native-svg:compileDebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-safe-area-context:javaPreCompileDebug UP-TO-DATE
+> Task :react-native-safe-area-context:compileDebugJavaWithJavac UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateDebugAssets UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugAssets
+> Task :react-native-gesture-handler:generateDebugAssets UP-TO-DATE
+> Task :react-native-gesture-handler:mergeDebugAssets
+> Task :react-native-reanimated:generateDebugAssets UP-TO-DATE
+> Task :react-native-reanimated:mergeDebugAssets UP-TO-DATE
+> Task :react-native-safe-area-context:generateDebugAssets UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugAssets UP-TO-DATE
+> Task :react-native-svg:generateDebugAssets UP-TO-DATE
+> Task :react-native-svg:mergeDebugAssets
+> Task :react-native-worklets:generateDebugAssets UP-TO-DATE
+> Task :react-native-worklets:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :react-native-reanimated:processDebugJavaRes UP-TO-DATE
+> Task :react-native-safe-area-context:processDebugJavaRes UP-TO-DATE
+> Task :react-native-svg:processDebugJavaRes NO-SOURCE
+> Task :react-native-worklets:processDebugJavaRes UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :react-native-svg:bundleLibCompileToJarDebug
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :react-native-reanimated:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-worklets:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :react-native-reanimated:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-safe-area-context:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-gesture-handler:writeDebugAarMetadata
+> Task :react-native-worklets:writeDebugAarMetadata UP-TO-DATE
+> Task :react-native-async-storage_async-storage:writeDebugAarMetadata
+> Task :react-native-svg:writeDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-async-storage_async-storage:extractDeepLinksDebug
+> Task :react-native-gesture-handler:extractDeepLinksDebug
+> Task :react-native-reanimated:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-reanimated:processDebugManifest UP-TO-DATE
+> Task :react-native-safe-area-context:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-safe-area-context:processDebugManifest UP-TO-DATE
+> Task :react-native-svg:extractDeepLinksDebug
+> Task :react-native-worklets:extractDeepLinksDebug UP-TO-DATE
+> Task :react-native-worklets:processDebugManifest UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mapDebugSourceSetPaths
+> Task :react-native-gesture-handler:mapDebugSourceSetPaths
+> Task :react-native-async-storage_async-storage:compileDebugLibraryResources
+> Task :react-native-gesture-handler:compileDebugLibraryResources
+> Task :react-native-reanimated:mapDebugSourceSetPaths UP-TO-DATE
+> Task :react-native-reanimated:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-safe-area-context:mapDebugSourceSetPaths UP-TO-DATE
+> Task :react-native-safe-area-context:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-svg:mapDebugSourceSetPaths
+> Task :react-native-svg:compileDebugLibraryResources
+> Task :react-native-worklets:mapDebugSourceSetPaths UP-TO-DATE
+> Task :react-native-worklets:compileDebugLibraryResources UP-TO-DATE
+> Task :react-native-svg:bundleLibRuntimeToDirDebug
+> Task :react-native-async-storage_async-storage:processDebugManifest
+> Task :react-native-gesture-handler:processDebugManifest
+> Task :react-native-svg:processDebugManifest
+> Task :react-native-worklets:configureCMakeDebug[arm64-v8a]
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :react-native-worklets:buildCMakeDebug[arm64-v8a][worklets]
+> Task :react-native-worklets:configureCMakeDebug[armeabi-v7a]
+> Task :react-native-worklets:buildCMakeDebug[armeabi-v7a][worklets]
+> Task :react-native-worklets:configureCMakeDebug[x86]
+> Task :react-native-worklets:buildCMakeDebug[x86][worklets]
+> Task :react-native-worklets:configureCMakeDebug[x86_64]
+> Task :react-native-worklets:buildCMakeDebug[x86_64][worklets]
+> Task :react-native-worklets:externalNativeBuildDebug
+> Task :react-native-worklets:generateJsonModelDebug
+> Task :react-native-worklets:prefabDebugConfigurePackage
+> Task :react-native-async-storage_async-storage:kspDebugKotlin
+> Task :react-native-reanimated:configureCMakeDebug[arm64-v8a]
+> Task :react-native-reanimated:configureCMakeDebug[armeabi-v7a]
+> Task :react-native-reanimated:configureCMakeDebug[x86]
+> Task :react-native-gesture-handler:compileDebugKotlin
+> Task :react-native-reanimated:configureCMakeDebug[x86_64]
+> Task :react-native-reanimated:generateJsonModelDebug
+> Task :react-native-reanimated:prefabDebugConfigurePackage UP-TO-DATE
+> Task :app:configureCMakeDebug[arm64-v8a]
+> Task :react-native-worklets:prefabDebugPackage UP-TO-DATE
+
+> Task :react-native-async-storage_async-storage:compileDebugKotlin
+w: file:///C:/Projetos/NotaDASI/node_modules/@react-native-async-storage/async-storage/android/src/main/kotlin/org/asyncstorage/legacy_storage/LegacyStorageSupplier.kt:63:69 Java type mismatch: inferred type is 'String?', but 'String' was expected.
+w: file:///C:/Projetos/NotaDASI/node_modules/@react-native-async-storage/async-storage/android/src/main/kotlin/org/asyncstorage/legacy_storage/LegacyStorageSupplier.kt:91:26 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Projetos/NotaDASI/node_modules/@react-native-async-storage/async-storage/android/src/main/kotlin/org/asyncstorage/legacy_storage/LegacyStorageSupplier.kt:202:17 Unchecked cast of 'ArrayList<Any?>' to 'List<String>'.
+
+> Task :react-native-reanimated:buildCMakeDebug[arm64-v8a][reanimated]
+> Task :react-native-reanimated:buildCMakeDebug[armeabi-v7a][reanimated]
+> Task :react-native-reanimated:buildCMakeDebug[x86][reanimated]
+
+> Task :react-native-gesture-handler:compileDebugKotlin
+w: file:///C:/Projetos/NotaDASI/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerButtonViewManager.kt:790:45 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///C:/Projetos/NotaDASI/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerButtonViewManager.kt:1168:45 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///C:/Projetos/NotaDASI/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerDetectorView.kt:245:43 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+
+> Task :react-native-reanimated:buildCMakeDebug[x86_64][reanimated]
+> Task :react-native-async-storage_async-storage:compileDebugJavaWithJavac
+> Task :react-native-async-storage_async-storage:bundleLibCompileToJarDebug
+> Task :react-native-gesture-handler:compileDebugJavaWithJavac
+> Task :react-native-async-storage_async-storage:processDebugJavaRes
+> Task :react-native-gesture-handler:processDebugJavaRes
+> Task :react-native-worklets:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-worklets:mergeDebugNativeLibs UP-TO-DATE
+> Task :react-native-worklets:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-gesture-handler:bundleLibCompileToJarDebug
+> Task :react-native-reanimated:externalNativeBuildDebug
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToDirDebug
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :react-native-reanimated:prefabDebugPackage UP-TO-DATE
+> Task :react-native-gesture-handler:bundleLibRuntimeToDirDebug
+> Task :app:buildCMakeDebug[arm64-v8a]
+> Task :app:configureCMakeDebug[armeabi-v7a]
+> Task :app:buildCMakeDebug[armeabi-v7a]
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:configureCMakeDebug[x86]
+> Task :app:buildCMakeDebug[x86]
+> Task :app:configureCMakeDebug[x86_64]
+> Task :app:buildCMakeDebug[x86_64]
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyDebugJniLibsProjectOnly
+> Task :react-native-gesture-handler:configureCMakeDebug[arm64-v8a]
+> Task :react-native-gesture-handler:buildCMakeDebug[arm64-v8a]
+> Task :react-native-gesture-handler:configureCMakeDebug[armeabi-v7a]
+> Task :react-native-gesture-handler:buildCMakeDebug[armeabi-v7a]
+> Task :react-native-gesture-handler:configureCMakeDebug[x86]
+> Task :react-native-gesture-handler:buildCMakeDebug[x86]
+> Task :react-native-gesture-handler:configureCMakeDebug[x86_64]
+> Task :react-native-gesture-handler:buildCMakeDebug[x86_64]
+> Task :react-native-gesture-handler:mergeDebugJniLibFolders
+> Task :react-native-reanimated:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-reanimated:mergeDebugNativeLibs UP-TO-DATE
+> Task :react-native-reanimated:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugJniLibFolders UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-safe-area-context:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-svg:mergeDebugJniLibFolders
+> Task :react-native-svg:mergeDebugNativeLibs NO-SOURCE
+> Task :react-native-svg:copyDebugJniLibsProjectOnly
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :react-native-async-storage_async-storage:stripDebugDebugSymbols NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyDebugJniLibsProjectAndLocalJars
+> Task :react-native-async-storage_async-storage:checkDebugAarMetadata
+> Task :react-native-async-storage_async-storage:extractDebugAnnotations
+> Task :react-native-async-storage_async-storage:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :react-native-async-storage_async-storage:prepareDebugArtProfile UP-TO-DATE
+> Task :react-native-async-storage_async-storage:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-gesture-handler:checkDebugAarMetadata
+> Task :react-native-gesture-handler:extractDebugAnnotations
+> Task :react-native-gesture-handler:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :react-native-gesture-handler:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-gesture-handler:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :react-native-gesture-handler:prepareDebugArtProfile UP-TO-DATE
+> Task :react-native-gesture-handler:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-reanimated:checkDebugAarMetadata UP-TO-DATE
+> Task :react-native-reanimated:stripDebugDebugSymbols UP-TO-DATE
+> Task :react-native-reanimated:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :react-native-reanimated:extractDebugAnnotations UP-TO-DATE
+> Task :react-native-reanimated:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :react-native-reanimated:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-reanimated:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeDebugJavaResource
+> Task :react-native-gesture-handler:mergeDebugJavaResource
+> Task :react-native-async-storage_async-storage:syncDebugLibJars
+> Task :react-native-async-storage_async-storage:bundleDebugAar
+> Task :react-native-async-storage_async-storage:assembleDebug
+> Task :react-native-gesture-handler:syncDebugLibJars
+> Task :react-native-reanimated:prepareDebugArtProfile UP-TO-DATE
+> Task :react-native-reanimated:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-gesture-handler:mergeDebugNativeLibs
+> Task :react-native-reanimated:mergeDebugJavaResource UP-TO-DATE
+> Task :react-native-reanimated:syncDebugLibJars UP-TO-DATE
+> Task :react-native-reanimated:bundleDebugAar UP-TO-DATE
+> Task :react-native-reanimated:assembleDebug UP-TO-DATE
+> Task :react-native-safe-area-context:checkDebugAarMetadata UP-TO-DATE
+> Task :react-native-safe-area-context:stripDebugDebugSymbols NO-SOURCE
+> Task :react-native-safe-area-context:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :react-native-safe-area-context:extractDebugAnnotations UP-TO-DATE
+> Task :react-native-safe-area-context:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :react-native-safe-area-context:prepareDebugArtProfile UP-TO-DATE
+> Task :react-native-safe-area-context:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-safe-area-context:mergeDebugJavaResource UP-TO-DATE
+> Task :react-native-safe-area-context:syncDebugLibJars UP-TO-DATE
+> Task :react-native-safe-area-context:bundleDebugAar UP-TO-DATE
+> Task :react-native-safe-area-context:assembleDebug UP-TO-DATE
+> Task :react-native-svg:stripDebugDebugSymbols NO-SOURCE
+> Task :react-native-svg:copyDebugJniLibsProjectAndLocalJars
+> Task :react-native-svg:checkDebugAarMetadata
+> Task :react-native-svg:extractDebugAnnotations
+> Task :react-native-svg:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :react-native-svg:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-svg:mergeDebugConsumerProguardFiles
+> Task :react-native-svg:prepareDebugArtProfile UP-TO-DATE
+> Task :react-native-svg:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-svg:mergeDebugJavaResource
+> Task :react-native-worklets:checkDebugAarMetadata UP-TO-DATE
+> Task :react-native-gesture-handler:stripDebugDebugSymbols
+> Task :react-native-gesture-handler:copyDebugJniLibsProjectOnly
+> Task :react-native-svg:syncDebugLibJars
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:packageDebug UP-TO-DATE
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug UP-TO-DATE
+> Task :react-native-svg:bundleDebugAar
+> Task :react-native-svg:assembleDebug
+> Task :react-native-worklets:stripDebugDebugSymbols UP-TO-DATE
+> Task :react-native-worklets:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :react-native-worklets:extractDebugAnnotations UP-TO-DATE
+> Task :react-native-worklets:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :react-native-worklets:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-worklets:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :react-native-worklets:prepareDebugArtProfile UP-TO-DATE
+> Task :react-native-gesture-handler:copyDebugJniLibsProjectAndLocalJars
+> Task :react-native-worklets:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-gesture-handler:bundleDebugAar
+> Task :react-native-gesture-handler:assembleDebug
+> Task :react-native-worklets:mergeDebugJavaResource UP-TO-DATE
+> Task :react-native-worklets:syncDebugLibJars UP-TO-DATE
+> Task :react-native-worklets:bundleDebugAar UP-TO-DATE
+> Task :react-native-worklets:assembleDebug UP-TO-DATE
+
+[Incubating] Problems report is available at: file:///C:/Projetos/NotaDASI/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4m
+298 actionable tasks: 118 executed, 180 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html

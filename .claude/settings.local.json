@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s https://registry.npmjs.org/react-native-reanimated/latest)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d['version']\\); print\\(d.get\\('peerDependencies'\\)\\)\")",
+      "Bash(curl -s https://registry.npmjs.org/react-native-worklets/latest)",
+      "Bash(curl -s https://unpkg.com/react-native-reanimated@4.6.0/lib/typescript/index.d.ts)"
+    ]
+  }
+}

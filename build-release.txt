@@ -1,0 +1,537 @@
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+
+> Configure project :app
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: API 'applicationVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling applicationVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+WARNING: API 'testVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling testVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+WARNING: API 'unitTestVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling unitTestVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+
+> Configure project :react-native-async-storage_async-storage
+WARNING: API 'libraryVariants' is obsolete and has been replaced with 'AndroidComponentsExtension'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+The legacy variant API is disabled by default in AGP 9.0, but can be re-enabled by adding 
+    android.newDsl=false
+to this project's gradle.properties file.
+For more information, see http://developer.android.com/build/r/new-dsl.
+
+To determine what is calling libraryVariants, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+ksp-2.2.0-2.0.2 is too old for kotlin-2.2.10. Please upgrade ksp or downgrade kotlin-gradle-plugin to 2.2.0.
+
+> Task :app:generateAutolinkingNewArchitectureFiles UP-TO-DATE
+> Task :app:generateAutolinkingPackageList UP-TO-DATE
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generateReactNativeEntryPoint UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateCodegenSchemaFromJavaScript
+> Task :react-native-async-storage_async-storage:generateCodegenArtifactsFromSchema
+> Task :react-native-async-storage_async-storage:preBuild
+> Task :react-native-gesture-handler:generateCodegenSchemaFromJavaScript
+> Task :react-native-gesture-handler:generateCodegenArtifactsFromSchema
+> Task :react-native-gesture-handler:preBuild
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask
+> Task :react-native-reanimated:assertWorkletsVersionTask
+> Task :react-native-reanimated:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-reanimated:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs UP-TO-DATE
+> Task :react-native-reanimated:preBuild
+> Task :react-native-safe-area-context:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-safe-area-context:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-safe-area-context:preBuild UP-TO-DATE
+> Task :react-native-svg:generateCodegenSchemaFromJavaScript
+> Task :react-native-svg:generateCodegenArtifactsFromSchema
+> Task :react-native-svg:preBuild
+> Task :react-native-worklets:assertMinimalReactNativeVersionTask
+> Task :react-native-worklets:generateCodegenSchemaFromJavaScript UP-TO-DATE
+> Task :react-native-worklets:generateCodegenArtifactsFromSchema UP-TO-DATE
+> Task :react-native-worklets:prepareWorkletsHeadersForPrefabs UP-TO-DATE
+> Task :react-native-worklets:preBuild
+> Task :app:preBuild
+> Task :app:preReleaseBuild
+> Task :react-native-reanimated:preReleaseBuild
+> Task :react-native-worklets:preReleaseBuild
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[arm64-v8a][worklets]
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[armeabi-v7a][worklets]
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[x86][worklets]
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[x86_64][worklets]
+> Task :react-native-worklets:externalNativeBuildRelease
+> Task :react-native-worklets:generateJsonModelRelease
+> Task :react-native-worklets:prefabReleaseConfigurePackage
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-reanimated:generateJsonModelRelease
+> Task :react-native-reanimated:prefabReleaseConfigurePackage UP-TO-DATE
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-worklets:prefabReleasePackage UP-TO-DATE
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[arm64-v8a][reanimated]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[armeabi-v7a][reanimated]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[x86][reanimated]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[x86_64][reanimated]
+> Task :react-native-worklets:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :react-native-worklets:mergeReleaseNativeLibs UP-TO-DATE
+> Task :react-native-worklets:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-reanimated:externalNativeBuildRelease
+> Task :react-native-reanimated:prefabReleasePackage UP-TO-DATE
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :app:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :app:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :app:configureCMakeRelWithDebInfo[x86]
+> Task :app:buildCMakeRelWithDebInfo[x86]
+> Task :app:configureCMakeRelWithDebInfo[x86_64]
+> Task :app:buildCMakeRelWithDebInfo[x86_64]
+> Task :app:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :react-native-async-storage_async-storage:preReleaseBuild
+> Task :react-native-async-storage_async-storage:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-gesture-handler:preReleaseBuild
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectOnly
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-gesture-handler:mergeReleaseJniLibFolders
+> Task :react-native-reanimated:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :react-native-reanimated:mergeReleaseNativeLibs UP-TO-DATE
+> Task :react-native-reanimated:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-safe-area-context:preReleaseBuild UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-svg:preReleaseBuild
+> Task :react-native-svg:mergeReleaseJniLibFolders
+> Task :react-native-svg:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-async-storage_async-storage:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-svg:copyReleaseJniLibsProjectOnly
+> Task :react-native-async-storage_async-storage:generateReleaseBuildConfig
+> Task :react-native-async-storage_async-storage:generateReleaseResources
+> Task :react-native-async-storage_async-storage:packageReleaseResources
+> Task :react-native-async-storage_async-storage:processReleaseNavigationResources
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-gesture-handler:generateReleaseBuildConfig
+> Task :react-native-gesture-handler:generateReleaseResources
+> Task :react-native-async-storage_async-storage:parseReleaseLocalResources
+> Task :react-native-gesture-handler:packageReleaseResources
+> Task :react-native-gesture-handler:processReleaseNavigationResources
+> Task :react-native-async-storage_async-storage:javaPreCompileRelease
+> Task :react-native-reanimated:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-reanimated:generateReleaseBuildConfig UP-TO-DATE
+> Task :react-native-reanimated:generateReleaseResources UP-TO-DATE
+> Task :react-native-reanimated:packageReleaseResources UP-TO-DATE
+> Task :react-native-reanimated:processReleaseNavigationResources UP-TO-DATE
+> Task :react-native-reanimated:parseReleaseLocalResources UP-TO-DATE
+> Task :react-native-gesture-handler:parseReleaseLocalResources
+> Task :react-native-async-storage_async-storage:generateReleaseRFile
+> Task :react-native-reanimated:generateReleaseRFile UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseNativeLibs
+> Task :react-native-worklets:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-worklets:generateReleaseBuildConfig UP-TO-DATE
+> Task :react-native-worklets:generateReleaseResources UP-TO-DATE
+> Task :react-native-worklets:packageReleaseResources UP-TO-DATE
+> Task :react-native-worklets:processReleaseNavigationResources UP-TO-DATE
+> Task :react-native-worklets:parseReleaseLocalResources UP-TO-DATE
+> Task :react-native-worklets:generateReleaseRFile UP-TO-DATE
+> Task :react-native-gesture-handler:generateReleaseRFile
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectOnly
+> Task :react-native-worklets:compileReleaseKotlin UP-TO-DATE
+> Task :app:mergeReleaseNativeLibs UP-TO-DATE
+> Task :app:stripReleaseDebugSymbols UP-TO-DATE
+> Task :app:extractReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeReleaseNativeDebugMetadata UP-TO-DATE
+> Task :react-native-worklets:javaPreCompileRelease UP-TO-DATE
+> Task :react-native-worklets:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :react-native-worklets:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :react-native-reanimated:compileReleaseKotlin UP-TO-DATE
+> Task :react-native-reanimated:javaPreCompileRelease UP-TO-DATE
+> Task :react-native-reanimated:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :react-native-reanimated:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :react-native-svg:generateReleaseBuildConfig
+> Task :react-native-svg:generateReleaseResources
+> Task :react-native-svg:packageReleaseResources
+> Task :react-native-svg:processReleaseNavigationResources
+> Task :react-native-svg:javaPreCompileRelease
+> Task :react-native-gesture-handler:javaPreCompileRelease
+> Task :react-native-svg:parseReleaseLocalResources
+> Task :react-native-reanimated:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-safe-area-context:generateReleaseBuildConfig UP-TO-DATE
+> Task :react-native-safe-area-context:generateReleaseResources UP-TO-DATE
+> Task :react-native-safe-area-context:packageReleaseResources UP-TO-DATE
+> Task :react-native-safe-area-context:processReleaseNavigationResources UP-TO-DATE
+> Task :react-native-safe-area-context:parseReleaseLocalResources UP-TO-DATE
+> Task :react-native-safe-area-context:generateReleaseRFile UP-TO-DATE
+> Task :react-native-svg:generateReleaseRFile
+> Task :react-native-safe-area-context:compileReleaseKotlin UP-TO-DATE
+
+> Task :react-native-svg:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :react-native-safe-area-context:javaPreCompileRelease UP-TO-DATE
+> Task :react-native-safe-area-context:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :react-native-worklets:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateReleaseBuildConfig UP-TO-DATE
+> Task :react-native-svg:bundleLibCompileToJarRelease
+> Task :react-native-svg:bundleLibRuntimeToDirRelease
+> Task :react-native-async-storage_async-storage:kspReleaseKotlin
+
+> Task :app:createBundleReleaseJsAndAssets
+
+                        ▒▒▓▓▓▓▒▒
+                     ▒▓▓▓▒▒░░▒▒▓▓▓▒
+                  ▒▓▓▓▓░░░▒▒▒▒░░░▓▓▓▓▒
+                 ▓▓▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▓▓
+                 ▓▓░░░░░▒▓▓▓▓▓▓▒░░░░░▓▓
+                 ▓▓░░▓▓▒░░░▒▒░░░▒▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▒▒▒▒▓▓▓▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░▓▓
+                 ▓▓▒░░▒▒▓▓▓▓▓▓▓▓▒░░░▒▓▓
+                  ▒▓▓▓▒░░░▒▓▓▒░░░▒▓▓▓▒
+                     ▒▓▓▓▒░░░░▒▓▓▓▒
+                        ▒▒▓▓▓▓▒▒
+
+
+ WARN  the transform cache was reset.
+                Welcome to Metro v0.87.0
+              Fast - Scalable - Integrated
+
+
+ WARN  Attempted to import the module "C:\Projetos\NotaDASI\node_modules\react-native\src\private\featureflags\ReactNativeFeatureFlags" which is not listed in the "exports" of "C:\Projetos\NotaDASI\node_modules\react-native" under the requested subpath "./src/private/featureflags/ReactNativeFeatureFlags". Falling back to file-based resolution. Consider updating the call site or asking the package maintainer(s) to expose this API.
+LOG:Writing bundle output to: android\app\build\generated\assets\react\release\index.android.bundle
+LOG:Writing sourcemap output to: android\app\build\intermediates\sourcemaps\react\release\index.android.bundle.packager.map
+LOG:Done writing bundle output
+LOG:Done writing sourcemap output
+
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:generateReleaseRFile UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :react-native-reanimated:writeReleaseAarMetadata UP-TO-DATE
+> Task :react-native-safe-area-context:writeReleaseAarMetadata UP-TO-DATE
+> Task :react-native-worklets:writeReleaseAarMetadata UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :react-native-async-storage_async-storage:writeReleaseAarMetadata
+> Task :react-native-gesture-handler:writeReleaseAarMetadata
+> Task :react-native-svg:writeReleaseAarMetadata
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :react-native-async-storage_async-storage:extractDeepLinksRelease
+> Task :react-native-gesture-handler:extractDeepLinksRelease
+> Task :react-native-reanimated:extractDeepLinksRelease UP-TO-DATE
+> Task :react-native-reanimated:processReleaseManifest UP-TO-DATE
+> Task :react-native-safe-area-context:extractDeepLinksRelease UP-TO-DATE
+> Task :react-native-safe-area-context:processReleaseManifest UP-TO-DATE
+> Task :react-native-svg:extractDeepLinksRelease
+> Task :react-native-gesture-handler:processReleaseManifest
+> Task :react-native-worklets:extractDeepLinksRelease UP-TO-DATE
+> Task :react-native-async-storage_async-storage:processReleaseManifest
+> Task :react-native-worklets:processReleaseManifest UP-TO-DATE
+> Task :react-native-svg:processReleaseManifest
+> Task :react-native-async-storage_async-storage:mapReleaseSourceSetPaths
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :react-native-async-storage_async-storage:compileReleaseLibraryResources
+> Task :react-native-gesture-handler:mapReleaseSourceSetPaths
+> Task :react-native-reanimated:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :react-native-gesture-handler:compileReleaseLibraryResources
+> Task :react-native-reanimated:compileReleaseLibraryResources UP-TO-DATE
+> Task :react-native-safe-area-context:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :react-native-safe-area-context:compileReleaseLibraryResources UP-TO-DATE
+> Task :react-native-svg:mapReleaseSourceSetPaths
+> Task :react-native-svg:compileReleaseLibraryResources
+> Task :react-native-worklets:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :react-native-worklets:compileReleaseLibraryResources UP-TO-DATE
+> Task :app:desugarReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexRelease UP-TO-DATE
+> Task :react-native-async-storage_async-storage:prepareReleaseArtProfile
+> Task :react-native-gesture-handler:prepareReleaseArtProfile
+> Task :react-native-reanimated:prepareReleaseArtProfile
+> Task :react-native-safe-area-context:prepareReleaseArtProfile
+> Task :react-native-svg:prepareReleaseArtProfile
+> Task :react-native-worklets:prepareReleaseArtProfile
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :react-native-async-storage_async-storage:generateReleaseAssets UP-TO-DATE
+> Task :react-native-async-storage_async-storage:mergeReleaseAssets
+> Task :react-native-gesture-handler:generateReleaseAssets UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseAssets
+> Task :react-native-reanimated:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseArtProfile
+> Task :react-native-reanimated:mergeReleaseAssets UP-TO-DATE
+> Task :react-native-safe-area-context:generateReleaseAssets UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseAssets UP-TO-DATE
+> Task :react-native-svg:generateReleaseAssets UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibRuntimeToJarRelease
+> Task :react-native-svg:mergeReleaseAssets
+> Task :react-native-worklets:generateReleaseAssets UP-TO-DATE
+> Task :react-native-worklets:mergeReleaseAssets UP-TO-DATE
+> Task :react-native-reanimated:bundleLibRuntimeToJarRelease
+> Task :react-native-worklets:bundleLibRuntimeToJarRelease
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:extractProguardFiles
+> Task :react-native-async-storage_async-storage:extractProguardFiles
+> Task :react-native-async-storage_async-storage:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-gesture-handler:extractProguardFiles
+> Task :react-native-reanimated:processReleaseJavaRes UP-TO-DATE
+> Task :react-native-reanimated:createFullJarRelease
+> Task :react-native-reanimated:extractProguardFiles
+> Task :react-native-worklets:processReleaseJavaRes UP-TO-DATE
+> Task :react-native-svg:bundleLibRuntimeToJarRelease
+> Task :react-native-worklets:createFullJarRelease
+> Task :react-native-worklets:extractProguardFiles
+> Task :app:processReleaseResources
+
+> Task :react-native-async-storage_async-storage:compileReleaseKotlin
+w: file:///C:/Projetos/NotaDASI/node_modules/@react-native-async-storage/async-storage/android/src/main/kotlin/org/asyncstorage/legacy_storage/LegacyStorageSupplier.kt:63:69 Java type mismatch: inferred type is 'String?', but 'String' was expected.
+w: file:///C:/Projetos/NotaDASI/node_modules/@react-native-async-storage/async-storage/android/src/main/kotlin/org/asyncstorage/legacy_storage/LegacyStorageSupplier.kt:91:26 The corresponding parameter in the supertype 'Migration' is named 'db'. This may cause problems when calling this function with named arguments.
+w: file:///C:/Projetos/NotaDASI/node_modules/@react-native-async-storage/async-storage/android/src/main/kotlin/org/asyncstorage/legacy_storage/LegacyStorageSupplier.kt:202:17 Unchecked cast of 'ArrayList<Any?>' to 'List<String>'.
+
+> Task :react-native-gesture-handler:compileReleaseKotlin
+w: file:///C:/Projetos/NotaDASI/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerButtonViewManager.kt:790:45 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///C:/Projetos/NotaDASI/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerButtonViewManager.kt:1168:45 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///C:/Projetos/NotaDASI/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/react/RNGestureHandlerDetectorView.kt:245:43 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+
+> Task :react-native-worklets:generateReleaseLintModel
+> Task :react-native-async-storage_async-storage:compileReleaseJavaWithJavac
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToDirRelease
+> Task :react-native-gesture-handler:compileReleaseJavaWithJavac
+> Task :react-native-async-storage_async-storage:processReleaseJavaRes
+> Task :react-native-async-storage_async-storage:bundleLibRuntimeToJarRelease
+> Task :react-native-async-storage_async-storage:bundleLibCompileToJarRelease
+> Task :react-native-gesture-handler:bundleLibRuntimeToJarRelease
+> Task :react-native-gesture-handler:bundleLibCompileToJarRelease
+> Task :react-native-gesture-handler:bundleLibRuntimeToDirRelease
+> Task :react-native-async-storage_async-storage:generateReleaseLintModel
+> Task :react-native-async-storage_async-storage:createFullJarRelease
+> Task :react-native-gesture-handler:processReleaseJavaRes
+> Task :react-native-gesture-handler:createFullJarRelease
+> Task :react-native-worklets:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-reanimated:generateReleaseLintModel
+> Task :react-native-reanimated:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-svg:processReleaseJavaRes NO-SOURCE
+> Task :react-native-svg:createFullJarRelease
+> Task :react-native-svg:extractProguardFiles
+> Task :react-native-svg:generateReleaseLintModel
+> Task :react-native-svg:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-gesture-handler:generateReleaseLintModel
+> Task :react-native-gesture-handler:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-safe-area-context:processReleaseJavaRes UP-TO-DATE
+> Task :react-native-safe-area-context:createFullJarRelease
+> Task :react-native-safe-area-context:extractProguardFiles
+
+> Task :app:compileReleaseKotlin
+w: file:///C:/Projetos/NotaDASI/android/app/src/main/java/com/notadasi/MainActivity.kt:21:7 'constructor(activity: ReactActivity, mainComponentName: String, fabricEnabled: Boolean): DefaultReactActivityDelegate' is deprecated. Creating DefaultReactActivityDelegate with flags is deprecated.
+w: file:///C:/Projetos/NotaDASI/android/app/src/main/java/com/notadasi/NotaBuscaRapidaPackage.kt:10:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+
+> Task :react-native-safe-area-context:generateReleaseLintModel
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:dexBuilderRelease
+> Task :react-native-safe-area-context:prepareLintJarForPublish UP-TO-DATE
+> Task :app:mergeReleaseGlobalSynthetics
+> Task :app:generateReleaseLintVitalReportModel
+> Task :react-native-async-storage_async-storage:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-async-storage_async-storage:extractDeepLinksForAarRelease
+> Task :react-native-async-storage_async-storage:checkReleaseAarMetadata
+> Task :react-native-async-storage_async-storage:extractReleaseAnnotations
+> Task :react-native-async-storage_async-storage:mergeReleaseGeneratedProguardFiles
+> Task :react-native-async-storage_async-storage:mergeReleaseConsumerProguardFiles
+> Task :react-native-gesture-handler:extractDeepLinksForAarRelease
+> Task :react-native-async-storage_async-storage:mergeReleaseJavaResource
+> Task :react-native-gesture-handler:checkReleaseAarMetadata
+> Task :react-native-gesture-handler:extractReleaseAnnotations
+> Task :react-native-async-storage_async-storage:syncReleaseLibJars
+> Task :react-native-async-storage_async-storage:bundleReleaseLocalLintAar
+> Task :react-native-gesture-handler:stripReleaseDebugSymbols
+> Task :react-native-gesture-handler:mergeReleaseGeneratedProguardFiles
+> Task :react-native-gesture-handler:mergeReleaseConsumerProguardFiles
+> Task :react-native-reanimated:extractDeepLinksForAarRelease
+> Task :react-native-gesture-handler:mergeReleaseJavaResource
+> Task :react-native-reanimated:extractReleaseAnnotations
+> Task :react-native-reanimated:checkReleaseAarMetadata
+> Task :react-native-reanimated:stripReleaseDebugSymbols
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-gesture-handler:syncReleaseLibJars
+> Task :react-native-gesture-handler:bundleReleaseLocalLintAar
+> Task :react-native-reanimated:mergeReleaseGeneratedProguardFiles
+> Task :react-native-reanimated:mergeReleaseConsumerProguardFiles
+> Task :react-native-safe-area-context:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-safe-area-context:extractDeepLinksForAarRelease
+> Task :react-native-reanimated:mergeReleaseJavaResource
+> Task :react-native-safe-area-context:checkReleaseAarMetadata
+> Task :react-native-safe-area-context:extractReleaseAnnotations
+> Task :react-native-reanimated:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-reanimated:syncReleaseLibJars
+> Task :app:mergeDexRelease
+> Task :react-native-reanimated:bundleReleaseLocalLintAar
+> Task :react-native-safe-area-context:mergeReleaseGeneratedProguardFiles
+> Task :react-native-safe-area-context:mergeReleaseConsumerProguardFiles
+> Task :react-native-worklets:extractDeepLinksForAarRelease
+> Task :react-native-safe-area-context:mergeReleaseJavaResource
+> Task :react-native-worklets:checkReleaseAarMetadata
+> Task :react-native-worklets:extractReleaseAnnotations
+> Task :react-native-worklets:stripReleaseDebugSymbols
+> Task :react-native-safe-area-context:syncReleaseLibJars
+> Task :react-native-safe-area-context:bundleReleaseLocalLintAar
+> Task :react-native-worklets:mergeReleaseGeneratedProguardFiles
+> Task :react-native-worklets:mergeReleaseConsumerProguardFiles
+> Task :app:compileReleaseArtProfile
+> Task :react-native-worklets:mergeReleaseJavaResource
+> Task :react-native-svg:checkReleaseAarMetadata
+> Task :react-native-worklets:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-worklets:syncReleaseLibJars
+> Task :react-native-worklets:bundleReleaseLocalLintAar
+> Task :react-native-svg:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-svg:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-svg:extractDeepLinksForAarRelease
+> Task :react-native-svg:extractReleaseAnnotations
+> Task :react-native-svg:mergeReleaseGeneratedProguardFiles
+> Task :react-native-svg:mergeReleaseConsumerProguardFiles
+> Task :react-native-svg:mergeReleaseJavaResource
+> Task :react-native-svg:syncReleaseLibJars
+> Task :react-native-svg:bundleReleaseLocalLintAar
+> Task :react-native-async-storage_async-storage:writeReleaseLintModelMetadata
+> Task :react-native-reanimated:writeReleaseLintModelMetadata
+> Task :react-native-svg:writeReleaseLintModelMetadata
+> Task :react-native-worklets:writeReleaseLintModelMetadata
+> Task :react-native-gesture-handler:writeReleaseLintModelMetadata
+> Task :react-native-safe-area-context:writeReleaseLintModelMetadata
+> Task :react-native-async-storage_async-storage:generateReleaseLintVitalModel
+> Task :react-native-gesture-handler:generateReleaseLintVitalModel
+> Task :react-native-reanimated:generateReleaseLintVitalModel
+> Task :react-native-safe-area-context:generateReleaseLintVitalModel
+> Task :react-native-svg:generateReleaseLintVitalModel
+> Task :react-native-worklets:generateReleaseLintVitalModel
+> Task :app:processReleaseJavaRes
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :react-native-async-storage_async-storage:bundleReleaseAar
+> Task :app:mergeReleaseJavaResource
+> Task :react-native-async-storage_async-storage:mergeReleaseResources
+> Task :react-native-gesture-handler:bundleReleaseAar
+> Task :react-native-gesture-handler:mergeReleaseResources
+> Task :react-native-async-storage_async-storage:verifyReleaseResources
+> Task :react-native-svg:lintVitalAnalyzeRelease
+> Task :react-native-reanimated:bundleReleaseAar
+> Task :react-native-async-storage_async-storage:assembleRelease
+> Task :react-native-gesture-handler:verifyReleaseResources
+> Task :react-native-safe-area-context:lintVitalAnalyzeRelease
+> Task :react-native-async-storage_async-storage:lintVitalAnalyzeRelease
+> Task :react-native-reanimated:mergeReleaseResources
+> Task :react-native-reanimated:lintVitalAnalyzeRelease SKIPPED
+> Task :react-native-worklets:lintVitalAnalyzeRelease SKIPPED
+> Task :react-native-gesture-handler:assembleRelease
+> Task :react-native-safe-area-context:bundleReleaseAar
+> Task :app:optimizeReleaseResources
+> Task :react-native-safe-area-context:mergeReleaseResources
+> Task :react-native-gesture-handler:lintVitalAnalyzeRelease
+> Task :react-native-reanimated:verifyReleaseResources
+> Task :react-native-reanimated:assembleRelease
+> Task :react-native-svg:bundleReleaseAar
+> Task :app:lintVitalAnalyzeRelease
+> Task :react-native-svg:mergeReleaseResources
+> Task :app:lintVitalReportRelease
+> Task :react-native-worklets:bundleReleaseAar
+> Task :app:lintVitalRelease
+> Task :react-native-worklets:mergeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+> Task :react-native-safe-area-context:verifyReleaseResources
+> Task :react-native-safe-area-context:assembleRelease
+> Task :react-native-svg:verifyReleaseResources
+> Task :react-native-svg:assembleRelease
+> Task :react-native-worklets:verifyReleaseResources
+> Task :react-native-worklets:assembleRelease
+
+[Incubating] Problems report is available at: file:///C:/Projetos/NotaDASI/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5m 39s
+371 actionable tasks: 252 executed, 119 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
