@@ -1,0 +1,15 @@
+package com.notadasi
+
+import com.facebook.react.ReactPackage
+import com.facebook.react.bridge.NativeModule
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.uimanager.ViewManager
+
+class NotaBuscaRapidaPackage : ReactPackage {
+
+  override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> =
+      listOf(NotaBuscaRapidaModule(reactContext))
+
+  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> =
+      emptyList()
+}
