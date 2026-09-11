@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -16,6 +16,15 @@ import { lerPosicoes, salvarPosicoes, type PosicoesSalvas } from './posicoes';
 type Props = {
   aoSelecionar?: (registro: Registro) => void;
 };
+
+const ESCALA_MINIMA = 0.25;
+const ESCALA_MAXIMA = 2.5;
+const ESCALA_INICIAL = 0.75;
+const FATOR_ZOOM_BOTAO = 1.35;
+const MARGEM_AJUSTE_TELA = 60;
+
+const limitarEscala = (valor: number): number =>
+  Math.min(ESCALA_MAXIMA, Math.max(ESCALA_MINIMA, valor));
 
 /**
  * Mapa mental interativo (estilo bloco de notas da Xiaomi):
@@ -80,13 +89,15 @@ const MapaMental: React.FC<Props> = ({ aoSelecionar }) => {
   }, []);
 
   // ---- Camera (pan + zoom) -------------------------------------------------
+  // Formula da câmera: posição na tela = posição no mundo * escala + deslocamento.
+  // (ver estiloCamera abaixo — a ordem [translate, scale] do transform implica nisso)
   const deslocX = useSharedValue(larguraTela / 2);
   const deslocY = useSharedValue(alturaTela / 2);
-  const escala = useSharedValue(0.75);
+  const escala = useSharedValue(ESCALA_INICIAL);
 
   const inicioX = useSharedValue(0);
   const inicioY = useSharedValue(0);
-  const escalaInicial = useSharedValue(0.75);
+  const escalaInicial = useSharedValue(ESCALA_INICIAL);
 
   const gestoPan = Gesture.Pan()
     .averageTouches(true)
@@ -104,8 +115,7 @@ const MapaMental: React.FC<Props> = ({ aoSelecionar }) => {
       escalaInicial.value = escala.value;
     })
     .onUpdate((evento) => {
-      const proxima = escalaInicial.value * evento.scale;
-      escala.value = Math.min(2.5, Math.max(0.25, proxima));
+      escala.value = limitarEscala(escalaInicial.value * evento.scale);
     });
 
   const gestoCamera = Gesture.Simultaneous(gestoPan, gestoPinca);
@@ -117,6 +127,69 @@ const MapaMental: React.FC<Props> = ({ aoSelecionar }) => {
       { scale: escala.value },
     ],
   }));
+
+  // Aproxima/afasta mantendo o centro da tela fixo no mesmo ponto do mundo.
+  const aplicarZoom = useCallback(
+    (fator: number) => {
+      const escalaAtual = escala.value;
+      const novaEscala = limitarEscala(escalaAtual * fator);
+
+      const centroTelaX = larguraTela / 2;
+      const centroTelaY = alturaTela / 2;
+      const mundoX = (centroTelaX - deslocX.value) / escalaAtual;
+      const mundoY = (centroTelaY - deslocY.value) / escalaAtual;
+
+      escala.value = withSpring(novaEscala, { damping: 20 });
+      deslocX.value = withSpring(centroTelaX - mundoX * novaEscala, { damping: 20 });
+      deslocY.value = withSpring(centroTelaY - mundoY * novaEscala, { damping: 20 });
+    },
+    [alturaTela, deslocX, deslocY, escala, larguraTela],
+  );
+
+  // Volta ao enquadramento inicial (raiz centralizada, escala padrão).
+  const centralizarMapa = useCallback(() => {
+    escala.value = withSpring(ESCALA_INICIAL, { damping: 20 });
+    deslocX.value = withSpring(larguraTela / 2, { damping: 20 });
+    deslocY.value = withSpring(alturaTela / 2, { damping: 20 });
+  }, [alturaTela, deslocX, deslocY, escala, larguraTela]);
+
+  // Calcula a caixa que envolve todos os nós visíveis e ajusta escala/deslocamento
+  // para que caibam inteiros na tela (com margem), centralizados.
+  const ajustarATela = useCallback(() => {
+    if (nos.length === 0) {
+      return;
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    nos.forEach((no) => {
+      const posicao = posicaoDe(no);
+      minX = Math.min(minX, posicao.x - no.largura / 2);
+      maxX = Math.max(maxX, posicao.x + no.largura / 2);
+      minY = Math.min(minY, posicao.y - no.altura / 2);
+      maxY = Math.max(maxY, posicao.y + no.altura / 2);
+    });
+
+    const larguraConteudo = Math.max(maxX - minX, 1);
+    const alturaConteudo = Math.max(maxY - minY, 1);
+
+    const novaEscala = limitarEscala(
+      Math.min(
+        (larguraTela - MARGEM_AJUSTE_TELA * 2) / larguraConteudo,
+        (alturaTela - MARGEM_AJUSTE_TELA * 2) / alturaConteudo,
+      ),
+    );
+
+    const centroX = (minX + maxX) / 2;
+    const centroY = (minY + maxY) / 2;
+
+    escala.value = withSpring(novaEscala, { damping: 20 });
+    deslocX.value = withSpring(larguraTela / 2 - centroX * novaEscala, { damping: 20 });
+    deslocY.value = withSpring(alturaTela / 2 - centroY * novaEscala, { damping: 20 });
+  }, [alturaTela, deslocX, deslocY, escala, larguraTela, nos, posicaoDe]);
 
   if (!carregado) {
     return (
@@ -159,14 +232,61 @@ const MapaMental: React.FC<Props> = ({ aoSelecionar }) => {
 
       <View style={estilos.dica} pointerEvents="none">
         <Text style={estilos.textoDica}>
-          Toque num setor para abrir · arraste os nós · pinça para zoom
+          Toque num setor para abrir · arraste os nós · pinça ou +/− para zoom
         </Text>
+      </View>
+
+      <View style={estilos.barraSuperior} pointerEvents="box-none">
+        <ControleTexto rotulo="Ajustar à tela" aoTocar={ajustarATela} />
+        <ControleTexto rotulo="Centralizar" aoTocar={centralizarMapa} />
+      </View>
+
+      <View style={estilos.pilhaZoom} pointerEvents="box-none">
+        <ControleIcone
+          rotulo="+"
+          descricao="Aumentar zoom"
+          aoTocar={() => aplicarZoom(FATOR_ZOOM_BOTAO)}
+        />
+        <View style={estilos.separadorZoom} />
+        <ControleIcone
+          rotulo="–"
+          descricao="Diminuir zoom"
+          aoTocar={() => aplicarZoom(1 / FATOR_ZOOM_BOTAO)}
+        />
       </View>
     </View>
   );
 };
 
 // ---------------------------------------------------------------------------
+
+/** Botão de texto usado na barra superior ("Ajustar à tela", "Centralizar"). */
+const ControleTexto: React.FC<{ rotulo: string; aoTocar: () => void }> = ({ rotulo, aoTocar }) => (
+  <Pressable
+    onPress={aoTocar}
+    accessibilityRole="button"
+    accessibilityLabel={rotulo}
+    hitSlop={6}
+    style={({ pressed }) => [estilos.botaoTexto, pressed && estilos.botaoPressionado]}>
+    <Text style={estilos.textoBotaoTexto}>{rotulo}</Text>
+  </Pressable>
+);
+
+/** Botão circular usado na pilha de zoom (+/-). */
+const ControleIcone: React.FC<{ rotulo: string; descricao: string; aoTocar: () => void }> = ({
+  rotulo,
+  descricao,
+  aoTocar,
+}) => (
+  <Pressable
+    onPress={aoTocar}
+    accessibilityRole="button"
+    accessibilityLabel={descricao}
+    hitSlop={8}
+    style={({ pressed }) => [estilos.botaoIcone, pressed && estilos.botaoPressionado]}>
+    <Text style={estilos.textoBotaoIcone}>{rotulo}</Text>
+  </Pressable>
+);
 
 type PropsLinhas = {
   nos: NoMapa[];
@@ -175,12 +295,43 @@ type PropsLinhas = {
   posicaoDe: (no: NoMapa) => { x: number; y: number };
 };
 
-/** Desenha as conexoes entre os nos. O SVG cobre uma area grande e centrada. */
-const LinhasDoMapa: React.FC<PropsLinhas> = ({ nos, ligacoes, ligacoesExtras, posicaoDe }) => {
-  const TAMANHO = 4000;
-  const centro = TAMANHO / 2;
+const PADDING_SVG_LINHAS = 40;
 
+/**
+ * Desenha as conexoes entre os nos. O SVG e dimensionado dinamicamente pela
+ * caixa que envolve os nos atuais (nao um tamanho fixo): um canvas fixo
+ * grande o bastante para mapas grandes gera um bitmap gigante em telas de
+ * alta densidade e o Android recusa desenhar ("Canvas: trying to draw too
+ * large bitmap"), enquanto um canvas pequeno demais corta linhas fora dele.
+ */
+const LinhasDoMapa: React.FC<PropsLinhas> = ({ nos, ligacoes, ligacoesExtras, posicaoDe }) => {
   const porId = useMemo(() => new Map(nos.map((no) => [no.id, no])), [nos]);
+
+  const limites = useMemo(() => {
+    if (nos.length === 0) {
+      return { minX: 0, minY: 0, largura: 0, altura: 0 };
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    nos.forEach((no) => {
+      const posicao = posicaoDe(no);
+      minX = Math.min(minX, posicao.x - no.largura / 2);
+      maxX = Math.max(maxX, posicao.x + no.largura / 2);
+      minY = Math.min(minY, posicao.y - no.altura / 2);
+      maxY = Math.max(maxY, posicao.y + no.altura / 2);
+    });
+
+    return {
+      minX: minX - PADDING_SVG_LINHAS,
+      minY: minY - PADDING_SVG_LINHAS,
+      largura: maxX - minX + PADDING_SVG_LINHAS * 2,
+      altura: maxY - minY + PADDING_SVG_LINHAS * 2,
+    };
+  }, [nos, posicaoDe]);
 
   const coordenada = (id: string) => {
     const no = porId.get(id);
@@ -188,14 +339,18 @@ const LinhasDoMapa: React.FC<PropsLinhas> = ({ nos, ligacoes, ligacoesExtras, po
       return null;
     }
     const posicao = posicaoDe(no);
-    return { x: centro + posicao.x, y: centro + posicao.y };
+    return { x: posicao.x - limites.minX, y: posicao.y - limites.minY };
   };
+
+  if (nos.length === 0) {
+    return null;
+  }
 
   return (
     <Svg
-      width={TAMANHO}
-      height={TAMANHO}
-      style={[estilos.svg, { left: -centro, top: -centro }]}
+      width={limites.largura}
+      height={limites.altura}
+      style={[estilos.svg, { left: limites.minX, top: limites.minY }]}
       pointerEvents="none">
       {ligacoes.map((ligacao) => {
         const origem = coordenada(ligacao.origemId);
@@ -402,6 +557,55 @@ const estilos = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     overflow: 'hidden',
+  },
+  barraSuperior: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  botaoTexto: {
+    backgroundColor: 'rgba(7, 17, 31, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+  },
+  textoBotaoTexto: {
+    color: '#dbeafe',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  pilhaZoom: {
+    position: 'absolute',
+    right: 16,
+    bottom: 64,
+    backgroundColor: 'rgba(7, 17, 31, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+    borderRadius: 22,
+    overflow: 'hidden',
+  },
+  botaoIcone: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoBotaoIcone: {
+    color: '#dbeafe',
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 22,
+  },
+  separadorZoom: {
+    height: 1,
+    backgroundColor: 'rgba(148, 163, 184, 0.25)',
+  },
+  botaoPressionado: {
+    backgroundColor: 'rgba(37, 99, 235, 0.35)',
   },
 });
 

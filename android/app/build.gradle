@@ -91,6 +91,14 @@ android {
             // Constroi a libappmodules.so (React Native) + a libnota_busca_rapida.so (nosso C++).
             path "src/main/jni/CMakeLists.txt"
             version "3.22.1"
+            // No Windows, o caminho padrao (android/app/.cxx/...) combinado com os
+            // diretorios profundos gerados pelo codegen do RN estoura o limite de
+            // 260 caracteres do sistema de arquivos, e o ninja falha com
+            // "Filename longer than 260 characters". Movendo o diretorio intermediario
+            // para a raiz do disco evitamos isso sem precisar habilitar "long paths".
+            if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+                buildStagingDirectory "C:/ndcxx"
+            }
         }
     }
     signingConfigs {
