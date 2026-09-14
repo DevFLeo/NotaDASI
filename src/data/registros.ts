@@ -54,7 +54,44 @@ export type Registro = {
 
   contatoInstitucional?: Contato;
   contatoPessoal?: Contato;
+
+  // Estado local do app (favoritar) — NAO existe na planilha, gerenciado
+  // inteiramente pelo useRegistros/AsyncStorage. Excecao a regra acima.
+  favorito?: boolean;
 };
+
+/** Um novo registro ainda nao tem id: ele e gerado ao criar (ver useRegistros). */
+export type NovoRegistro = Omit<Registro, 'id' | 'favorito'>;
+
+/** Registro em branco para abrir o formulario de criacao. */
+export const registroEmBranco = (base?: Partial<NovoRegistro>): NovoRegistro => ({
+  departamento: base?.departamento ?? '',
+  departamentoSigla: base?.departamentoSigla ?? '',
+  departamentoResponsavel: base?.departamentoResponsavel ?? '',
+  departamentoCargo: base?.departamentoCargo ?? '',
+  setor: base?.setor ?? '',
+  setorSigla: base?.setorSigla ?? '',
+  responsavel: base?.responsavel ?? '',
+  cargo: base?.cargo ?? '',
+  competencia: base?.competencia ?? '',
+  sistemaAtende: base?.sistemaAtende,
+  comoAtende: base?.comoAtende ?? '',
+  estruturadoNoSistema: base?.estruturadoNoSistema,
+  houveTreinamento: base?.houveTreinamento,
+  informacoesAcessadas: base?.informacoesAcessadas ?? '',
+  nivelAcessoCamada: base?.nivelAcessoCamada ?? '',
+  acessoCamadaConcedido: base?.acessoCamadaConcedido,
+  iniciouAtividade: base?.iniciouAtividade,
+  moduloSig: base?.moduloSig ?? '',
+  nivelAcessoModulo: base?.nivelAcessoModulo ?? '',
+  acessoModuloConcedido: base?.acessoModuloConcedido,
+  temProblema: base?.temProblema,
+  temChamado: base?.temChamado,
+  detalheProblema: base?.detalheProblema ?? '',
+  observacao: base?.observacao ?? '',
+  contatoInstitucional: base?.contatoInstitucional,
+  contatoPessoal: base?.contatoPessoal,
+});
 
 /** Situação derivada das respostas — usada para colorir o cartão. */
 export type SituacaoAdesao = 'aderido' | 'parcial' | 'pendente' | 'problema';

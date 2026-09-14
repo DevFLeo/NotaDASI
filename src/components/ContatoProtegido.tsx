@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import type { Contato } from '../data/registros';
+import { criarEstilos } from '../tema/estilos';
+import { useEstilos } from '../tema/ThemeContext';
 
 type Props = {
   contato?: Contato;
@@ -13,6 +15,7 @@ type Props = {
  * mas o borrao evita exposicao acidental do dado em tela compartilhada.
  */
 const ContatoProtegido: React.FC<Props> = ({ contato }) => {
+  const estilos = useEstilos(criarEstilosContato);
   const [revelado, setRevelado] = useState(false);
 
   if (!contato || (!contato.email && !contato.telefone)) {
@@ -48,40 +51,40 @@ const ContatoProtegido: React.FC<Props> = ({ contato }) => {
 const mascarar = (texto: string): string =>
   texto.replace(/[a-zA-Z0-9]/g, '•');
 
-const estilos = StyleSheet.create({
-  container: {
-    marginTop: 14,
-  },
-  rotulo: {
-    color: '#64748b',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 6,
-  },
-  area: {
-    backgroundColor: 'rgba(148, 163, 184, 0.08)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.18)',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  valor: {
-    color: '#e2e8f0',
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  valorOculto: {
-    color: '#94a3b8',
-    letterSpacing: 1.5,
-  },
-  dica: {
-    color: '#64748b',
-    fontSize: 10,
-    marginTop: 6,
-  },
-});
+const criarEstilosContato = criarEstilos((tema) => ({
+    container: {
+      marginTop: 14,
+    },
+    rotulo: {
+      color: tema.textoTerciario,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: 6,
+    },
+    area: {
+      backgroundColor: tema.superficie,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: tema.borda,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    valor: {
+      color: tema.texto,
+      fontSize: 13,
+      lineHeight: 20,
+    },
+    valorOculto: {
+      color: tema.textoSecundario,
+      letterSpacing: 1.5,
+    },
+    dica: {
+      color: tema.textoTerciario,
+      fontSize: 10,
+      marginTop: 6,
+    },
+}));
 
 export default ContatoProtegido;
