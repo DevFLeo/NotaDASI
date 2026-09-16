@@ -8,9 +8,11 @@ type Props = {
   valor: string;
   aoAlterar: (texto: string) => void;
   aoPesquisar: () => void;
+  /** O padrão fala do levantamento; um campo livre passa o texto dele. */
+  placeholder?: string;
 };
 
-const BarraBusca: React.FC<Props> = ({ valor, aoAlterar, aoPesquisar }) => {
+const BarraBusca: React.FC<Props> = ({ valor, aoAlterar, aoPesquisar, placeholder }) => {
   const tema = useTema();
   const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosBusca);
@@ -25,7 +27,7 @@ const BarraBusca: React.FC<Props> = ({ valor, aoAlterar, aoPesquisar }) => {
         value={valor}
         onChangeText={aoAlterar}
         onSubmitEditing={aoPesquisar}
-        placeholder="Buscar competência, setor, responsável..."
+        placeholder={placeholder ?? 'Buscar competência, setor, responsável...'}
         placeholderTextColor={tema.textoTerciario}
         style={estilos.input}
         autoCapitalize="none"

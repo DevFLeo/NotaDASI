@@ -1,15 +1,17 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Pressable, StatusBar, Text, View } from 'react-native';
+import { Pressable, StatusBar, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { FadeIn, runOnJS } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AjustesTela from './src/components/AjustesTela';
+import ListaAnotacoes from './src/components/ListaAnotacoes';
 import ListaRegistros from './src/components/ListaRegistros';
-import DetalheRegistro from './src/components/DetalheRegistro';
-import FormularioRegistro from './src/components/FormularioRegistro';
 import MapaMental from './src/mapa/MapaMental';
-import { registroEmBranco, type NovoRegistro, type Registro } from './src/data/registros';
-import { useRegistros } from './src/data/useRegistros';
+import Modais from './src/app/Modais';
+import { useAplicacao } from './src/app/useAplicacao';
+import PortaDeEntrada from './src/auth/PortaDeEntrada';
+import { SessaoProvider } from './src/auth/useSessao';
+import { useSegurarParaAbrir } from './src/hooks/useSegurarParaAbrir';
 import { criarEstilos } from './src/tema/estilos';
 import { ThemeProvider, useEstilos, useMetricas, useTema } from './src/tema/ThemeContext';
 import { IconeEngrenagem, IconeLista, IconeMapa } from './src/tema/Icones';
@@ -19,79 +21,22 @@ type Aba = 'lista' | 'mapa' | 'ajustes';
 /** Ordem física das abas — define para onde um swipe para esquerda/direita navega. */
 const ORDEM_ABAS: Aba[] = ['lista', 'mapa', 'ajustes'];
 
-type EstadoFormulario =
-  | { modo: 'criar'; sugestao?: Partial<Registro> }
-  | { modo: 'editar'; registro: Registro }
-  | null;
-
-const AppConteudo: React.FC = () => {
+/**
+ * Casca do CELULAR: conteúdo em cima, barra de abas embaixo, uma tela por vez.
+ *
+ * É exportada porque o alvo PC também a usa — quando a janela do navegador é
+ * estreita demais para a barra lateral, `pc/RaizPC.tsx` cai nesta mesma casca
+ * em vez de espremer o layout de três colunas. Todo o estado vem de
+ * `useAplicacao()`, compartilhado entre as duas cascas.
+ */
+export const AppConteudo: React.FC = () => {
   const tema = useTema();
   const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosApp);
   const insets = useSafeAreaInsets();
+  const app = useAplicacao();
 
   const [aba, setAba] = useState<Aba>('lista');
-  const [selecionado, setSelecionado] = useState<Registro | null>(null);
-  const [formulario, setFormulario] = useState<EstadoFormulario>(null);
-
-  const {
-    registros,
-    origem,
-    criarRegistro,
-    atualizarRegistro,
-    excluirRegistro,
-    alternarFavorito,
-    limparDadosLocais,
-  } = useRegistros();
-
-  const abrirCriacao = useCallback((sugestao?: Partial<Registro>) => {
-    setFormulario({ modo: 'criar', sugestao });
-  }, []);
-
-  const abrirEdicao = useCallback((registro: Registro) => {
-    setSelecionado(null);
-    setFormulario({ modo: 'editar', registro });
-  }, []);
-
-  const fecharFormulario = useCallback(() => setFormulario(null), []);
-
-  const alternarFavoritoDoRegistro = useCallback(
-    (registro: Registro) => alternarFavorito(registro.id),
-    [alternarFavorito],
-  );
-
-  const salvarFormulario = useCallback(
-    (dados: NovoRegistro) => {
-      if (formulario?.modo === 'editar') {
-        atualizarRegistro(formulario.registro.id, dados);
-      } else {
-        criarRegistro(dados);
-      }
-      setFormulario(null);
-    },
-    [formulario, atualizarRegistro, criarRegistro],
-  );
-
-  const pedirExclusao = useCallback(
-    (registro: Registro) => {
-      Alert.alert('Excluir competência', 'Essa ação não pode ser desfeita. Deseja continuar?', [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: () => {
-            excluirRegistro(registro.id);
-            setSelecionado(null);
-            setFormulario(null);
-          },
-        },
-      ]);
-    },
-    [excluirRegistro],
-  );
-
-  const valorInicialFormulario =
-    formulario?.modo === 'editar' ? formulario.registro : registroEmBranco(formulario?.sugestao);
 
   const trocarAbaRelativa = useCallback((delta: number) => {
     setAba((atual) => {
@@ -111,6 +56,9 @@ const AppConteudo: React.FC = () => {
   // os dois gestos disputariam o mesmo movimento.
   const gestoTrocarAba = Gesture.Pan()
     .enabled(aba !== 'mapa')
+    // Um dedo só: com dois, o gesto é a pinça que ajusta o tamanho do texto na
+    // lista — sem este limite, beliscar a tela também trocaria de aba.
+    .maxPointers(1)
     .activeOffsetX([-20, 20])
     .failOffsetY([-15, 15])
     .onEnd((evento) => {
@@ -129,20 +77,40 @@ const AppConteudo: React.FC = () => {
         <View style={estilos.conteudo}>
           <Animated.View key={aba} entering={FadeIn.duration(160)} style={estilos.conteudo}>
             {aba === 'lista' ? (
-              <ListaRegistros
-                registros={registros}
-                origem={origem}
-                aoSelecionar={setSelecionado}
-                aoAlternarFavorito={alternarFavoritoDoRegistro}
-                aoCriar={abrirCriacao}
-              />
+              app.eCampoLivre ? (
+                <ListaAnotacoes
+                  campo={app.campoAtivo}
+                  anotacoes={app.anotacoes}
+                  aoAbrir={app.abrirAnotacao}
+                  aoCriar={app.criarNovaAnotacao}
+                />
+              ) : (
+                <ListaRegistros
+                  registros={app.registros}
+                  origem={app.origem}
+                  aoSelecionar={app.setSelecionado}
+                  aoAlternarFavorito={app.alternarFavoritoDoRegistro}
+                  aoCriar={app.abrirCriacao}
+                />
+              )
             ) : aba === 'mapa' ? (
-              <MapaMental registros={registros} aoSelecionar={setSelecionado} aoCriar={abrirCriacao} />
+              <MapaMental
+                campo={app.campoAtivo}
+                registros={app.registros}
+                anotacoes={app.anotacoes}
+                aoSelecionar={app.setSelecionado}
+                aoCriar={app.abrirCriacao}
+                aoAbrirAnotacao={app.abrirAnotacao}
+                aoCriarAnotacao={app.criarNovaAnotacao}
+              />
             ) : (
               <AjustesTela
-                origem={origem}
-                totalRegistros={registros.length}
-                aoLimparDados={limparDadosLocais}
+                origem={app.origem}
+                totalRegistros={app.registros.length}
+                aoLimparDados={app.limparDadosLocais}
+                campoAtivo={app.campoAtivo}
+                totalCampos={app.campos.length}
+                aoAbrirCampos={app.abrirMenuCampos}
               />
             )}
           </Animated.View>
@@ -152,19 +120,25 @@ const AppConteudo: React.FC = () => {
       {/* A barra fica fora das bordas seguras de baixo de propósito: o fundo
           dela precisa correr até o fim da tela, e só o padding interno respeita
           a barra de gestos do Android / o home indicator do iOS. */}
-      <View style={[estilos.barraAbas, { paddingBottom: (estilos.barraAbas.paddingTop as number) + insets.bottom }]}>
+      <View
+        style={[
+          estilos.barraAbas,
+          { paddingBottom: (estilos.barraAbas.paddingTop as number) + insets.bottom },
+        ]}>
         <View style={estilos.abasInterno}>
           <BotaoAba
             rotulo="Lista"
             Icone={IconeLista}
             ativo={aba === 'lista'}
             aoTocar={() => setAba('lista')}
+            aoSegurar={app.abrirMenuCampos}
           />
           <BotaoAba
             rotulo={metricas.compacta ? 'Mapa' : 'Mapa mental'}
             Icone={IconeMapa}
             ativo={aba === 'mapa'}
             aoTocar={() => setAba('mapa')}
+            aoSegurar={app.abrirMenuCampos}
           />
           <BotaoAba
             rotulo="Ajustes"
@@ -175,36 +149,34 @@ const AppConteudo: React.FC = () => {
         </View>
       </View>
 
-      <DetalheRegistro
-        registro={selecionado}
-        aoFechar={() => setSelecionado(null)}
-        aoEditar={abrirEdicao}
-        aoExcluir={pedirExclusao}
-        aoAlternarFavorito={alternarFavoritoDoRegistro}
-      />
-
-      <FormularioRegistro
-        visivel={formulario !== null}
-        tituloModal={formulario?.modo === 'editar' ? 'Editar competência' : 'Nova competência'}
-        valorInicial={valorInicialFormulario}
-        aoSalvar={salvarFormulario}
-        aoCancelar={fecharFormulario}
-        aoExcluir={
-          formulario?.modo === 'editar' ? () => pedirExclusao(formulario.registro) : undefined
-        }
-      />
+      <Modais app={app} />
     </SafeAreaView>
   );
 };
 
-const App: React.FC = () => (
+/**
+ * Os provedores que qualquer casca precisa, na ordem certa.
+ *
+ * Exportado para o alvo PC montar exatamente os mesmos (ver pc/main.tsx): se
+ * cada plataforma listasse os seus, um provedor novo entraria só num lado e o
+ * bug apareceria semanas depois, num alvo só.
+ */
+export const Provedores: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <GestureHandlerRootView style={estilosRaiz.raiz}>
     <SafeAreaProvider>
       <ThemeProvider>
-        <AppConteudo />
+        <SessaoProvider>{children}</SessaoProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   </GestureHandlerRootView>
+);
+
+const App: React.FC = () => (
+  <Provedores>
+    <PortaDeEntrada>
+      <AppConteudo />
+    </PortaDeEntrada>
+  </Provedores>
 );
 
 type ComponenteIcone = React.FC<{ tamanho?: number; cor: string }>;
@@ -214,18 +186,27 @@ const BotaoAba: React.FC<{
   Icone: ComponenteIcone;
   ativo: boolean;
   aoTocar: () => void;
-}> = ({ rotulo, Icone, ativo, aoTocar }) => {
+  /**
+   * Segurar a aba abre o menu de campos (os cofres). É o caminho rápido: fica
+   * sempre no mesmo lugar, some da HUD quando não é usado, e não muda nada do
+   * que já está cadastrado — só troca de cofre ou cria outro.
+   */
+  aoSegurar?: () => void;
+}> = ({ rotulo, Icone, ativo, aoTocar, aoSegurar }) => {
   const tema = useTema();
   const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosApp);
   const cor = ativo ? tema.primariaTexto : tema.textoSecundario;
+  const segurar = useSegurarParaAbrir(aoSegurar);
 
   return (
     <Pressable
       onPress={aoTocar}
+      {...segurar}
       accessibilityRole="tab"
       accessibilityState={{ selected: ativo }}
       accessibilityLabel={rotulo}
+      accessibilityHint={aoSegurar ? 'Segure para trocar de campo ou criar outro' : undefined}
       style={[estilos.aba, ativo && estilos.abaAtiva]}>
       <Icone tamanho={metricas.compacta ? 18 : 20} cor={cor} />
       <Text

@@ -10,8 +10,16 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import SecaoConta from '../auth/SecaoConta';
+import type { Campo } from '../data/campos';
 import { lerUrlServidor, salvarUrlServidor } from '../data/integracao';
-import { usePreferenciaTema, useTema, type PreferenciaTema } from '../tema/ThemeContext';
+import { ESCALA_TEXTO_PADRAO } from '../tema/responsivo';
+import {
+  useEscalaTexto,
+  usePreferenciaTema,
+  useTema,
+  type PreferenciaTema,
+} from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
 import {
   IconeAparelho,
@@ -26,6 +34,10 @@ type Props = {
   origem: 'planilha' | 'exemplo';
   totalRegistros: number;
   aoLimparDados: () => void;
+  campoAtivo: Campo;
+  totalCampos: number;
+  /** Abre o mesmo menu que aparece ao segurar um cartão da lista ou do mapa. */
+  aoAbrirCampos: () => void;
 };
 
 /** Abaixo desta largura, os dois botões de integração empilham em vez de dividir a linha. */
@@ -37,12 +49,38 @@ const OPCOES_TEMA: { valor: PreferenciaTema; rotulo: string; Icone: React.FC<{ t
   { valor: 'sistema', rotulo: 'Do aparelho', Icone: IconeAparelho },
 ];
 
-const AjustesTela: React.FC<Props> = ({ origem, totalRegistros, aoLimparDados }) => {
+/**
+ * Atalhos para a mesma escala que a pinça na lista ajusta. A pinça é contínua
+ * (degraus de 0,05); aqui o chip marca como ativo o preset mais próximo, senão
+ * quase nenhum valor vindo do gesto acenderia algum.
+ */
+const OPCOES_ESCALA: { valor: number; rotulo: string; tamanho: number }[] = [
+  { valor: 0.85, rotulo: 'Pequeno', tamanho: 11 },
+  { valor: ESCALA_TEXTO_PADRAO, rotulo: 'Padrão', tamanho: 13 },
+  { valor: 1.2, rotulo: 'Grande', tamanho: 15 },
+  { valor: 1.45, rotulo: 'Maior', tamanho: 17 },
+];
+
+const presetMaisProximo = (escala: number): number =>
+  OPCOES_ESCALA.reduce((melhor, opcao) =>
+    Math.abs(opcao.valor - escala) < Math.abs(melhor.valor - escala) ? opcao : melhor,
+  ).valor;
+
+const AjustesTela: React.FC<Props> = ({
+  origem,
+  totalRegistros,
+  aoLimparDados,
+  campoAtivo,
+  totalCampos,
+  aoAbrirCampos,
+}) => {
   const tema = useTema();
   const estilos = criarEstilos(tema);
   const { width: larguraTela } = useWindowDimensions();
   const estreita = larguraTela < LARGURA_ESTREITA;
   const [preferencia, definirPreferencia] = usePreferenciaTema();
+  const [escalaTexto, definirEscalaTexto] = useEscalaTexto();
+  const escalaAtiva = presetMaisProximo(escalaTexto);
 
   const [urlServidor, setUrlServidor] = useState('');
   const [urlSalva, setUrlSalva] = useState('');
@@ -95,6 +133,10 @@ const AjustesTela: React.FC<Props> = ({ origem, totalRegistros, aoLimparDados })
         <Text style={estilos.titulo}>Ajustes</Text>
       </View>
 
+      {/* Primeiro bloco da tela: saber QUEM está usando o app vem antes de
+          qualquer preferência. É também o único caminho para sair da conta. */}
+      <SecaoConta />
+
       <Cartao tema={tema}>
         <Text style={estilos.tituloSecao}>Aparência</Text>
         <Text style={estilos.descricao}>Escolha como o NotaDASI aparece neste aparelho.</Text>
@@ -113,6 +155,56 @@ const AjustesTela: React.FC<Props> = ({ origem, totalRegistros, aoLimparDados })
             );
           })}
         </View>
+
+        <Text style={estilos.rotuloEscala}>Tamanho do texto da lista</Text>
+        <View style={estilos.faixaChips}>
+          {OPCOES_ESCALA.map((opcao) => {
+            const ativo = escalaAtiva === opcao.valor;
+            return (
+              <Pressable
+                key={opcao.valor}
+                onPress={() => definirEscalaTexto(opcao.valor)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: ativo }}
+                accessibilityLabel={`Texto ${opcao.rotulo.toLowerCase()}`}
+                style={[estilos.chip, ativo && estilos.chipAtivo]}>
+                <Text
+                  style={[
+                    estilos.textoChip,
+                    { fontSize: opcao.tamanho },
+                    ativo && estilos.textoChipAtivo,
+                  ]}
+                  maxFontSizeMultiplier={1.2}>
+                  {opcao.rotulo}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={estilos.descricao}>
+          Vale {Math.round(escalaTexto * 100)}% do tamanho normal. Na aba Lista, você também pode
+          ajustar com uma pinça de dois dedos — o valor fica salvo neste aparelho.
+        </Text>
+      </Cartao>
+
+      <Cartao tema={tema}>
+        <View style={estilos.linhaTituloSecao}>
+          <IconeBanco tamanho={16} cor={tema.primaria} />
+          <Text style={estilos.tituloSecao}>Campos</Text>
+        </View>
+        <Text style={estilos.descricao}>
+          Cada campo é um cofre separado, com os próprios itens e o próprio formulário de cadastro.
+          O atalho também está na barra de baixo: segure a aba Lista ou Mapa mental.
+        </Text>
+        <Campo tema={tema} rotulo="Campo ativo" valor={campoAtivo.nome} />
+        <Campo
+          tema={tema}
+          rotulo="Campos neste aparelho"
+          valor={`${totalCampos} (o do SIG é o padrão)`}
+        />
+        <Pressable onPress={aoAbrirCampos} style={estilos.botaoSecundarioLargo}>
+          <Text style={estilos.textoBotaoSecundario}>Gerenciar campos</Text>
+        </Pressable>
       </Cartao>
 
       <Cartao tema={tema}>
@@ -170,7 +262,7 @@ const AjustesTela: React.FC<Props> = ({ origem, totalRegistros, aoLimparDados })
         </View>
       </Cartao>
 
-      <Text style={estilos.rodape}>NotaDASI · v1.0</Text>
+      <Text style={estilos.rodape}>NotaDASI · v0.2</Text>
     </ScrollView>
   );
 };
@@ -220,7 +312,15 @@ const criarEstilos = (tema: Tema) =>
     },
     descricao: { color: tema.textoSecundario, fontSize: 13, lineHeight: 19, marginTop: 6 },
     destaque: { color: tema.texto, fontWeight: '700' },
-    faixaChips: { flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' },
+    faixaChips: { flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' },
+    rotuloEscala: {
+      color: tema.textoTerciario,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginTop: 18,
+    },
     chip: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -275,6 +375,16 @@ const criarEstilos = (tema: Tema) =>
       alignItems: 'center',
     },
     textoBotaoSecundario: { color: tema.texto, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+    botaoSecundarioLargo: {
+      marginTop: 14,
+      alignSelf: 'flex-start',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 12,
+      backgroundColor: tema.superficie,
+      borderWidth: 1,
+      borderColor: tema.borda,
+    },
     botaoPerigo: {
       marginTop: 14,
       alignSelf: 'flex-start',

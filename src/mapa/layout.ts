@@ -1,6 +1,12 @@
+import {
+  tituloDaAnotacao,
+  valoresPreenchidos,
+  type Anotacao,
+  type Campo,
+} from '../data/campos';
 import { calcularSituacao, corPorSituacao, type Registro } from '../data/registros';
 
-export type TipoNo = 'raiz' | 'setor' | 'competencia';
+export type TipoNo = 'raiz' | 'setor' | 'competencia' | 'anotacao';
 
 export type NoMapa = {
   id: string;
@@ -13,6 +19,8 @@ export type NoMapa = {
   largura: number;
   altura: number;
   registro?: Registro;
+  /** Preenchido só nos nós de campo livre (tipo 'anotacao'). */
+  anotacao?: Anotacao;
   cor: string;
 };
 
@@ -122,6 +130,63 @@ export const montarMapa = (
         destinoId: noCompetencia.id,
       });
     });
+  });
+
+  return { nos, ligacoes };
+};
+
+/**
+ * Mapa de um campo livre: a raiz e o nome do cofre, e cada item cadastrado
+ * vira um no ao redor.
+ *
+ * Nao ha nivel intermediario aqui porque um campo livre nao tem hierarquia
+ * definida — o formulario dele e uma lista de perguntas, nao uma lotacao.
+ */
+export const montarMapaDeAnotacoes = (
+  campo: Campo,
+  anotacoes: Anotacao[],
+): { nos: NoMapa[]; ligacoes: LigacaoMapa[] } => {
+  const raiz: NoMapa = {
+    // O id leva o campo junto porque as posicoes arrastadas sao guardadas num
+    // mapa unico por id: uma raiz chamada so 'raiz' faria todos os cofres
+    // compartilharem a mesma posicao.
+    id: `raiz-${campo.id}`,
+    tipo: 'raiz',
+    rotulo: campo.nome,
+    subtitulo: `${anotacoes.length} ${anotacoes.length === 1 ? 'item' : 'itens'}`,
+    x: 0,
+    y: 0,
+    largura: LARGURA_RAIZ,
+    altura: ALTURA_RAIZ,
+    cor: '#60A5FA',
+  };
+
+  const nos: NoMapa[] = [raiz];
+  const ligacoes: LigacaoMapa[] = [];
+
+  const raio = Math.max(320, anotacoes.length * 70);
+
+  anotacoes.forEach((anotacao, indice) => {
+    const angulo = (indice / Math.max(anotacoes.length, 1)) * Math.PI * 2 - Math.PI / 2;
+    // O segundo valor preenchido serve de subtitulo — o primeiro ja e o titulo.
+    const [, segundo] = valoresPreenchidos(campo, anotacao);
+
+    const no: NoMapa = {
+      id: `anot-${anotacao.id}`,
+      tipo: 'anotacao',
+      rotulo: tituloDaAnotacao(campo, anotacao).slice(0, 60),
+      subtitulo: segundo ? `${segundo.requisito.rotulo}: ${segundo.texto}`.slice(0, 60) : '',
+      paiId: raiz.id,
+      x: Math.cos(angulo) * raio,
+      y: Math.sin(angulo) * raio,
+      largura: LARGURA_COMPETENCIA,
+      altura: ALTURA_COMPETENCIA,
+      anotacao,
+      cor: PALETA[indice % PALETA.length],
+    };
+
+    nos.push(no);
+    ligacoes.push({ id: `lig-${raiz.id}-${no.id}`, origemId: raiz.id, destinoId: no.id });
   });
 
   return { nos, ligacoes };

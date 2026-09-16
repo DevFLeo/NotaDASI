@@ -1,0 +1,16 @@
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    // O alvo PC roda no navegador, então precisa dos tipos de DOM (window,
+    // navigator, document) e de Node (__dirname, path no vite.config).
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true
+  },
+  // Inclui o código compartilhado da raiz: é o mesmo App e o mesmo src/.
+  "include": ["**/*.ts", "**/*.mts", "**/*.tsx", "../App.tsx", "../src/**/*.ts", "../src/**/*.tsx"],
+  "exclude": ["../node_modules"]
+}

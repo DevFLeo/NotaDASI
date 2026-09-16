@@ -60,4 +60,13 @@ module.exports = {
   withTiming: (valor) => valor,
   runOnJS: (fn) => fn,
   runOnUI: (fn) => fn,
+
+  // Usadas pelo react-native-gesture-handler dentro do <GestureDetector>.
+  // Sem elas, qualquer teste que renderize o mapa mental quebra com
+  // "Reanimated.useEvent is not a function" — o gesto e' montado no render,
+  // antes de qualquer interacao.
+  useEvent: () => () => {},
+  useHandler: () => ({ context: {}, doDependenciesDiffer: false, useWeb: false }),
+  useAnimatedReaction: () => {},
+  cancelAnimation: () => {},
 };

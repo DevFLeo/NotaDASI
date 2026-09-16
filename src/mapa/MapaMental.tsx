@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -8,14 +15,23 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
-import type { Registro } from '../data/registros';
+import {
+  textoPesquisavelDaAnotacao,
+  type Anotacao,
+  type Campo,
+} from '../data/campos';
+import { textoPesquisavel, type Registro } from '../data/registros';
 import { useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
-import { ligacoesPorCamada, montarMapa, type NoMapa } from './layout';
+import BuscaLupa from './BuscaLupa';
+import { ligacoesPorCamada, montarMapa, montarMapaDeAnotacoes, type NoMapa } from './layout';
 import { lerPosicoes, salvarPosicoes, type PosicoesSalvas } from './posicoes';
 
 type Props = {
+  /** Cofre ativo: decide se o mapa é o do levantamento ou o de um campo livre. */
+  campo: Campo;
   registros: Registro[];
+  anotacoes: Anotacao[];
   aoSelecionar?: (registro: Registro) => void;
   /**
    * Abre o formulario de criacao. Se um setor estiver expandido no momento,
@@ -23,6 +39,8 @@ type Props = {
    * setor); senao, o formulario abre em branco (nasce uma secretaria nova).
    */
   aoCriar: (sugestao?: Partial<Registro>) => void;
+  aoAbrirAnotacao: (anotacao: Anotacao) => void;
+  aoCriarAnotacao: () => void;
 };
 
 const ESCALA_MINIMA = 0.25;
@@ -46,16 +64,48 @@ const limitarEscala = (valor: number): number => {
  * - Pinca com dois dedos aplica zoom.
  * - Cada no pode ser arrastado individualmente; a posicao fica salva.
  * - Tocar numa secretaria expande/recolhe os projetos dela.
+ * - O menu de campos (os cofres) abre segurando a aba na barra de baixo.
  * - Linhas tracejadas ligam projetos de secretarias diferentes que tem o mesmo cargo.
+ *
+ * Num campo livre o mapa e mais simples: a raiz e o nome do cofre e cada item
+ * cadastrado vira um no ao redor (ver montarMapaDeAnotacoes).
  */
-const MapaMental: React.FC<Props> = ({ registros, aoSelecionar, aoCriar }) => {
+const MapaMental: React.FC<Props> = ({
+  campo,
+  registros,
+  anotacoes,
+  aoSelecionar,
+  aoCriar,
+  aoAbrirAnotacao,
+  aoCriarAnotacao,
+}) => {
   const tema = useTema();
   const estilos = criarEstilos(tema);
-  const { width: larguraTela, height: alturaTela } = useWindowDimensions();
+  const janela = useWindowDimensions();
+
+  /**
+   * A câmera trabalha sobre a área REAL do mapa, não sobre a janela.
+   *
+   * No celular as duas coisas são a mesma e isto não muda nada. No PC o mapa
+   * divide a tela com o painel de 35% (ver pc/CascaPC.tsx): medindo a janela,
+   * a raiz do mapa seria centralizada num ponto que fica atrás do painel, e o
+   * "ajustar à tela" calcularia um zoom para uma largura que o mapa não tem.
+   *
+   * A janela serve de valor inicial só porque o primeiro render acontece antes
+   * do onLayout — sem isso o mapa apareceria no canto por um quadro.
+   */
+  const [area, setArea] = useState({ largura: janela.width, altura: janela.height });
+  const areaRef = useRef(area);
+  const larguraTela = area.largura;
+  const alturaTela = area.altura;
 
   const [expandidos, setExpandidos] = useState<Set<string>>(() => new Set());
   const [posicoesSalvas, setPosicoesSalvas] = useState<PosicoesSalvas>({});
   const [carregado, setCarregado] = useState(false);
+  const [termoBusca, setTermoBusca] = useState('');
+  const [buscaAberta, setBuscaAberta] = useState(false);
+
+  const eCampoLivre = campo.tipo !== 'sig';
 
   useEffect(() => {
     let ativo = true;
@@ -72,9 +122,42 @@ const MapaMental: React.FC<Props> = ({ registros, aoSelecionar, aoCriar }) => {
     };
   }, []);
 
-  const { nos, ligacoes } = useMemo(() => montarMapa(registros, expandidos), [registros, expandidos]);
+  const { nos, ligacoes } = useMemo(
+    () =>
+      eCampoLivre ? montarMapaDeAnotacoes(campo, anotacoes) : montarMapa(registros, expandidos),
+    [eCampoLivre, campo, anotacoes, registros, expandidos],
+  );
 
-  const ligacoesExtras = useMemo(() => ligacoesPorCamada(nos), [nos]);
+  // As ligacoes por camada so existem no levantamento do SIG — um campo livre
+  // nao tem "informacoes acessadas" para cruzar.
+  const ligacoesExtras = useMemo(
+    () => (eCampoLivre ? [] : ligacoesPorCamada(nos)),
+    [eCampoLivre, nos],
+  );
+
+  // Busca da lupa: em vez de esconder nós (o que desmontaria o mapa a cada
+  // tecla), os que não batem ficam apagados — o desenho continua inteiro e a
+  // vizinhança do resultado segue visível.
+  const idsEncontrados = useMemo(() => {
+    const termo = termoBusca.trim().toLowerCase();
+    if (!termo) {
+      return null;
+    }
+
+    const combina = (no: NoMapa): boolean => {
+      const alvo = [
+        no.rotulo,
+        no.subtitulo ?? '',
+        no.registro ? textoPesquisavel(no.registro) : '',
+        no.anotacao ? textoPesquisavelDaAnotacao(campo, no.anotacao) : '',
+      ]
+        .join(' ')
+        .toLowerCase();
+      return alvo.includes(termo);
+    };
+
+    return new Set(nos.filter(combina).map((no) => no.id));
+  }, [campo, nos, termoBusca]);
 
   // Posicao efetiva de cada no: a arrastada pelo usuario vence o layout automatico.
   const posicaoDe = useCallback(
@@ -135,6 +218,33 @@ const MapaMental: React.FC<Props> = ({ registros, aoSelecionar, aoCriar }) => {
   const escala = useSharedValue(ESCALA_INICIAL);
 
   const escalaInicial = useSharedValue(ESCALA_INICIAL);
+
+  /**
+   * Redimensionar a área (abrir/fechar o painel no PC, girar o celular) desloca
+   * a câmera por METADE da diferença: o que estava no centro continua no
+   * centro. Sem isso, abrir o painel empurraria o mapa para fora da vista.
+   */
+  const aoMedirArea = useCallback(
+    (evento: LayoutChangeEvent) => {
+      const { width, height } = evento.nativeEvent.layout;
+
+      if (width <= 0 || height <= 0) {
+        return;
+      }
+
+      const anterior = areaRef.current;
+      if (Math.abs(anterior.largura - width) < 1 && Math.abs(anterior.altura - height) < 1) {
+        return;
+      }
+
+      deslocX.value += (width - anterior.largura) / 2;
+      deslocY.value += (height - anterior.altura) / 2;
+
+      areaRef.current = { largura: width, altura: height };
+      setArea(areaRef.current);
+    },
+    [deslocX, deslocY],
+  );
 
   // Incremental (soma o delta desde o ultimo frame, em vez de recalcular a
   // partir do inicio do gesto) — assim compõe corretamente com o pinça
@@ -247,7 +357,7 @@ const MapaMental: React.FC<Props> = ({ registros, aoSelecionar, aoCriar }) => {
   }
 
   return (
-    <View style={estilos.container}>
+    <View style={estilos.container} onLayout={aoMedirArea}>
       <GestureDetector gesture={gestoCamera}>
         <View style={estilos.areaGesto} collapsable={false}>
           <Animated.View style={[estilos.camera, estiloCamera]}>
@@ -265,12 +375,15 @@ const MapaMental: React.FC<Props> = ({ registros, aoSelecionar, aoCriar }) => {
                 tema={tema}
                 no={no}
                 posicaoInicial={posicaoDe(no)}
+                apagado={idsEncontrados !== null && !idsEncontrados.has(no.id)}
                 aoSoltar={registrarPosicao}
                 aoTocar={() => {
                   if (no.tipo === 'setor') {
                     alternarSetor(no.rotulo);
                   } else if (no.tipo === 'competencia' && no.registro) {
                     aoSelecionar?.(no.registro);
+                  } else if (no.tipo === 'anotacao' && no.anotacao) {
+                    aoAbrirAnotacao(no.anotacao);
                   }
                 }}
               />
@@ -281,13 +394,28 @@ const MapaMental: React.FC<Props> = ({ registros, aoSelecionar, aoCriar }) => {
 
       <View style={estilos.dica} pointerEvents="none">
         <Text style={estilos.textoDica}>
-          Toque num setor para abrir · arraste os nós · pinça ou +/− para zoom
+          {eCampoLivre
+            ? 'Toque num item para editar · arraste os nós · pinça para zoom'
+            : 'Toque num setor para abrir · arraste os nós · pinça ou +/− para zoom'}
         </Text>
       </View>
 
+      {/* Enquanto a lupa está aberta ela fica com a linha só para si: no celular
+          estreito os três controles juntos não cabem lado a lado. */}
       <View style={estilos.barraSuperior} pointerEvents="box-none">
-        <ControleTexto tema={tema} rotulo="Ajustar à tela" aoTocar={ajustarATela} />
-        <ControleTexto tema={tema} rotulo="Centralizar" aoTocar={centralizarMapa} />
+        {buscaAberta ? null : (
+          <>
+            <ControleTexto tema={tema} rotulo="Ajustar à tela" aoTocar={ajustarATela} />
+            <ControleTexto tema={tema} rotulo="Centralizar" aoTocar={centralizarMapa} />
+          </>
+        )}
+        <BuscaLupa
+          valor={termoBusca}
+          aoAlterar={setTermoBusca}
+          aoMudarAbertura={setBuscaAberta}
+          larguraMaxima={larguraTela - 64}
+          placeholder={eCampoLivre ? `Buscar em ${campo.nome}...` : 'Buscar no mapa...'}
+        />
       </View>
 
       <View style={estilos.pilhaZoom} pointerEvents="box-none">
@@ -307,13 +435,15 @@ const MapaMental: React.FC<Props> = ({ registros, aoSelecionar, aoCriar }) => {
       </View>
 
       <Pressable
-        onPress={criarNoContexto}
+        onPress={eCampoLivre ? aoCriarAnotacao : criarNoContexto}
         style={estilos.fab}
         accessibilityRole="button"
         accessibilityLabel={
-          expandidos.size > 0
-            ? 'Adicionar competência a este setor'
-            : 'Adicionar nova secretaria ou setor'
+          eCampoLivre
+            ? `Adicionar item em ${campo.nome}`
+            : expandidos.size > 0
+              ? 'Adicionar competência a este setor'
+              : 'Adicionar nova secretaria ou setor'
         }>
         <Text style={estilos.textoFab}>+</Text>
       </Pressable>
@@ -481,11 +611,20 @@ type PropsNo = {
   tema: Tema;
   no: NoMapa;
   posicaoInicial: { x: number; y: number };
+  /** Fora do resultado da busca: continua no lugar, mas em segundo plano. */
+  apagado: boolean;
   aoSoltar: (id: string, x: number, y: number) => void;
   aoTocar: () => void;
 };
 
-const NoArrastavel: React.FC<PropsNo> = ({ tema, no, posicaoInicial, aoSoltar, aoTocar }) => {
+const NoArrastavel: React.FC<PropsNo> = ({
+  tema,
+  no,
+  posicaoInicial,
+  apagado,
+  aoSoltar,
+  aoTocar,
+}) => {
   const estilos = criarEstilos(tema);
   const x = useSharedValue(posicaoInicial.x);
   const y = useSharedValue(posicaoInicial.y);
@@ -522,7 +661,9 @@ const NoArrastavel: React.FC<PropsNo> = ({ tema, no, posicaoInicial, aoSoltar, a
     runOnJS(aoTocar)();
   });
 
-  // O toque so dispara se nao virou arrasto.
+  // O toque so dispara se nao virou arrasto. Segurar um no nao faz nada de
+  // proposito: o menu de campos mora no "segurar" da barra de abas, e aqui o
+  // gesto longo competiria com o arrasto do no.
   const gesto = Gesture.Exclusive(gestoArrastar, gestoToque);
 
   const estilo = useAnimatedStyle(() => ({
@@ -532,6 +673,8 @@ const NoArrastavel: React.FC<PropsNo> = ({ tema, no, posicaoInicial, aoSoltar, a
       { scale: withSpring(arrastando.value ? 1.06 : 1, { damping: 20 }) },
     ],
   }));
+
+  const estiloPorTipoDeBusca = apagado ? estilos.noApagado : null;
 
   const estiloPorTipo =
     no.tipo === 'raiz'
@@ -546,6 +689,7 @@ const NoArrastavel: React.FC<PropsNo> = ({ tema, no, posicaoInicial, aoSoltar, a
         style={[
           estilos.no,
           estiloPorTipo,
+          estiloPorTipoDeBusca,
           { width: no.largura, minHeight: no.altura, borderColor: `${no.cor}88` },
           estilo,
         ]}>
@@ -601,6 +745,9 @@ const criarEstilos = (tema: Tema) =>
     },
     noCompetencia: {
       backgroundColor: tema.superficie,
+    },
+    noApagado: {
+      opacity: 0.22,
     },
     rotuloNo: {
       color: tema.texto,

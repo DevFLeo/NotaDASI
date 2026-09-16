@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NotaDASI — PC</title>
+    <style>
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      /*
+        A raiz do App é um SafeAreaView com `flex: 1` (ver App.tsx). No React
+        Native isso ocupa a tela inteira porque a raiz nativa TEM altura. Na
+        web, #root é um bloco comum: o `flex: 1` do filho não encontra altura
+        definida para resolver e o container estica até a altura do conteúdo.
+
+        O sintoma é silencioso e enganoso — a lista aparece normalmente, mas
+        tudo que é `position: absolute` ancorado nela vai junto: o botão "+"
+        de adicionar competência ia parar a ~6300px do topo, fora da janela,
+        impossível de clicar.
+
+        Declarar #root como container flex dá ao filho a altura da janela para
+        resolver o `flex: 1`, e o "+" volta a ficar fixo sobre a lista.
+      */
+      #root {
+        display: flex;
+        flex-direction: column;
+      }
+
+      body {
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>
