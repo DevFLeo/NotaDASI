@@ -1,4 +1,9 @@
+<<<<<<< Updated upstream
 {
     "cmake.sourceDirectory": "C:/Users/03407711271/RepositorioLeo/NotaDASI/cpp",
     "java.compile.nullAnalysis.mode": "automatic"
+=======
+{
+    "cmake.sourceDirectory": "C:/Projetos/NotaDASI/cpp"
+>>>>>>> Stashed changes
 }
