@@ -82,6 +82,12 @@ android/app/src/main/res/raw/keep.xml
 !.yarn/sdks
 !.yarn/versions
 
+<<<<<<< Updated upstream
 # Build do alvo PC (pc/) e cache do Vite
 pc/dist/
 node_modules/.vite/
+=======
+# Versao web (Vite)
+web/dist/
+web/node_modules/
+>>>>>>> Stashed changes

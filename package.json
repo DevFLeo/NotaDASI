@@ -11,7 +11,10 @@
     "importar-xlsx": "python scripts/importacao_de_xlsx.py",
     "dev": "vite --config pc/vite.config.mts",
     "dev:build": "vite build --config pc/vite.config.mts",
-    "dev:preview": "vite preview --config pc/vite.config.mts"
+    "dev:preview": "vite preview --config pc/vite.config.mts",
+    "dev:web": "node scripts/dev-web.mjs",
+    "web:build": "npm --prefix web run build",
+    "web:preview": "npm --prefix web run preview"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.1.1",

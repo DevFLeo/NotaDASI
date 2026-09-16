@@ -44,11 +44,14 @@ os detalhes, inclusive o que **não** é compartilhado entre os dois.
 
 Aplicativo para consulta do **levantamento de competências e adesão ao SIG** (Prefeitura de Porto Velho). Cada registro é uma competência de um setor, com as respostas sobre como o SIG atende (ou não) aquela atividade.
 
-O app combina três camadas de tecnologia:
+O projeto combina quatro camadas de tecnologia:
 
-- **React Native (TypeScript)** — interface, lista de competências, mapa mental interativo e animações (`react-native-reanimated`).
+- **React Native (TypeScript)** — app Android: lista de competências, mapa mental interativo e animações (`react-native-reanimated`).
+- **React + Vite (TypeScript)** — versão web (`npm run dev`), com o **mapa mental melhorado** e o **acervo de documentos** por divisão/pessoa. Lê exatamente os mesmos dados do app.
 - **C++ (NDK/CMake)** — busca de texto normalizada (sem acento, case-insensitive), exposta ao JavaScript via módulo nativo (JNI).
 - **XML nativo (Android)** — layout de cabeçalho de referência para componentes nativos customizados.
+
+> **Só quer ver rodando?** `npm run dev` sobe a versão web em `http://localhost:5173` — não precisa de Android SDK, NDK nem emulador.
 
 ---
 
@@ -75,6 +78,7 @@ flowchart TD
 
         subgraph Dados["Dados e lógica"]
             Registros["data/registros.ts<br/><i>tipos + regras</i>"]
+            Documentos["data/documentos.ts<br/><i>documento → divisão/pessoa</i>"]
             Fonte["data/fonte.ts<br/><i>escolhe a origem</i>"]
             Gerado["data/registros.gerado.ts<br/><i>saída da planilha</i>"]
             Layout["mapa/layout.ts<br/><i>posições radiais</i>"]
@@ -82,6 +86,13 @@ flowchart TD
         end
 
         Ponte["native/NotaBuscaRapida.ts<br/><i>ponte + fallback JS</i>"]
+    end
+
+    subgraph Web["🟨 Versão web (React + Vite)"]
+        WebApp["web/src/App.tsx<br/><i>busca, filtros, foco</i>"]
+        WebMapa["web/src/mapa/MapaMental.tsx<br/><i>pan, zoom, arrastar, recolher</i>"]
+        WebLayout["web/src/mapa/layout.ts<br/><i>4 níveis + nós de documento</i>"]
+        WebDocs["web/src/documentos/<br/><i>painel + localStorage</i>"]
     end
 
     subgraph Nativo["🟩 Camada Nativa Android"]
@@ -103,6 +114,11 @@ flowchart TD
     Ponte -->|"NativeModules"| Modulo
     Modulo -->|"external fun"| JNI
     JNI --> Cpp
+
+    WebApp --> WebMapa & WebDocs
+    WebMapa --> WebLayout
+    WebLayout --> Registros & Documentos
+    WebDocs --> Documentos
 
     Fallback["fallback em JS puro<br/><i>se o .so não carregar</i>"]
     Ponte -.-> Fallback
@@ -163,6 +179,9 @@ classDiagram
         raiz
         setor
         competencia
+        divisao_web
+        pessoa_web
+        documento_web
     }
 
     class LigacaoMapa {
@@ -171,12 +190,48 @@ classDiagram
         +string destinoId
     }
 
+    class Documento {
+        +string id
+        +string titulo
+        +TipoDocumento tipo
+        +TipoAlvo alvoTipo
+        +string alvoId
+        +string alvoRotulo
+        +string descricao
+        +string url
+        +string arquivoNome
+        +string arquivoDados
+        +string criadoEm
+    }
+
+    class TipoAlvo {
+        <<enumeration>>
+        departamento
+        divisao
+        pessoa
+    }
+
+    class TipoDocumento {
+        <<enumeration>>
+        oficio
+        portaria
+        ata
+        manual
+        planilha
+        mapa
+        outro
+    }
+
     Registro "1" --> "0..1" Contato : contatoInstitucional
     Registro "1" --> "0..1" Contato : contatoPessoal
     Registro ..> SituacaoAdesao : calcularSituacao()
     NoMapa "0..1" --> "1" Registro : registro
+    NoMapa "0..1" --> "1" Documento : documento
     NoMapa ..> TipoNo
     LigacaoMapa "*" --> "2" NoMapa : liga
+    Documento ..> TipoAlvo
+    Documento ..> TipoDocumento
+    Documento "*" ..> "1" Registro : alvo vem de setorSigla ou responsavel
 ```
 
 > Os campos `boolean` de `Registro` são **opcionais** no TypeScript: `undefined` significa *"não respondido"* (o `-` da planilha), que é diferente de `false`. Toda a UI trata os três estados — `Sim` / `Não` / `—`.
@@ -237,6 +292,7 @@ src/
     ContatoProtegido.tsx           Contato pessoal mascarado (toque para revelar)
   data/
     registros.ts                   Tipos (Registro, Contato), regras e dados de exemplo
+    documentos.ts                  Documento alocado a departamento/divisão/pessoa (compartilhado app+web)
     fonte.ts                       Decide entre dados da planilha e dados de exemplo
     registros.gerado.ts            Gerado pelo script de importação (não editar à mão)
   mapa/
@@ -263,15 +319,32 @@ android/
     layout/nota_header.xml         Referência de cabeçalho nativo
     drawable/fundo_header.xml      Fundo do cabeçalho
 
+<<<<<<< Updated upstream
 pc/                                Alvo navegador — ver pc/README.md
   main.tsx                         Entrada: provedores + login + RaizPC
   RaizPC.tsx                       Escolhe a casca conforme a largura da janela
   CascaPC.tsx                      Barra lateral, mapa em foco, painel 35/65
   vite.config.mts                  Resolução por plataforma, worklets, aliases
   shims/                           O que o react-native-web não tem
+=======
+web/                               Versão web (React + Vite) — npm run dev
+  index.html                       Casca da página
+  vite.config.ts                   Porta 5173 + permissão para ler ../src/data
+  src/
+    main.tsx                       Monta o React na página
+    App.tsx                        Barra (busca, filtros, interruptores), mapa, painel e rodapé
+    estilos.css                    Tema escuro espelhando o app mobile
+    dados/fonte.ts                 Mesma decisão planilha/exemplo, com import ESM
+    mapa/layout.ts                 4 níveis + nós de documento + layout radial proporcional
+    mapa/MapaMental.tsx            Pan, zoom no cursor, arrastar, recolher, foco
+    documentos/armazenamento.ts    localStorage, leitura de arquivo, exportar/importar JSON
+    documentos/PainelDocumentos.tsx  Formulário e lista do acervo
+    componentes/DetalheRegistro.tsx  Modal da competência + documentos do dono
+>>>>>>> Stashed changes
 
 scripts/
   importacao_de_xlsx.py            Converte a planilha do levantamento em TypeScript
+  dev-web.mjs                      `npm run dev`: instala (1ª vez) e sobe o Vite
 ```
 
 ---
@@ -381,18 +454,83 @@ continua no centro.
 
 ---
 
+## Versão web — mapa mental melhorado + documentos
+
+```bash
+npm run dev        # instala o que falta na primeira vez e abre http://localhost:5173
+```
+
+Não precisa de Android SDK, NDK, emulador nem do `npm install` da raiz: o script `scripts/dev-web.mjs` cuida das dependências da pasta `web/` sozinho.
+
+### A melhoria do mapa mental
+
+O mapa do app mobile tinha três limitações práticas: **a pessoa sumia** (só aparecia no detalhe), **os ramos se atropelavam** (cada setor recebia a mesma fatia de ângulo, independentemente de ter 2 ou 40 competências) e **não dava para focar** — com tudo aceso, o olho se perde. A versão web resolve as três e acrescenta o acervo de documentos:
+
+| Melhoria | Como funciona |
+|---|---|
+| **Quatro níveis** | **Departamento → Divisão → Pessoa → Competência**. A pessoa virou nó: dá para ver a carga de cada servidor e é o ponto natural para pendurar o documento dela. |
+| **Layout radial proporcional** | Cada ramo recebe uma fatia de ângulo **proporcional ao número de folhas** que carrega (`contarFolhas`), então uma divisão grande não esmaga a pequena. |
+| **Modo foco** | Clicar num nó acende ele, os ancestrais e toda a subárvore; o resto cai para 16% de opacidade. `Esc` (ou clicar de novo) desliga. |
+| **Busca com realce** | Digitar na barra contorna de azul os nós que casam e acende só os ramos deles — sem esconder o resto do mapa. |
+| **Filtro por situação** | Chips Aderido / Parcial / Pendente / Com problema remontam o mapa só com o que interessa ("o que falta?"). |
+| **Recolher ramo** | Cada divisão e cada pessoa tem o botão `▾`; recolhido, ele mostra `▸ N` com quantos filhos estão escondidos. |
+| **Enquadrar / zoom** | Botões `+`, `−` e `⤢` (enquadra tudo, calculando a caixa de todos os nós), zoom pela roda do mouse **ancorado no cursor**, de 20% a 240%. |
+| **Reposicionar** | Arrastar um nó salva a posição no `localStorage`; o botão *reposicionar* volta ao layout automático. |
+| **Ligações por camada** | Continuam (tracejado amarelo), agora com interruptor para desligar quando poluírem. |
+
+### Documento alocado a uma divisão ou a uma pessoa
+
+É a funcionalidade nova: um documento **não pertence a uma competência**, pertence a um **alvo** — o departamento, uma divisão ou uma pessoa. É o mesmo critério do mundo real (a portaria é da divisão; a ficha de treinamento é da pessoa).
+
+```mermaid
+flowchart LR
+    Doc["📎 Documento<br/><i>título, tipo, link ou arquivo</i>"]
+    Dep["Departamento<br/>DRCF"]
+    Div["Divisão<br/>DICI, DICTF…"]
+    Pes["Pessoa<br/>responsável"]
+
+    Doc -->|alvoTipo = departamento| Dep
+    Doc -->|alvoTipo = divisao| Div
+    Doc -->|alvoTipo = pessoa| Pes
+
+    Dep --> Div --> Pes --> Comp["Competências"]
+```
+
+Como usar:
+
+1. **Pelo mapa** — o botão `+ 📎` em qualquer nó de departamento, divisão ou pessoa abre o painel **já com o alvo preenchido**.
+2. **Pelo painel** — botão *📎 Documentos* na barra: título, tipo (ofício, portaria, ata, manual, planilha, mapa, outro), alvo, link externo e/ou arquivo de até 2 MB, mais uma observação.
+3. **Pelo detalhe da competência** — atalhos "+ para *fulano*" e "+ para *DICI*".
+
+Cada nó com documento ganha o selo `📎 N`, e os documentos aparecem como nós amarelos ligados por linha pontilhada ao dono (pode desligar no interruptor *documentos no mapa*).
+
+> **Onde os dados ficam:** `localStorage` do navegador (chaves `@notadasi:web:documentos` e `@notadasi:web:posicoes`). Não há servidor. Para levar o acervo para outra máquina, use `⤓` (exporta JSON) e `⤒` (importa) no painel. Arquivos anexados viram base64 — por isso o limite de 2 MB; documentos grandes devem entrar como **link** (Drive, SEI, intranet).
+
+O modelo (`src/data/documentos.ts`) é TypeScript puro, sem React Native e sem DOM: o app mobile pode adotá-lo trocando só o armazenamento (`AsyncStorage` no lugar do `localStorage`).
+
+### Scripts
+
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Sobe a versão web em modo desenvolvimento (instala as dependências de `web/` na primeira vez). |
+| `npm run web:build` | `tsc --noEmit` + build de produção em `web/dist/`. |
+| `npm run web:preview` | Serve o `web/dist/` já construído. |
+
+---
+
 ## Pré-requisitos
 
-- Node.js 22.11+
-- JDK 17
-- Android SDK com **NDK** e **CMake** (necessários para compilar `cpp/`)
-- Emulador Android ou aparelho físico conectado
+- Node.js 22.11+ — **é o único requisito da versão web** (`npm run dev`)
+- JDK 17 *(app Android)*
+- Android SDK com **NDK** e **CMake** — necessários para compilar `cpp/` *(app Android)*
+- Emulador Android ou aparelho físico conectado *(app Android)*
 
 ## Como rodar
 
 ```bash
 npm install
-npm run android
+npm run android     # app Android
+npm run dev         # versão web (não precisa de SDK/NDK/emulador)
 ```
 
 O Gradle compila a biblioteca nativa automaticamente — não há passo manual de compilação do C++.
