@@ -8,7 +8,8 @@ import {
   View,
   type ListRenderItemInfo,
 } from 'react-native';
-import Animated, { FadeInUp, LinearTransition } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { FadeInUp, LinearTransition, runOnJS, useSharedValue } from 'react-native-reanimated';
 import BarraBusca from './BarraBusca';
 import ContatoProtegido from './ContatoProtegido';
 import NotaBuscaRapida from '../native/NotaBuscaRapida';
@@ -19,8 +20,9 @@ import {
   textoPesquisavel,
   type Registro,
 } from '../data/registros';
-import { criarEstilos } from '../tema/estilos';
-import { useEstilos, useMetricas, useTema } from '../tema/ThemeContext';
+import { criarEstilosEscalaveis } from '../tema/estilos';
+import { limitarEscalaTexto } from '../tema/responsivo';
+import { useEscalaTexto, useEstilos, useMetricas, useTema } from '../tema/ThemeContext';
 
 const registroCorresponde = async (registro: Registro, termoBusca: string): Promise<boolean> => {
   const ocorrencias = await NotaBuscaRapida.buscarOcorrencias(
@@ -189,6 +191,7 @@ const ListaRegistros: React.FC<Props> = ({
 }) => {
   const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosLista);
+  const [escalaTexto, definirEscalaTexto] = useEscalaTexto();
 
   const [termoBusca, setTermoBusca] = useState('');
   const [setorFiltro, setSetorFiltro] = useState<string | null>(null);
@@ -278,6 +281,32 @@ const ListaRegistros: React.FC<Props> = ({
     [abrir, aoAlternarFavorito],
   );
 
+  // ---- Pinça para o tamanho do texto --------------------------------------
+  // Dois dedos sobre a lista aumentam/diminuem o texto dos cartões. A escala
+  // mora no ThemeContext (fica salva no aparelho e também aparece em Ajustes →
+  // Aparência), mas o gesto roda na UI thread: o valor só atravessa para o JS
+  // quando muda de degrau, senão a lista re-renderizaria a cada frame.
+  const escalaAoIniciar = useSharedValue(escalaTexto);
+  const escalaAplicada = useSharedValue(escalaTexto);
+
+  const gestoPinca = Gesture.Pinch()
+    .onBegin(() => {
+      escalaAoIniciar.value = escalaAplicada.value;
+    })
+    .onChange((evento) => {
+      const proxima = limitarEscalaTexto(escalaAoIniciar.value * evento.scale);
+      if (proxima !== escalaAplicada.value) {
+        escalaAplicada.value = proxima;
+        runOnJS(definirEscalaTexto)(proxima);
+      }
+    });
+
+  // Mantém o gesto em dia quando a escala muda por fora (chips de Ajustes, ou
+  // o valor salvo chegando do AsyncStorage depois do primeiro render).
+  useEffect(() => {
+    escalaAplicada.value = escalaTexto;
+  }, [escalaTexto, escalaAplicada]);
+
   const departamento = registros[0]?.departamentoSigla ?? '';
 
   const cabecalho = (
@@ -359,26 +388,28 @@ const ListaRegistros: React.FC<Props> = ({
 
   return (
     <View style={estilos.container}>
-      <FlatList
-        // A FlatList não aceita mudar numColumns em tempo de execução; trocar a
-        // key força a remontagem quando o aparelho gira ou muda de janela.
-        key={`colunas-${metricas.colunas}`}
-        data={visiveis}
-        keyExtractor={(registro) => registro.id}
-        renderItem={renderizar}
-        numColumns={metricas.colunas}
-        columnWrapperStyle={metricas.colunas > 1 ? estilos.linhaGrade : undefined}
-        ListHeaderComponent={cabecalho}
-        ListEmptyComponent={vazio}
-        contentContainerStyle={estilos.conteudoLista}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        initialNumToRender={6}
-        maxToRenderPerBatch={8}
-        windowSize={9}
-        removeClippedSubviews={Platform.OS === 'android'}
-      />
+      <GestureDetector gesture={gestoPinca}>
+        <FlatList
+          // A FlatList não aceita mudar numColumns em tempo de execução; trocar a
+          // key força a remontagem quando o aparelho gira ou muda de janela.
+          key={`colunas-${metricas.colunas}`}
+          data={visiveis}
+          keyExtractor={(registro) => registro.id}
+          renderItem={renderizar}
+          numColumns={metricas.colunas}
+          columnWrapperStyle={metricas.colunas > 1 ? estilos.linhaGrade : undefined}
+          ListHeaderComponent={cabecalho}
+          ListEmptyComponent={vazio}
+          contentContainerStyle={estilos.conteudoLista}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          initialNumToRender={6}
+          maxToRenderPerBatch={8}
+          windowSize={9}
+          removeClippedSubviews={Platform.OS === 'android'}
+        />
+      </GestureDetector>
 
       <Pressable
         onPress={aoCriar}
@@ -391,7 +422,7 @@ const ListaRegistros: React.FC<Props> = ({
   );
 };
 
-const criarEstilosLista = criarEstilos((tema, m) => ({
+const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
   container: { flex: 1, backgroundColor: tema.fundo },
   cabecalho: { paddingTop: 12 },
   titulo: {

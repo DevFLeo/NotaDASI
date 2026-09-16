@@ -1,5 +1,7 @@
 {
   "extends": "@react-native/typescript-config",
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["**/node_modules", "**/Pods"]
+  // pc/ é o alvo navegador: precisa das libs DOM e dos tipos do Node, que a
+  // config do React Native não traz. Ele tem seu próprio tsconfig (pc/tsconfig.json).
+  "exclude": ["**/node_modules", "**/Pods", "pc"]
 }
