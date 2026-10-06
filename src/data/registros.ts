@@ -18,6 +18,10 @@ export type Contato = {
 export type Registro = {
   id: string;
 
+  // Secretaria = aba da planilha (SEMUR, SEMFAZ, ...). Opcional porque
+  // registros criados no aparelho antes da v0.3 não tinham este campo.
+  secretaria?: string;
+
   // Lotação
   departamento: string;
   departamentoSigla: string;
@@ -65,6 +69,7 @@ export type NovoRegistro = Omit<Registro, 'id' | 'favorito'>;
 
 /** Registro em branco para abrir o formulario de criacao. */
 export const registroEmBranco = (base?: Partial<NovoRegistro>): NovoRegistro => ({
+  secretaria: base?.secretaria ?? '',
   departamento: base?.departamento ?? '',
   departamentoSigla: base?.departamentoSigla ?? '',
   departamentoResponsavel: base?.departamentoResponsavel ?? '',
@@ -94,13 +99,14 @@ export const registroEmBranco = (base?: Partial<NovoRegistro>): NovoRegistro => 
 });
 
 /** Situação derivada das respostas — usada para colorir o cartão. */
-export type SituacaoAdesao = 'aderido' | 'parcial' | 'pendente' | 'problema';
+export type SituacaoAdesao = 'aderido' | 'parcial' | 'pendente' | 'problema' | 'semResposta';
 
 export const rotuloSituacao: Record<SituacaoAdesao, string> = {
   aderido: 'Aderido',
   parcial: 'Parcial',
   pendente: 'Pendente',
   problema: 'Com problema',
+  semResposta: 'Sem resposta',
 };
 
 export const corPorSituacao: Record<SituacaoAdesao, string> = {
@@ -108,12 +114,14 @@ export const corPorSituacao: Record<SituacaoAdesao, string> = {
   parcial: '#FCD34D',
   pendente: '#FCA5A5',
   problema: '#F9A8D4',
+  semResposta: '#CBD5E1',
 };
 
 /**
  * Resume a linha em um status único:
  * - problema : há problema relatado no SIG
  * - pendente : o sistema não atende a competência
+ * - semResposta : a planilha não respondeu se o sistema atende
  * - aderido  : atende E já iniciou a atividade no sistema
  * - parcial  : atende, mas ainda não começou a usar
  */
@@ -124,15 +132,29 @@ export const calcularSituacao = (registro: Registro): SituacaoAdesao => {
   if (registro.sistemaAtende === false) {
     return 'pendente';
   }
+  if (typeof registro.sistemaAtende !== 'boolean') {
+    return 'semResposta';
+  }
   if (registro.sistemaAtende === true && registro.iniciouAtividade === true) {
     return 'aderido';
   }
   return 'parcial';
 };
 
-/** Texto varrido pela busca: setor, responsável, cargo, competência e módulo. */
+/** Rótulo curto do setor: a sigla, ou o nome quando a planilha não traz sigla. */
+export const rotuloSetor = (registro: Registro): string => registro.setorSigla || registro.setor;
+
+/**
+ * Identifica o setor DENTRO da secretaria. Só a sigla não basta: com várias
+ * secretarias, duas podem ter um "Divisão de Fiscalização" ou um "DIFT".
+ */
+export const chaveSetor = (registro: Registro): string =>
+  `${registro.secretaria ?? ''}|${rotuloSetor(registro)}`;
+
+/** Texto varrido pela busca: secretaria, setor, responsável, competência e módulo. */
 export const textoPesquisavel = (registro: Registro): string =>
   [
+    registro.secretaria ?? '',
     registro.responsavel,
     registro.cargo,
     registro.setor,

@@ -4,9 +4,15 @@ import {
   type Anotacao,
   type Campo,
 } from '../data/campos';
-import { calcularSituacao, corPorSituacao, type Registro } from '../data/registros';
+import {
+  calcularSituacao,
+  chaveSetor,
+  corPorSituacao,
+  rotuloSetor,
+  type Registro,
+} from '../data/registros';
 
-export type TipoNo = 'raiz' | 'setor' | 'competencia' | 'anotacao';
+export type TipoNo = 'raiz' | 'secretaria' | 'setor' | 'competencia' | 'anotacao';
 
 export type NoMapa = {
   id: string;
@@ -14,6 +20,8 @@ export type NoMapa = {
   rotulo: string;
   subtitulo?: string;
   paiId?: string;
+  /** Secretaria/setor: a chave que abre e fecha o nó (ver montarMapa). */
+  chave?: string;
   x: number;
   y: number;
   largura: number;
@@ -39,28 +47,134 @@ export const ALTURA_COMPETENCIA = 88;
 
 const PALETA = ['#7DD3FC', '#C4B5FD', '#6EE7B7', '#FCD34D', '#FCA5A5', '#F9A8D4', '#A5B4FC'];
 
+/** "3 competências · 2 pendentes" — resumo de um grupo de registros. */
+const resumoDoGrupo = (grupo: Registro[]): string => {
+  const pendentes = grupo.filter((r) => calcularSituacao(r) !== 'aderido').length;
+  return `${grupo.length} competência${grupo.length === 1 ? '' : 's'}${
+    pendentes ? ` · ${pendentes} pendente${pendentes === 1 ? '' : 's'}` : ''
+  }`;
+};
+
 /**
- * Monta o mapa mental em tres niveis:
+ * Espalha `quantidade` filhos num leque voltado para FORA do pai (na direção
+ * `angulo`), com raio que cresce junto com o leque para os nós não se
+ * encavalarem.
+ */
+const posicoesEmLeque = (
+  pai: { x: number; y: number },
+  angulo: number,
+  quantidade: number,
+  raioMinimo: number,
+  espacoPorNo: number,
+): { x: number; y: number; angulo: number }[] => {
+  const abertura = Math.min(Math.PI * 1.2, Math.max(Math.PI * 0.5, quantidade * 0.18));
+  const raio = Math.max(raioMinimo, (quantidade * espacoPorNo) / abertura);
+
+  return Array.from({ length: quantidade }, (_, posicao) => {
+    const fracao = quantidade === 1 ? 0.5 : posicao / (quantidade - 1);
+    const anguloItem = angulo - abertura / 2 + fracao * abertura;
+    return {
+      x: pai.x + Math.cos(anguloItem) * raio,
+      y: pai.y + Math.sin(anguloItem) * raio,
+      angulo: anguloItem,
+    };
+  });
+};
+
+/** Agrupa preservando a ordem da planilha (os setores aparecem como no Excel). */
+const agrupar = (lista: Registro[], chave: (r: Registro) => string): Registro[][] => {
+  const grupos = new Map<string, Registro[]>();
+  lista.forEach((registro) => {
+    const k = chave(registro);
+    grupos.set(k, [...(grupos.get(k) ?? []), registro]);
+  });
+  return [...grupos.values()];
+};
+
+/**
+ * Monta o mapa mental:
  *
- *   Departamento (raiz) → Setores → Competencias
+ *   Porto Velho (raiz) → Secretarias → Setores → Competências
  *
- * O layout e radial e serve apenas como POSICAO INICIAL: o usuario pode
- * arrastar cada no e a posicao dele passa a valer (ver posicoes.ts).
+ * Secretarias e setores abrem e fecham com um toque (as chaves abertas vêm em
+ * `expandidos`: "sec:SEMUR", "set:SEMUR|DICI"). Com uma secretaria só (dados
+ * de exemplo, ou registros antigos sem secretaria) o nível das secretarias é
+ * pulado e a raiz é o departamento, como era antes.
+ *
+ * O layout é radial e serve apenas como POSIÇÃO INICIAL: o usuário pode
+ * arrastar cada nó e a posição dele passa a valer (ver posicoes.ts).
  */
 export const montarMapa = (
   registros: Registro[],
-  setoresExpandidos: Set<string>,
+  expandidos: Set<string>,
 ): { nos: NoMapa[]; ligacoes: LigacaoMapa[] } => {
   const nos: NoMapa[] = [];
   const ligacoes: LigacaoMapa[] = [];
 
+  const ligar = (pai: NoMapa, filho: NoMapa) => {
+    nos.push(filho);
+    ligacoes.push({ id: `lig-${pai.id}-${filho.id}`, origemId: pai.id, destinoId: filho.id });
+  };
+
+  const colocarCompetencias = (noSetor: NoMapa, angulo: number, doSetor: Registro[]) => {
+    posicoesEmLeque(noSetor, angulo, doSetor.length, 300, ALTURA_COMPETENCIA + 24).forEach(
+      (posicao, indice) => {
+        const registro = doSetor[indice];
+        ligar(noSetor, {
+          id: `comp-${registro.id}`,
+          tipo: 'competencia',
+          rotulo: registro.competencia.slice(0, 60),
+          subtitulo: registro.moduloSig || registro.informacoesAcessadas || '',
+          paiId: noSetor.id,
+          x: posicao.x,
+          y: posicao.y,
+          largura: LARGURA_COMPETENCIA,
+          altura: ALTURA_COMPETENCIA,
+          registro,
+          cor: corPorSituacao[calcularSituacao(registro)],
+        });
+      },
+    );
+  };
+
+  const criarNoSetor = (
+    pai: NoMapa,
+    doSetor: Registro[],
+    posicao: { x: number; y: number; angulo: number },
+    cor: string,
+  ) => {
+    const chave = chaveSetor(doSetor[0]);
+    const noSetor: NoMapa = {
+      id: `setor-${chave}`,
+      tipo: 'setor',
+      chave: `set:${chave}`,
+      rotulo: rotuloSetor(doSetor[0]),
+      subtitulo: resumoDoGrupo(doSetor),
+      paiId: pai.id,
+      x: posicao.x,
+      y: posicao.y,
+      largura: LARGURA_SETOR,
+      altura: ALTURA_SETOR,
+      cor,
+    };
+    ligar(pai, noSetor);
+
+    if (expandidos.has(`set:${chave}`)) {
+      colocarCompetencias(noSetor, posicao.angulo, doSetor);
+    }
+  };
+
+  const porSecretaria = agrupar(registros, (r) => r.secretaria ?? '');
+  const comSecretaria = porSecretaria.length > 1;
   const departamento = registros[0];
 
   const raiz: NoMapa = {
     id: 'raiz',
     tipo: 'raiz',
-    rotulo: departamento?.departamentoSigla || 'Departamento',
-    subtitulo: departamento?.departamentoResponsavel || 'Porto Velho',
+    rotulo: comSecretaria ? 'Porto Velho' : departamento?.departamentoSigla || 'Departamento',
+    subtitulo: comSecretaria
+      ? `${porSecretaria.length} secretarias · ${registros.length} competências`
+      : departamento?.departamentoResponsavel || 'Porto Velho',
     x: 0,
     y: 0,
     largura: LARGURA_RAIZ,
@@ -69,67 +183,49 @@ export const montarMapa = (
   };
   nos.push(raiz);
 
-  const siglas = [...new Set(registros.map((r) => r.setorSigla || r.setor))].filter(Boolean).sort();
+  if (!comSecretaria) {
+    const setores = agrupar(registros, chaveSetor).filter((grupo) => rotuloSetor(grupo[0]));
+    const raio = Math.max(320, setores.length * 90);
+    setores.forEach((doSetor, indice) => {
+      const angulo = (indice / Math.max(setores.length, 1)) * Math.PI * 2 - Math.PI / 2;
+      const posicao = { x: Math.cos(angulo) * raio, y: Math.sin(angulo) * raio, angulo };
+      criarNoSetor(raiz, doSetor, posicao, PALETA[indice % PALETA.length]);
+    });
+    return { nos, ligacoes };
+  }
 
-  const raioSetores = Math.max(320, siglas.length * 90);
+  const raioSecretarias = Math.max(340, porSecretaria.length * 80);
 
-  siglas.forEach((sigla, indice) => {
-    const angulo = (indice / Math.max(siglas.length, 1)) * Math.PI * 2 - Math.PI / 2;
+  porSecretaria.forEach((daSecretaria, indice) => {
+    const nome = daSecretaria[0].secretaria || 'Sem secretaria';
+    const angulo = (indice / porSecretaria.length) * Math.PI * 2 - Math.PI / 2;
     const cor = PALETA[indice % PALETA.length];
+    const setores = agrupar(daSecretaria, chaveSetor).filter((grupo) => rotuloSetor(grupo[0]));
 
-    const doSetor = registros.filter((r) => (r.setorSigla || r.setor) === sigla);
-    const pendentes = doSetor.filter((r) => calcularSituacao(r) !== 'aderido').length;
-
-    const noSetor: NoMapa = {
-      id: `setor-${sigla}`,
-      tipo: 'setor',
-      rotulo: sigla,
-      subtitulo: `${doSetor.length} competência${doSetor.length === 1 ? '' : 's'}${
-        pendentes ? ` · ${pendentes} pendente${pendentes === 1 ? '' : 's'}` : ''
-      }`,
+    const noSecretaria: NoMapa = {
+      id: `sec-${nome}`,
+      tipo: 'secretaria',
+      chave: `sec:${nome}`,
+      rotulo: nome,
+      subtitulo: `${setores.length} setor${setores.length === 1 ? '' : 'es'} · ${resumoDoGrupo(
+        daSecretaria,
+      )}`,
       paiId: raiz.id,
-      x: Math.cos(angulo) * raioSetores,
-      y: Math.sin(angulo) * raioSetores,
+      x: Math.cos(angulo) * raioSecretarias,
+      y: Math.sin(angulo) * raioSecretarias,
       largura: LARGURA_SETOR,
       altura: ALTURA_SETOR,
       cor,
     };
+    ligar(raiz, noSecretaria);
 
-    nos.push(noSetor);
-    ligacoes.push({ id: `lig-${raiz.id}-${noSetor.id}`, origemId: raiz.id, destinoId: noSetor.id });
-
-    if (!setoresExpandidos.has(sigla)) {
+    if (!expandidos.has(`sec:${nome}`)) {
       return;
     }
 
-    const raioCompetencias = 300;
-    const abertura = Math.PI * 0.8;
-
-    doSetor.forEach((registro, posicao) => {
-      const fracao = doSetor.length === 1 ? 0.5 : posicao / (doSetor.length - 1);
-      const anguloItem = angulo - abertura / 2 + fracao * abertura;
-
-      const noCompetencia: NoMapa = {
-        id: `comp-${registro.id}`,
-        tipo: 'competencia',
-        rotulo: registro.competencia.slice(0, 60),
-        subtitulo: registro.moduloSig || registro.informacoesAcessadas || '',
-        paiId: noSetor.id,
-        x: noSetor.x + Math.cos(anguloItem) * raioCompetencias,
-        y: noSetor.y + Math.sin(anguloItem) * raioCompetencias,
-        largura: LARGURA_COMPETENCIA,
-        altura: ALTURA_COMPETENCIA,
-        registro,
-        cor: corPorSituacao[calcularSituacao(registro)],
-      };
-
-      nos.push(noCompetencia);
-      ligacoes.push({
-        id: `lig-${noSetor.id}-${noCompetencia.id}`,
-        origemId: noSetor.id,
-        destinoId: noCompetencia.id,
-      });
-    });
+    posicoesEmLeque(noSecretaria, angulo, setores.length, 340, ALTURA_SETOR + 28).forEach(
+      (posicao, posicaoSetor) => criarNoSetor(noSecretaria, setores[posicaoSetor], posicao, cor),
+    );
   });
 
   return { nos, ligacoes };
@@ -220,8 +316,8 @@ export const ligacoesPorCamada = (nos: NoMapa[]): LigacaoMapa[] => {
     for (let i = 0; i < grupo.length - 1; i += 1) {
       const origem = grupo[i];
       const destino = grupo[i + 1];
-      const setorOrigem = origem.registro?.setorSigla ?? '';
-      const setorDestino = destino.registro?.setorSigla ?? '';
+      const setorOrigem = origem.registro ? chaveSetor(origem.registro) : '';
+      const setorDestino = destino.registro ? chaveSetor(destino.registro) : '';
 
       if (setorOrigem !== setorDestino) {
         ligacoes.push({

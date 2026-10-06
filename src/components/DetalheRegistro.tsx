@@ -86,6 +86,7 @@ const DetalheRegistro: React.FC<Props> = ({
                 no ponto certo. */}
             <View style={estilos.grade}>
               <Secao titulo="Lotação" />
+              {registro.secretaria ? <Campo rotulo="Secretaria" valor={registro.secretaria} /> : null}
               <Campo rotulo="Departamento" valor={rotularUnidade(registro.departamentoSigla, registro.departamento)} />
               <Campo
                 rotulo="Direção"

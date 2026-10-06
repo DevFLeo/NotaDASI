@@ -16,6 +16,7 @@ import NotaBuscaRapida from '../native/NotaBuscaRapida';
 import {
   calcularSituacao,
   corPorSituacao,
+  rotuloSetor,
   rotuloSituacao,
   textoPesquisavel,
   type Registro,
@@ -58,6 +59,31 @@ const Indicador: React.FC<{ rotulo: string; valor?: boolean }> = ({ rotulo, valo
         {texto}
       </Text>
     </View>
+  );
+};
+
+/** Um chip da faixa de filtros (secretaria, setor, favoritos). */
+const ChipFiltro: React.FC<{ rotulo: string; ativo: boolean; aoTocar: () => void }> = ({
+  rotulo,
+  ativo,
+  aoTocar,
+}) => {
+  const metricas = useMetricas();
+  const estilos = useEstilos(criarEstilosLista);
+
+  return (
+    <Pressable
+      onPress={aoTocar}
+      accessibilityRole="button"
+      accessibilityState={{ selected: ativo }}
+      style={[estilos.chip, ativo && estilos.chipAtivo]}>
+      <Text
+        style={[estilos.textoChip, ativo && estilos.textoChipAtivo]}
+        numberOfLines={1}
+        maxFontSizeMultiplier={metricas.fonteMaxDensa}>
+        {rotulo}
+      </Text>
+    </Pressable>
   );
 };
 
@@ -110,7 +136,9 @@ const CartaoRegistroBase: React.FC<PropsCartao> = ({
                 style={estilos.textoSeloSetor}
                 numberOfLines={1}
                 maxFontSizeMultiplier={metricas.fonteMaxDensa}>
-                {registro.setorSigla || registro.setor}
+                {registro.secretaria
+                  ? `${registro.secretaria} · ${rotuloSetor(registro)}`
+                  : rotuloSetor(registro)}
               </Text>
             </View>
 
@@ -194,14 +222,38 @@ const ListaRegistros: React.FC<Props> = ({
   const [escalaTexto, definirEscalaTexto] = useEscalaTexto();
 
   const [termoBusca, setTermoBusca] = useState('');
+  const [secretariaFiltro, setSecretariaFiltro] = useState<string | null>(null);
   const [setorFiltro, setSetorFiltro] = useState<string | null>(null);
   const [somenteFavoritos, setSomenteFavoritos] = useState(false);
   const [idsCorrespondentes, setIdsCorrespondentes] = useState<string[] | null>(null);
 
-  const setores = useMemo(
-    () => [...new Set(registros.map((r) => r.setorSigla || r.setor))].filter(Boolean).sort(),
+  const secretarias = useMemo(
+    () => [...new Set(registros.map((r) => r.secretaria ?? ''))].filter(Boolean).sort(),
     [registros],
   );
+
+  // Com várias secretarias, a lista de setores só aparece depois de escolher
+  // uma: todos juntos seriam quase sessenta chips numa faixa só.
+  const variasSecretarias = secretarias.length > 1;
+
+  const daSecretaria = useCallback(
+    (registro: Registro) =>
+      secretariaFiltro === null || (registro.secretaria ?? '') === secretariaFiltro,
+    [secretariaFiltro],
+  );
+
+  const setores = useMemo(
+    () =>
+      variasSecretarias && secretariaFiltro === null
+        ? []
+        : [...new Set(registros.filter(daSecretaria).map(rotuloSetor))].filter(Boolean).sort(),
+    [registros, daSecretaria, variasSecretarias, secretariaFiltro],
+  );
+
+  const escolherSecretaria = useCallback((secretaria: string | null) => {
+    setSecretariaFiltro(secretaria);
+    setSetorFiltro(null);
+  }, []);
 
   // A busca é assíncrona (passa pelo módulo nativo). Sem este contador, uma
   // busca lenta que termina depois de uma mais recente sobrescreveria o
@@ -255,12 +307,12 @@ const ListaRegistros: React.FC<Props> = ({
     return registros.filter((registro) => {
       const passouBusca = conjunto === null || conjunto.has(registro.id);
       const passouFiltro =
-        setorFiltro === null || (registro.setorSigla || registro.setor) === setorFiltro;
+        daSecretaria(registro) && (setorFiltro === null || rotuloSetor(registro) === setorFiltro);
       const passouFavoritos = !somenteFavoritos || registro.favorito === true;
 
       return passouBusca && passouFiltro && passouFavoritos;
     });
-  }, [registros, idsCorrespondentes, setorFiltro, somenteFavoritos]);
+  }, [registros, idsCorrespondentes, daSecretaria, setorFiltro, somenteFavoritos]);
 
   const abrir = useCallback(
     (registro: Registro) => {
@@ -308,12 +360,13 @@ const ListaRegistros: React.FC<Props> = ({
   }, [escalaTexto, escalaAplicada]);
 
   const departamento = registros[0]?.departamentoSigla ?? '';
+  const contexto = secretariaFiltro ?? (variasSecretarias ? 'Todas as secretarias' : departamento);
 
   const cabecalho = (
     <Animated.View entering={FadeInUp.duration(400)} style={estilos.cabecalho}>
       <Text style={estilos.titulo}>Levantamento SIG</Text>
       <Text style={estilos.subtitulo}>
-        {departamento ? `${departamento} · ` : ''}
+        {contexto ? `${contexto} · ` : ''}
         {visiveis.length} de {registros.length} competências
         {origem === 'exemplo' ? ' · dados de exemplo' : ''}
       </Text>
@@ -330,48 +383,70 @@ const ListaRegistros: React.FC<Props> = ({
         keyboardShouldPersistTaps="handled"
         style={estilos.rolagemFiltros}
         contentContainerStyle={estilos.faixaFiltros}>
-        <Pressable
-          onPress={() => setSetorFiltro(null)}
-          accessibilityRole="button"
-          accessibilityState={{ selected: setorFiltro === null }}
-          style={[estilos.chip, setorFiltro === null && estilos.chipAtivo]}>
-          <Text
-            style={[estilos.textoChip, setorFiltro === null && estilos.textoChipAtivo]}
-            maxFontSizeMultiplier={metricas.fonteMaxDensa}>
-            Todos
-          </Text>
-        </Pressable>
+        {variasSecretarias ? (
+          <ChipFiltro
+            rotulo="Todas"
+            ativo={secretariaFiltro === null}
+            aoTocar={() => escolherSecretaria(null)}
+          />
+        ) : (
+          <ChipFiltro
+            rotulo="Todos"
+            ativo={setorFiltro === null}
+            aoTocar={() => setSetorFiltro(null)}
+          />
+        )}
 
-        <Pressable
-          onPress={() => setSomenteFavoritos((atual) => !atual)}
-          accessibilityRole="button"
-          accessibilityState={{ selected: somenteFavoritos }}
-          style={[estilos.chip, somenteFavoritos && estilos.chipAtivo]}>
-          <Text
-            style={[estilos.textoChip, somenteFavoritos && estilos.textoChipAtivo]}
-            maxFontSizeMultiplier={metricas.fonteMaxDensa}>
-            ★ Favoritos
-          </Text>
-        </Pressable>
+        <ChipFiltro
+          rotulo="★ Favoritos"
+          ativo={somenteFavoritos}
+          aoTocar={() => setSomenteFavoritos((atual) => !atual)}
+        />
 
-        {setores.map((sigla) => {
-          const ativo = setorFiltro === sigla;
-          return (
-            <Pressable
-              key={sigla}
-              onPress={() => setSetorFiltro(ativo ? null : sigla)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: ativo }}
-              style={[estilos.chip, ativo && estilos.chipAtivo]}>
-              <Text
-                style={[estilos.textoChip, ativo && estilos.textoChipAtivo]}
-                maxFontSizeMultiplier={metricas.fonteMaxDensa}>
-                {sigla}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {variasSecretarias
+          ? secretarias.map((secretaria) => (
+              <ChipFiltro
+                key={secretaria}
+                rotulo={secretaria}
+                ativo={secretariaFiltro === secretaria}
+                aoTocar={() =>
+                  escolherSecretaria(secretariaFiltro === secretaria ? null : secretaria)
+                }
+              />
+            ))
+          : setores.map((sigla) => (
+              <ChipFiltro
+                key={sigla}
+                rotulo={sigla}
+                ativo={setorFiltro === sigla}
+                aoTocar={() => setSetorFiltro(setorFiltro === sigla ? null : sigla)}
+              />
+            ))}
       </ScrollView>
+
+      {/* Segunda faixa: os setores da secretaria escolhida. */}
+      {variasSecretarias && setores.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          style={estilos.rolagemFiltros}
+          contentContainerStyle={estilos.faixaFiltros}>
+          <ChipFiltro
+            rotulo="Todos os setores"
+            ativo={setorFiltro === null}
+            aoTocar={() => setSetorFiltro(null)}
+          />
+          {setores.map((sigla) => (
+            <ChipFiltro
+              key={sigla}
+              rotulo={sigla}
+              ativo={setorFiltro === sigla}
+              aoTocar={() => setSetorFiltro(setorFiltro === sigla ? null : sigla)}
+            />
+          ))}
+        </ScrollView>
+      ) : null}
     </Animated.View>
   );
 

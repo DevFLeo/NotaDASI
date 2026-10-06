@@ -127,11 +127,23 @@ npx react-native bundle \
 
 ## 5. Importar a planilha do levantamento
 
+Coloque a planilha em `dados/DIAGNOSTICO_GEO360.xlsx` (ela não vai para o git —
+veja o `.gitignore`). Depois de trocar o
+arquivo por uma versão nova, regenere os dois arquivos que o app consome:
+
 ```bash
-npm run importar-xlsx -- sua_planilha.xlsx --ts src/data/registros.gerado.ts
+pip install openpyxl     # uma vez
+npm run importar-xlsx -- dados/DIAGNOSTICO_GEO360.xlsx --ts src/data/registros.gerado.ts --abas-ts src/data/planilha.gerado.ts
 ```
 
-Enquanto `registros.gerado.ts` não existir, o app usa os dados de exemplo e
+- `registros.gerado.ts`: as competências das abas de secretaria (SEMUR,
+  SEMFAZ, SEMUSB, SEMA, SEMTRAN...), usadas na Lista e no Mapa mental.
+- `planilha.gerado.ts`: **todas** as abas, como tabelas, para a tela Planilha.
+
+Aba nova de secretaria entra sozinha, desde que tenha a coluna "Competência".
+Depois de importar, gere o APK de novo (seção 4).
+
+Se `registros.gerado.ts` estiver vazio, o app usa os dados de exemplo e
 mostra "dados de exemplo" no subtítulo.
 
 ---

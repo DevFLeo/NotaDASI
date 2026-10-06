@@ -86,14 +86,35 @@ describe('casca do PC', () => {
     expect(conteudo).toContain('Campo');
     expect(conteudo).toContain('Acompanhamento do SIG');
 
-    // O mapa mental é o foco: aparece sem ninguém pedir, com os dados reais.
-    expect(conteudo).toContain('DRCF');
+    // O mapa mental é o foco: aparece sem ninguém pedir, com os dados reais —
+    // a raiz é a prefeitura e, em volta, as secretarias da planilha.
+    expect(conteudo).toContain('Porto Velho');
+    expect(conteudo).toContain('SEMUR');
     expect(conteudo).toContain('Ajustar à tela');
 
-    // Os dois itens da barra existem mesmo quando ela está reduzida a ícones
+    // Os itens da barra existem mesmo quando ela está reduzida a ícones
     // (a janela do Jest é estreita, então ela já nasce reduzida).
     expect(itemDaBarra(arvore, 'Lista')).toBeDefined();
+    expect(itemDaBarra(arvore, 'Planilha')).toBeDefined();
     expect(itemDaBarra(arvore, 'Ajustes')).toBeDefined();
+  });
+
+  it('o painel Planilha mostra todas as abas da pasta de trabalho', async () => {
+    const arvore = await montar(
+      <Provedores>
+        <CascaPC />
+      </Provedores>,
+    );
+
+    await act(async () => {
+      itemDaBarra(arvore, 'Planilha').props.onPress();
+    });
+    const conteudo = texto(arvore);
+
+    for (const aba of ['SEMUR', 'SEMFAZ', 'SEMUSB', 'SEMA', 'SEMTRAN', 'Estrutura interna', 'Página6']) {
+      expect(conteudo).toContain(aba);
+    }
+    expect(conteudo).toContain('Avanço das Atividades');
   });
 
   it('acionar um item da barra abre o painel, e acionar de novo fecha', async () => {

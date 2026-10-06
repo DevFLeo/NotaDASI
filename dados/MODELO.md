@@ -24,7 +24,26 @@ python scripts/importacao_de_xlsx.py dados/sua_planilha.xlsx --aba "Levantamento
 Depois do passo 3, o app usa automaticamente os dados da planilha no lugar dos
 dados de exemplo (a troca acontece em `src/data/fonte.ts`).
 
-## Os dois problemas que ele resolve sozinho
+## Várias abas
+
+Sem `--aba`, o script lê **todas** as abas que tiverem a coluna de competência
+(no diagnóstico: SEMUR, SEMFAZ, SEMUSB, SEMA, SEMTRAN). O nome da aba vira o
+campo `secretaria` de cada registro. As abas de resumo ("Estrutura interna",
+"Página6"...) não viram registros, mas vão inteiras para a tela **Planilha**
+com `--abas-ts src/data/planilha.gerado.ts`.
+
+Particularidades da planilha real que o script já trata:
+
+- o cabeçalho "setor" fica mesclado por cima de duas colunas (departamento +
+  setor) — ou três na SEMA, com a coordenadoria antes;
+- uma competência que usa várias camadas ocupa várias linhas; as de baixo
+  trazem só a camada e herdam a competência de cima (um registro por linha);
+- a coluna 1° vem escrita "O **sitema** atende..." (sem o s);
+- erros de fórmula do Excel (`#DIV/0!`, `#VALUE!`...) viram célula vazia;
+- competência sem resposta em "1° O sistema atende" aparece no app como
+  **Sem resposta**, não como "Parcial".
+
+## Os problemas que ele resolve sozinho
 
 **1. Células mescladas.** Na planilha, "Departamento" e "Setor" ficam mesclados
 por várias linhas — o Excel guarda o valor só na primeira e deixa as outras
@@ -96,6 +115,7 @@ O app resume cada linha em um status, usado para colorir o cartão:
 |---|---|
 | **Com problema** | `temProblema = Sim` |
 | **Pendente** | `sistemaAtende = Não` |
+| **Sem resposta** | `sistemaAtende` vazio ou `-` |
 | **Aderido** | `sistemaAtende = Sim` **e** `iniciouAtividade = Sim` |
 | **Parcial** | atende, mas ainda não começou a usar |
 

@@ -7,6 +7,7 @@ import AjustesTela from './src/components/AjustesTela';
 import ListaAnotacoes from './src/components/ListaAnotacoes';
 import ListaRegistros from './src/components/ListaRegistros';
 import MapaMental from './src/mapa/MapaMental';
+import PlanilhaTela from './src/components/PlanilhaTela';
 import Modais from './src/app/Modais';
 import { useAplicacao } from './src/app/useAplicacao';
 import PortaDeEntrada from './src/auth/PortaDeEntrada';
@@ -14,12 +15,12 @@ import { SessaoProvider } from './src/auth/useSessao';
 import { useSegurarParaAbrir } from './src/hooks/useSegurarParaAbrir';
 import { criarEstilos } from './src/tema/estilos';
 import { ThemeProvider, useEstilos, useMetricas, useTema } from './src/tema/ThemeContext';
-import { IconeEngrenagem, IconeLista, IconeMapa } from './src/tema/Icones';
+import { IconeEngrenagem, IconeLista, IconeMapa, IconePlanilha } from './src/tema/Icones';
 
-type Aba = 'lista' | 'mapa' | 'ajustes';
+type Aba = 'lista' | 'mapa' | 'planilha' | 'ajustes';
 
 /** Ordem física das abas — define para onde um swipe para esquerda/direita navega. */
-const ORDEM_ABAS: Aba[] = ['lista', 'mapa', 'ajustes'];
+const ORDEM_ABAS: Aba[] = ['lista', 'mapa', 'planilha', 'ajustes'];
 
 /**
  * Casca do CELULAR: conteúdo em cima, barra de abas embaixo, uma tela por vez.
@@ -51,7 +52,7 @@ export const AppConteudo: React.FC = () => {
   // celular estreito (e vice-versa).
   const limiarSwipe = Math.max(48, Math.min(120, metricas.largura * 0.16));
 
-  // Arrastar para o lado troca de aba (Lista ↔ Mapa mental ↔ Ajustes). Desativado
+  // Arrastar para o lado troca de aba (Lista ↔ Mapa mental ↔ Planilha ↔ Ajustes). Desativado
   // na aba do mapa, que já usa arrasto horizontal para mover a câmera do mapa —
   // os dois gestos disputariam o mesmo movimento.
   const gestoTrocarAba = Gesture.Pan()
@@ -103,6 +104,8 @@ export const AppConteudo: React.FC = () => {
                 aoAbrirAnotacao={app.abrirAnotacao}
                 aoCriarAnotacao={app.criarNovaAnotacao}
               />
+            ) : aba === 'planilha' ? (
+              <PlanilhaTela />
             ) : (
               <AjustesTela
                 origem={app.origem}
@@ -139,6 +142,12 @@ export const AppConteudo: React.FC = () => {
             ativo={aba === 'mapa'}
             aoTocar={() => setAba('mapa')}
             aoSegurar={app.abrirMenuCampos}
+          />
+          <BotaoAba
+            rotulo="Planilha"
+            Icone={IconePlanilha}
+            ativo={aba === 'planilha'}
+            aoTocar={() => setAba('planilha')}
           />
           <BotaoAba
             rotulo="Ajustes"

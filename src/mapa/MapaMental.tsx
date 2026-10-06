@@ -20,7 +20,7 @@ import {
   type Anotacao,
   type Campo,
 } from '../data/campos';
-import { textoPesquisavel, type Registro } from '../data/registros';
+import { chaveSetor, textoPesquisavel, type Registro } from '../data/registros';
 import { useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
 import BuscaLupa from './BuscaLupa';
@@ -173,20 +173,24 @@ const MapaMental: React.FC<Props> = ({
     });
   }, []);
 
-  // Se algum setor estiver expandido, "+" cria mais uma competencia nele;
-  // senao, abre em branco (o usuario nomeia uma secretaria/setor nova).
+  // Se algum setor estiver expandido, "+" cria mais uma competencia nele; se so
+  // uma secretaria estiver aberta, a competencia nasce nela; senao, abre em
+  // branco (o usuario nomeia uma secretaria/setor nova).
   const criarNoContexto = useCallback(() => {
-    const [siglaExpandida] = expandidos;
-    const registroDoSetor = siglaExpandida
-      ? registros.find((r) => (r.setorSigla || r.setor) === siglaExpandida)
+    const chaves = [...expandidos];
+    const setorAberto = chaves.find((chave) => chave.startsWith('set:'));
+    const secretariaAberta = chaves.find((chave) => chave.startsWith('sec:'));
+    const registroDoSetor = setorAberto
+      ? registros.find((r) => `set:${chaveSetor(r)}` === setorAberto)
       : undefined;
 
     if (!registroDoSetor) {
-      aoCriar();
+      aoCriar(secretariaAberta ? { secretaria: secretariaAberta.slice(4) } : undefined);
       return;
     }
 
     aoCriar({
+      secretaria: registroDoSetor.secretaria,
       departamento: registroDoSetor.departamento,
       departamentoSigla: registroDoSetor.departamentoSigla,
       departamentoResponsavel: registroDoSetor.departamentoResponsavel,
@@ -198,13 +202,22 @@ const MapaMental: React.FC<Props> = ({
     });
   }, [aoCriar, expandidos, registros]);
 
-  const alternarSetor = useCallback((sigla: string) => {
+  /** Abre/fecha uma secretaria ("sec:...") ou um setor ("set:...") do mapa. */
+  const alternarNo = useCallback((chave: string) => {
     setExpandidos((atual) => {
       const proximo = new Set(atual);
-      if (proximo.has(sigla)) {
-        proximo.delete(sigla);
+      if (proximo.has(chave)) {
+        proximo.delete(chave);
+        // Fechar a secretaria fecha junto os setores dela, senão eles
+        // reapareceriam abertos na próxima vez.
+        if (chave.startsWith('sec:')) {
+          const prefixoSetores = `set:${chave.slice(4)}|`;
+          [...proximo]
+            .filter((outra) => outra.startsWith(prefixoSetores))
+            .forEach((outra) => proximo.delete(outra));
+        }
       } else {
-        proximo.add(sigla);
+        proximo.add(chave);
       }
       return proximo;
     });
@@ -378,8 +391,8 @@ const MapaMental: React.FC<Props> = ({
                 apagado={idsEncontrados !== null && !idsEncontrados.has(no.id)}
                 aoSoltar={registrarPosicao}
                 aoTocar={() => {
-                  if (no.tipo === 'setor') {
-                    alternarSetor(no.rotulo);
+                  if ((no.tipo === 'setor' || no.tipo === 'secretaria') && no.chave) {
+                    alternarNo(no.chave);
                   } else if (no.tipo === 'competencia' && no.registro) {
                     aoSelecionar?.(no.registro);
                   } else if (no.tipo === 'anotacao' && no.anotacao) {
@@ -396,7 +409,7 @@ const MapaMental: React.FC<Props> = ({
         <Text style={estilos.textoDica}>
           {eCampoLivre
             ? 'Toque num item para editar · arraste os nós · pinça para zoom'
-            : 'Toque num setor para abrir · arraste os nós · pinça ou +/− para zoom'}
+            : 'Toque numa secretaria ou setor para abrir · arraste os nós · pinça ou +/− para zoom'}
         </Text>
       </View>
 
@@ -441,7 +454,7 @@ const MapaMental: React.FC<Props> = ({
         accessibilityLabel={
           eCampoLivre
             ? `Adicionar item em ${campo.nome}`
-            : expandidos.size > 0
+            : [...expandidos].some((chave) => chave.startsWith('set:'))
               ? 'Adicionar competência a este setor'
               : 'Adicionar nova secretaria ou setor'
         }>
@@ -679,7 +692,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
   const estiloPorTipo =
     no.tipo === 'raiz'
       ? estilos.noRaiz
-      : no.tipo === 'setor'
+      : no.tipo === 'setor' || no.tipo === 'secretaria'
         ? estilos.noSetor
         : estilos.noCompetencia;
 

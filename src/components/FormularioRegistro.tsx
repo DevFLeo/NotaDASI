@@ -127,6 +127,7 @@ const FormularioRegistro: React.FC<Props> = ({
             contentContainerStyle={estilos.conteudo}
             showsVerticalScrollIndicator={false}>
             <Secao tema={tema} titulo="Lotação" />
+            <CampoTexto tema={tema} rotulo="Secretaria" valor={dados.secretaria ?? ''} aoAlterar={(v) => definirCampo('secretaria', v)} />
             <CampoTexto tema={tema} rotulo="Departamento" valor={dados.departamento} aoAlterar={(v) => definirCampo('departamento', v)} />
             <CampoTexto tema={tema} rotulo="Sigla do departamento" valor={dados.departamentoSigla} aoAlterar={(v) => definirCampo('departamentoSigla', v)} />
             <CampoTexto tema={tema} rotulo="Diretor(a) responsável" valor={dados.departamentoResponsavel} aoAlterar={(v) => definirCampo('departamentoResponsavel', v)} />

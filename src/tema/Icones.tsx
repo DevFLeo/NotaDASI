@@ -93,6 +93,18 @@ export const IconeLista: React.FC<PropsIcone> = ({ tamanho = 20, cor }) => (
   </Svg>
 );
 
+/** Planilha — grade de células, para a tela com as abas do Excel. */
+export const IconePlanilha: React.FC<PropsIcone> = ({ tamanho = 20, cor }) => (
+  <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M4 5.5C4 4.67 4.67 4 5.5 4h13c.83 0 1.5.67 1.5 1.5v13c0 .83-.67 1.5-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-13Z"
+      stroke={cor}
+      strokeWidth={1.8}
+    />
+    <Path d="M4 9.5h16M4 14.5h16M10 9.5V20" stroke={cor} strokeWidth={1.8} />
+  </Svg>
+);
+
 /** Mapa mental — nós conectados. */
 export const IconeMapa: React.FC<PropsIcone> = ({ tamanho = 20, cor }) => (
   <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">

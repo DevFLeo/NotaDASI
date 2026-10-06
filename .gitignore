@@ -85,3 +85,7 @@ android/app/src/main/res/raw/keep.xml
 # Build do alvo PC (pc/) e cache do Vite
 pc/dist/
 node_modules/.vite/
+
+# Planilha original do diagnóstico (dado bruto, com nomes de servidores).
+# Fica só na máquina de quem importa; o app usa os arquivos gerados em src/data.
+dados/DIAGNOSTICO_GEO360.xlsx

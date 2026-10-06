@@ -6,13 +6,14 @@ import AjustesTela from '../src/components/AjustesTela';
 import ListaAnotacoes from '../src/components/ListaAnotacoes';
 import ListaRegistros from '../src/components/ListaRegistros';
 import MenuCampos from '../src/components/MenuCampos';
+import PlanilhaTela from '../src/components/PlanilhaTela';
 import MapaMental from '../src/mapa/MapaMental';
 import Modais from '../src/app/Modais';
 import { useAplicacao } from '../src/app/useAplicacao';
 import { useSessao } from '../src/auth/useSessao';
 import { criarEstilos } from '../src/tema/estilos';
 import { AreaDeLayout, useEstilos, useMetricas, useTema } from '../src/tema/ThemeContext';
-import { IconeEngrenagem, IconeLista } from '../src/tema/Icones';
+import { IconeEngrenagem, IconeLista, IconePlanilha } from '../src/tema/Icones';
 
 /**
  * Casca do PC: barra lateral à esquerda, mapa mental em foco à direita.
@@ -25,7 +26,7 @@ import { IconeEngrenagem, IconeLista } from '../src/tema/Icones';
  *
  * Três regras de layout, todas pedidas para esta tela:
  *
- * 1. **Barra lateral** com Lista e Ajustes.
+ * 1. **Barra lateral** com Lista, Planilha e Ajustes.
  * 2. **Acionar um item da barra a reduz** para os ícones — o rótulo já cumpriu
  *    a função de explicar, e o espaço vale mais para o painel que abriu.
  * 3. **Painel 35 / mapa 65**, seja a lista, sejam os Ajustes, seja a tabela de
@@ -36,7 +37,7 @@ import { IconeEngrenagem, IconeLista } from '../src/tema/Icones';
  * mesmo hook que o App.tsx do celular usa. O que é só daqui é a geometria.
  */
 
-type Painel = 'lista' | 'ajustes' | 'campos' | null;
+type Painel = 'lista' | 'planilha' | 'ajustes' | 'campos' | null;
 
 const LARGURA_BARRA = 216;
 const LARGURA_BARRA_REDUZIDA = 76;
@@ -111,7 +112,12 @@ const CascaPC: React.FC = () => {
         if (!ativo) {
           return;
         }
-        if (painelSalvo === 'lista' || painelSalvo === 'ajustes' || painelSalvo === 'campos') {
+        if (
+          painelSalvo === 'lista' ||
+          painelSalvo === 'planilha' ||
+          painelSalvo === 'ajustes' ||
+          painelSalvo === 'campos'
+        ) {
           setPainel(painelSalvo);
         }
         setBarraReduzidaSalva(barraSalva === 'sim');
@@ -159,11 +165,13 @@ const CascaPC: React.FC = () => {
   const tituloPainel =
     painel === 'lista'
       ? app.campoAtivo.nome
-      : painel === 'ajustes'
-        ? 'Ajustes'
-        : painel === 'campos'
-          ? 'Campos'
-          : '';
+      : painel === 'planilha'
+        ? 'Planilha'
+        : painel === 'ajustes'
+          ? 'Ajustes'
+          : painel === 'campos'
+            ? 'Campos'
+            : '';
 
   return (
     <View style={estilos.raiz}>
@@ -218,6 +226,13 @@ const CascaPC: React.FC = () => {
             aoTocar={() => acionar('lista')}
           />
           <ItemBarra
+            rotulo="Planilha"
+            Icone={IconePlanilha}
+            ativo={painel === 'planilha'}
+            reduzida={barraReduzida}
+            aoTocar={() => acionar('planilha')}
+          />
+          <ItemBarra
             rotulo="Ajustes"
             Icone={IconeEngrenagem}
             ativo={painel === 'ajustes'}
@@ -264,6 +279,8 @@ const CascaPC: React.FC = () => {
                     aoCriar={app.abrirCriacao}
                   />
                 )
+              ) : painel === 'planilha' ? (
+                <PlanilhaTela />
               ) : painel === 'ajustes' ? (
                 <AjustesTela
                   origem={app.origem}
