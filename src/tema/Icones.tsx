@@ -136,3 +136,36 @@ export const IconeX: React.FC<PropsIcone> = ({ tamanho = 16, cor }) => (
     <Path d="M6 6l12 12M18 6 6 18" stroke={cor} strokeWidth={2} strokeLinecap="round" />
   </Svg>
 );
+
+/** Estrela — favorito. `preenchida` distingue marcado de não marcado. */
+export const IconeEstrela: React.FC<PropsIcone & { preenchida?: boolean }> = ({
+  tamanho = 20,
+  cor,
+  preenchida = false,
+}) => (
+  <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"
+      stroke={cor}
+      strokeWidth={1.8}
+      strokeLinejoin="round"
+      fill={preenchida ? cor : 'none'}
+    />
+  </Svg>
+);
+
+/** Triângulo de alerta — problema relatado. */
+export const IconeAlerta: React.FC<PropsIcone> = ({ tamanho = 16, cor }) => (
+  <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Path d="M12 4 2.8 19.5h18.4L12 4Z" stroke={cor} strokeWidth={1.8} strokeLinejoin="round" />
+    <Path d="M12 10v4.5" stroke={cor} strokeWidth={1.8} strokeLinecap="round" />
+    <Circle cx={12} cy={17} r={1} fill={cor} />
+  </Svg>
+);
+
+/** Mais — botão flutuante de adicionar. */
+export const IconeMais: React.FC<PropsIcone> = ({ tamanho = 24, cor }) => (
+  <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Path d="M12 5v14M5 12h14" stroke={cor} strokeWidth={2.2} strokeLinecap="round" />
+  </Svg>
+);

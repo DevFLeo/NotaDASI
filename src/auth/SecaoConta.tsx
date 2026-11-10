@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Alert, Text, TextInput, View } from 'react-native';
 import { useSessao } from './useSessao';
 import { criarEstilos } from '../tema/estilos';
 import { useEstilos, useTema } from '../tema/ThemeContext';
+import Tocavel from '../components/Tocavel';
+import { raios } from '../tema/raios';
 
 /**
  * Bloco "Conta" da tela de Ajustes — quem está usando o app, trocar a senha e
@@ -109,22 +111,22 @@ export const SecaoConta: React.FC = () => {
           {erro ? <Text style={estilos.erro}>{erro}</Text> : null}
 
           <View style={estilos.linhaBotoes}>
-            <Pressable onPress={fecharTroca} style={estilos.botaoNeutro}>
+            <Tocavel onPress={fecharTroca} style={estilos.botaoNeutro}>
               <Text style={estilos.textoBotaoNeutro}>Cancelar</Text>
-            </Pressable>
-            <Pressable onPress={confirmarTroca} style={estilos.botaoPrimario}>
+            </Tocavel>
+            <Tocavel onPress={confirmarTroca} style={estilos.botaoPrimario}>
               <Text style={estilos.textoBotaoPrimario}>Salvar senha</Text>
-            </Pressable>
+            </Tocavel>
           </View>
         </View>
       ) : (
         <View style={estilos.linhaBotoes}>
-          <Pressable onPress={() => setTrocando(true)} style={estilos.botaoNeutro}>
+          <Tocavel onPress={() => setTrocando(true)} style={estilos.botaoNeutro}>
             <Text style={estilos.textoBotaoNeutro}>Trocar senha</Text>
-          </Pressable>
-          <Pressable onPress={confirmarSaida} style={estilos.botaoSair}>
+          </Tocavel>
+          <Tocavel onPress={confirmarSaida} style={estilos.botaoSair}>
             <Text style={estilos.textoBotaoSair}>Sair</Text>
-          </Pressable>
+          </Tocavel>
         </View>
       )}
     </View>
@@ -134,7 +136,7 @@ export const SecaoConta: React.FC = () => {
 const criarEstilosConta = criarEstilos((tema, m) => ({
   cartao: {
     backgroundColor: tema.fundoElevado,
-    borderRadius: 20,
+    borderRadius: raios.g,
     borderWidth: 1,
     borderColor: tema.borda,
     padding: m.compacta ? 16 : 20,
@@ -162,7 +164,7 @@ const criarEstilosConta = criarEstilos((tema, m) => ({
   bloco: { marginTop: 14 },
   rotulo: {
     color: tema.textoTerciario,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -173,7 +175,7 @@ const criarEstilosConta = criarEstilos((tema, m) => ({
     backgroundColor: tema.superficie,
     borderWidth: 1,
     borderColor: tema.borda,
-    borderRadius: 12,
+    borderRadius: raios.m,
     paddingHorizontal: 12,
     minHeight: 46,
     paddingVertical: 10,
@@ -185,7 +187,7 @@ const criarEstilosConta = criarEstilos((tema, m) => ({
   botaoNeutro: {
     flex: 1,
     minHeight: 44,
-    borderRadius: 12,
+    borderRadius: raios.m,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tema.superficie,
@@ -194,16 +196,16 @@ const criarEstilosConta = criarEstilos((tema, m) => ({
   botaoPrimario: {
     flex: 1,
     minHeight: 44,
-    borderRadius: 12,
+    borderRadius: raios.m,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tema.primaria,
   },
-  textoBotaoPrimario: { color: tema.textoInvertido, fontSize: 12, fontWeight: '700' },
+  textoBotaoPrimario: { color: tema.sobrePrimaria, fontSize: 12, fontWeight: '700' },
   botaoSair: {
     flex: 1,
     minHeight: 44,
-    borderRadius: 12,
+    borderRadius: raios.m,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tema.erroFundo,

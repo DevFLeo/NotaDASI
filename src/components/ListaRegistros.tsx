@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FlatList,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   View,
@@ -15,14 +14,17 @@ import ContatoProtegido from './ContatoProtegido';
 import NotaBuscaRapida from '../native/NotaBuscaRapida';
 import {
   calcularSituacao,
-  corPorSituacao,
   rotuloSituacao,
   textoPesquisavel,
   type Registro,
 } from '../data/registros';
 import { criarEstilosEscalaveis } from '../tema/estilos';
+import { IconeAlerta, IconeEstrela, IconeMais } from '../tema/Icones';
 import { limitarEscalaTexto } from '../tema/responsivo';
+import { coresDaSituacao } from '../tema/situacao';
 import { useEscalaTexto, useEstilos, useMetricas, useTema } from '../tema/ThemeContext';
+import Tocavel from './Tocavel';
+import { raios } from '../tema/raios';
 
 const registroCorresponde = async (registro: Registro, termoBusca: string): Promise<boolean> => {
   const ocorrencias = await NotaBuscaRapida.buscarOcorrencias(
@@ -78,7 +80,7 @@ const CartaoRegistroBase: React.FC<PropsCartao> = ({
   const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosLista);
   const situacao = calcularSituacao(registro);
-  const cor = corPorSituacao[situacao];
+  const { cor, fundo: fundoSelo } = coresDaSituacao(tema, situacao);
 
   // Em coluna dupla/tripla cabe menos texto por cartão do que em coluna única.
   const limiteCompetencia = metricas.colunas > 1 ? 90 : 130;
@@ -87,15 +89,16 @@ const CartaoRegistroBase: React.FC<PropsCartao> = ({
     <Animated.View
       entering={FadeInUp.delay(Math.min(indice, 8) * 60).springify()}
       layout={LinearTransition.springify()}
-      style={[estilos.itemGrade, estilos.cartao, { borderColor: `${cor}55` }]}>
-      <Pressable
+      style={[estilos.itemGrade, estilos.cartao]}>
+      <Tocavel
         android_ripple={{ color: tema.superficieAtiva }}
         onPress={() => aoSelecionar(registro)}
+        suave
         accessibilityRole="button"
         accessibilityLabel={`${rotuloSituacao[situacao]}. ${registro.competencia}`}
         style={estilos.areaCartao}>
         <View style={estilos.cabecalhoCartao}>
-          <View style={[estilos.selo, { backgroundColor: `${cor}22` }]}>
+          <View style={[estilos.selo, { backgroundColor: fundoSelo }]}>
             <Text
               style={[estilos.textoSelo, { color: cor }]}
               numberOfLines={1}
@@ -114,13 +117,17 @@ const CartaoRegistroBase: React.FC<PropsCartao> = ({
               </Text>
             </View>
 
-            <Pressable
+            <Tocavel
               onPress={() => aoAlternarFavorito(registro)}
               hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel={registro.favorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}>
-              <Text style={estilos.estrela}>{registro.favorito ? '★' : '☆'}</Text>
-            </Pressable>
+              <IconeEstrela
+                tamanho={20}
+                cor={registro.favorito ? tema.favorito : tema.textoTerciario}
+                preenchida={registro.favorito === true}
+              />
+            </Tocavel>
           </View>
         </View>
 
@@ -155,15 +162,16 @@ const CartaoRegistroBase: React.FC<PropsCartao> = ({
 
         {registro.temProblema === true && (
           <View style={estilos.avisoProblema}>
+            <IconeAlerta tamanho={14} cor={tema.problema} />
             <Text style={estilos.textoAvisoProblema}>
-              ⚠ {registro.detalheProblema || 'Problema relatado no SIG'}
+              {registro.detalheProblema || 'Problema relatado no SIG'}
               {registro.temChamado === false ? ' · sem chamado aberto' : ''}
             </Text>
           </View>
         )}
 
         <ContatoProtegido contato={registro.contatoPessoal} />
-      </Pressable>
+      </Tocavel>
     </Animated.View>
   );
 };
@@ -189,6 +197,7 @@ const ListaRegistros: React.FC<Props> = ({
   aoAlternarFavorito,
   aoCriar,
 }) => {
+  const tema = useTema();
   const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosLista);
   const [escalaTexto, definirEscalaTexto] = useEscalaTexto();
@@ -330,7 +339,7 @@ const ListaRegistros: React.FC<Props> = ({
         keyboardShouldPersistTaps="handled"
         style={estilos.rolagemFiltros}
         contentContainerStyle={estilos.faixaFiltros}>
-        <Pressable
+        <Tocavel
           onPress={() => setSetorFiltro(null)}
           accessibilityRole="button"
           accessibilityState={{ selected: setorFiltro === null }}
@@ -340,24 +349,29 @@ const ListaRegistros: React.FC<Props> = ({
             maxFontSizeMultiplier={metricas.fonteMaxDensa}>
             Todos
           </Text>
-        </Pressable>
+        </Tocavel>
 
-        <Pressable
+        <Tocavel
           onPress={() => setSomenteFavoritos((atual) => !atual)}
           accessibilityRole="button"
           accessibilityState={{ selected: somenteFavoritos }}
-          style={[estilos.chip, somenteFavoritos && estilos.chipAtivo]}>
+          style={[estilos.chip, estilos.chipComIcone, somenteFavoritos && estilos.chipAtivo]}>
+          <IconeEstrela
+            tamanho={14}
+            cor={somenteFavoritos ? tema.primariaTexto : tema.textoSecundario}
+            preenchida={somenteFavoritos}
+          />
           <Text
             style={[estilos.textoChip, somenteFavoritos && estilos.textoChipAtivo]}
             maxFontSizeMultiplier={metricas.fonteMaxDensa}>
-            ★ Favoritos
+            Favoritos
           </Text>
-        </Pressable>
+        </Tocavel>
 
         {setores.map((sigla) => {
           const ativo = setorFiltro === sigla;
           return (
-            <Pressable
+            <Tocavel
               key={sigla}
               onPress={() => setSetorFiltro(ativo ? null : sigla)}
               accessibilityRole="button"
@@ -368,7 +382,7 @@ const ListaRegistros: React.FC<Props> = ({
                 maxFontSizeMultiplier={metricas.fonteMaxDensa}>
                 {sigla}
               </Text>
-            </Pressable>
+            </Tocavel>
           );
         })}
       </ScrollView>
@@ -411,13 +425,13 @@ const ListaRegistros: React.FC<Props> = ({
         />
       </GestureDetector>
 
-      <Pressable
+      <Tocavel
         onPress={aoCriar}
         style={estilos.fab}
         accessibilityRole="button"
         accessibilityLabel="Adicionar nova competência">
-        <Text style={estilos.textoFab}>+</Text>
-      </Pressable>
+        <IconeMais tamanho={26} cor={tema.sobrePrimaria} />
+      </Tocavel>
     </View>
   );
 };
@@ -441,11 +455,12 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
     minHeight: 40,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: raios.pilula,
     backgroundColor: tema.superficie,
     borderWidth: 1,
     borderColor: tema.borda,
   },
+  chipComIcone: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   chipAtivo: { backgroundColor: tema.primariaFundo, borderColor: tema.primaria },
   textoChip: { color: tema.textoSecundario, fontSize: 12, fontWeight: '600' },
   textoChipAtivo: { color: tema.primariaTexto },
@@ -464,16 +479,19 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
   // estique e fique com o dobro do tamanho dos vizinhos.
   itemGrade: m.colunas > 1 ? { flex: 1, maxWidth: `${100 / m.colunas}%` } : {},
   cartao: {
-    borderRadius: 22,
+    borderRadius: raios.g,
     marginBottom: m.espaco,
+    // Borda neutra e sombra curta: a situação já está no selo, e uma borda
+    // colorida por cartão transformava a lista num arco-íris difícil de ler.
     borderWidth: 1,
+    borderColor: tema.borda,
     overflow: 'hidden',
     backgroundColor: tema.fundoElevado,
     shadowColor: tema.sombra,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: tema.modo === 'escuro' ? 0.26 : 0.08,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: tema.modo === 'escuro' ? 0.2 : 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   areaCartao: { padding: m.compacta ? 14 : 18 },
   cabecalhoCartao: {
@@ -483,23 +501,22 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
     gap: 8,
     marginBottom: 12,
   },
-  selo: { flexShrink: 1, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  selo: { flexShrink: 1, paddingHorizontal: 10, paddingVertical: 6, borderRadius: raios.pilula },
   textoSelo: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
   grupoDireitaCabecalho: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
-  estrela: { fontSize: 18, color: tema.favorito },
   seloSetor: {
     flexShrink: 1,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 999,
+    borderRadius: raios.pilula,
     backgroundColor: tema.superficie,
   },
-  textoSeloSetor: { color: tema.textoSecundario, fontSize: 10, fontWeight: '700', letterSpacing: 0.6 },
+  textoSeloSetor: { color: tema.textoSecundario, fontSize: 11, fontWeight: '700', letterSpacing: 0.6 },
   competencia: { color: tema.texto, fontSize: 14, fontWeight: '600', lineHeight: 20 },
   comoAtende: { color: tema.textoSecundario, fontSize: 12, lineHeight: 18, marginTop: 8 },
   blocoResponsavel: {
@@ -519,7 +536,7 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
   indicador: { flex: 1, alignItems: 'center' },
   rotuloIndicador: {
     color: tema.textoTerciario,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -527,13 +544,16 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
   valorIndicador: { fontSize: 13, fontWeight: '700', marginTop: 3 },
   linhaCamada: { color: tema.textoSecundario, fontSize: 11, marginTop: 12 },
   avisoProblema: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
     marginTop: 12,
     backgroundColor: tema.problemaFundo,
-    borderRadius: 10,
+    borderRadius: raios.p,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  textoAvisoProblema: { color: tema.problema, fontSize: 11, lineHeight: 17 },
+  textoAvisoProblema: { flex: 1, color: tema.problema, fontSize: 12, lineHeight: 17 },
   estadoVazio: { alignItems: 'center', paddingHorizontal: 32, paddingTop: 40 },
   textoEstadoVazio: { color: tema.textoSecundario, fontSize: 14, textAlign: 'center' },
   fab: {
@@ -552,7 +572,6 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
     shadowOpacity: 0.3,
     shadowRadius: 10,
   },
-  textoFab: { color: tema.textoInvertido, fontSize: 28, fontWeight: '600', lineHeight: 30 },
 }));
 
 export default ListaRegistros;

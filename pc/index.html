@@ -33,6 +33,21 @@
       body {
         overflow: hidden;
       }
+
+      /*
+        Anel de foco para quem navega pelo teclado (Tab). `:focus-visible` não
+        acende no clique do mouse, só quando o foco chegou pelo teclado — e não
+        existe em StyleSheet do React Native, por isso mora aqui. A cor é a
+        `primaria` de src/tema/cores.ts.
+      */
+      [role='button']:focus-visible,
+      [role='tab']:focus-visible,
+      [tabindex]:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 2px;
+      }
     </style>
   </head>
   <body>

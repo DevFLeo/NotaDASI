@@ -29,6 +29,8 @@ export type Tema = {
   primaria: string;
   primariaFundo: string;
   primariaTexto: string;
+  /** Texto e ícones em cima de `primaria` (botões cheios, FAB). */
+  sobrePrimaria: string;
 
   // Status (situação de adesão, indicadores, favoritos)
   sucesso: string;
@@ -58,7 +60,8 @@ export const temaClaro: Tema = {
 
   texto: '#0f172a',
   textoSecundario: '#475569',
-  textoTerciario: '#94a3b8',
+  // Escuro o bastante para passar em AA (4.5:1) mesmo nos rótulos de 11px.
+  textoTerciario: '#5b6880',
   textoInvertido: '#f8fafc',
 
   borda: '#dde3ee',
@@ -67,9 +70,10 @@ export const temaClaro: Tema = {
   primaria: '#2563eb',
   primariaFundo: 'rgba(37, 99, 235, 0.10)',
   primariaTexto: '#1d4ed8',
+  sobrePrimaria: '#ffffff',
 
-  sucesso: '#0f9d63',
-  sucessoFundo: 'rgba(15, 157, 99, 0.12)',
+  sucesso: '#0b7a4b',
+  sucessoFundo: 'rgba(11, 122, 75, 0.12)',
   alerta: '#b45309',
   alertaFundo: 'rgba(180, 83, 9, 0.12)',
   erro: '#dc2626',
@@ -92,7 +96,7 @@ export const temaEscuro: Tema = {
 
   texto: '#f8fafc',
   textoSecundario: '#94a3b8',
-  textoTerciario: '#64748b',
+  textoTerciario: '#8492a6',
   textoInvertido: '#0f172a',
 
   borda: 'rgba(148, 163, 184, 0.18)',
@@ -101,6 +105,7 @@ export const temaEscuro: Tema = {
   primaria: '#2563eb',
   primariaFundo: 'rgba(37, 99, 235, 0.22)',
   primariaTexto: '#dbeafe',
+  sobrePrimaria: '#ffffff',
 
   sucesso: '#6ee7b7',
   sucessoFundo: 'rgba(110, 231, 183, 0.16)',

@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +16,8 @@ import { requisitosFaltando, type Anotacao, type Campo, type RequisitoCampo } fr
 import { useArrastarParaFechar } from '../hooks/useArrastarParaFechar';
 import { useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
+import Tocavel from './Tocavel';
+import { raios } from '../tema/raios';
 
 type Valores = Anotacao['valores'];
 
@@ -128,16 +129,16 @@ const FormularioAnotacao: React.FC<Props> = ({
 
             <View style={estilos.rodape}>
               {aoExcluir ? (
-                <Pressable onPress={aoExcluir} style={estilos.botaoExcluir}>
+                <Tocavel onPress={aoExcluir} style={estilos.botaoExcluir}>
                   <Text style={estilos.textoBotaoExcluir}>Excluir</Text>
-                </Pressable>
+                </Tocavel>
               ) : null}
-              <Pressable onPress={aoCancelar} style={estilos.botaoCancelar}>
+              <Tocavel onPress={aoCancelar} style={estilos.botaoCancelar}>
                 <Text style={estilos.textoBotaoCancelar}>Cancelar</Text>
-              </Pressable>
-              <Pressable onPress={confirmar} style={estilos.botaoSalvar}>
+              </Tocavel>
+              <Tocavel onPress={confirmar} style={estilos.botaoSalvar}>
                 <Text style={estilos.textoBotaoSalvar}>Salvar</Text>
-              </Pressable>
+              </Tocavel>
             </View>
           </KeyboardAvoidingView>
         </Animated.View>
@@ -160,7 +161,7 @@ const CampoDinamico: React.FC<{
     return (
       <View style={[estilos.bloco, estilos.blocoBooleano]}>
         <Text style={estilos.rotuloEmLinha}>{rotulo}</Text>
-        <Pressable
+        <Tocavel
           onPress={() => aoAlterar(proximoBooleano(valor))}
           accessibilityRole="button"
           accessibilityLabel={`${requisito.rotulo}: ${texto}`}
@@ -170,7 +171,7 @@ const CampoDinamico: React.FC<{
             valor === false && estilos.chipBooleanoNao,
           ]}>
           <Text style={estilos.textoChipBooleano}>{texto}</Text>
-        </Pressable>
+        </Tocavel>
       </View>
     );
   }
@@ -199,15 +200,15 @@ const criarEstilos = (tema: Tema) =>
     painel: {
       maxHeight: '92%',
       backgroundColor: tema.fundoElevado,
-      borderTopLeftRadius: 26,
-      borderTopRightRadius: 26,
+      borderTopLeftRadius: raios.xg,
+      borderTopRightRadius: raios.xg,
       paddingHorizontal: 22,
       paddingTop: 10,
       borderTopWidth: 1,
       borderColor: tema.borda,
     },
     areaPuxador: { alignItems: 'center', paddingVertical: 8, marginBottom: 6 },
-    puxador: { width: 40, height: 4, borderRadius: 999, backgroundColor: tema.bordaForte },
+    puxador: { width: 40, height: 4, borderRadius: raios.pilula, backgroundColor: tema.bordaForte },
     titulo: { color: tema.texto, fontSize: 18, fontWeight: '700', marginBottom: 4 },
     scroll: { flexShrink: 1 },
     conteudo: { paddingBottom: 12 },
@@ -216,7 +217,7 @@ const criarEstilos = (tema: Tema) =>
     blocoBooleano: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     rotulo: {
       color: tema.textoTerciario,
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.8,
@@ -233,7 +234,7 @@ const criarEstilos = (tema: Tema) =>
       backgroundColor: tema.superficie,
       borderWidth: 1,
       borderColor: tema.borda,
-      borderRadius: 10,
+      borderRadius: raios.p,
       paddingHorizontal: 12,
       paddingVertical: 10,
       color: tema.texto,
@@ -243,7 +244,7 @@ const criarEstilos = (tema: Tema) =>
     chipBooleano: {
       paddingHorizontal: 16,
       paddingVertical: 8,
-      borderRadius: 999,
+      borderRadius: raios.pilula,
       backgroundColor: tema.superficie,
       borderWidth: 1,
       borderColor: tema.borda,
@@ -261,14 +262,14 @@ const criarEstilos = (tema: Tema) =>
     botaoExcluir: {
       paddingHorizontal: 16,
       paddingVertical: 14,
-      borderRadius: 14,
+      borderRadius: raios.m,
       backgroundColor: tema.erroFundo,
     },
     textoBotaoExcluir: { color: tema.erro, fontSize: 13, fontWeight: '700' },
     botaoCancelar: {
       flex: 1,
       paddingVertical: 14,
-      borderRadius: 14,
+      borderRadius: raios.m,
       alignItems: 'center',
       backgroundColor: tema.superficie,
     },
@@ -276,12 +277,12 @@ const criarEstilos = (tema: Tema) =>
     botaoSalvar: {
       flex: 1,
       paddingVertical: 14,
-      borderRadius: 14,
+      borderRadius: raios.m,
       alignItems: 'center',
       backgroundColor: tema.primaria,
     },
     textoBotaoSalvar: {
-      color: tema.textoInvertido,
+      color: tema.sobrePrimaria,
       fontSize: 13,
       fontWeight: '700',
       textTransform: 'uppercase',

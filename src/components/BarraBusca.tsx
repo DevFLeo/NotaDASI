@@ -1,8 +1,10 @@
 import React from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { criarEstilos } from '../tema/estilos';
-import { useEstilos, useMetricas, useTema } from '../tema/ThemeContext';
+import { useEstilos, useTema } from '../tema/ThemeContext';
 import { IconeLupa, IconeX } from '../tema/Icones';
+import Tocavel from './Tocavel';
+import { raios } from '../tema/raios';
 
 type Props = {
   valor: string;
@@ -14,7 +16,6 @@ type Props = {
 
 const BarraBusca: React.FC<Props> = ({ valor, aoAlterar, aoPesquisar, placeholder }) => {
   const tema = useTema();
-  const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosBusca);
 
   return (
@@ -37,32 +38,20 @@ const BarraBusca: React.FC<Props> = ({ valor, aoAlterar, aoPesquisar, placeholde
       />
 
       {valor.length > 0 ? (
-        <Pressable
+        <Tocavel
           onPress={() => aoAlterar('')}
           hitSlop={8}
           style={estilos.botaoLimpar}
           accessibilityRole="button"
           accessibilityLabel="Limpar busca">
           <IconeX tamanho={15} cor={tema.textoSecundario} />
-        </Pressable>
+        </Tocavel>
       ) : null}
 
-      {/* Em tela estreita o rótulo "Buscar" rouba metade da barra do campo de
-          texto — ali o botão vira só o ícone (a busca também roda sozinha
-          enquanto se digita, então ele é um atalho, não o único caminho). */}
-      <Pressable
-        onPress={aoPesquisar}
-        style={estilos.botaoBusca}
-        accessibilityRole="button"
-        accessibilityLabel="Buscar">
-        {metricas.compacta ? (
-          <IconeLupa tamanho={17} cor={tema.textoInvertido} />
-        ) : (
-          <Text style={estilos.textoBotao} maxFontSizeMultiplier={metricas.fonteMaxDensa}>
-            Buscar
-          </Text>
-        )}
-      </Pressable>
+      {/* Não há botão "Buscar": a lista já filtra sozinha enquanto se digita,
+          e o botão cheio ao lado do campo disputava atenção com o conteúdo.
+          Enter (ou a tecla de busca do teclado) continua chamando
+          `aoPesquisar` para quem quer forçar a busca na hora. */}
     </View>
   );
 };
@@ -74,7 +63,7 @@ const criarEstilosBusca = criarEstilos((tema, m) => ({
     backgroundColor: tema.superficie,
     borderColor: tema.borda,
     borderWidth: 1,
-    borderRadius: 18,
+    borderRadius: raios.g,
     overflow: 'hidden',
     marginBottom: 18,
   },
@@ -90,26 +79,11 @@ const criarEstilosBusca = criarEstilos((tema, m) => ({
   botaoLimpar: {
     width: 32,
     height: 32,
-    marginRight: 4,
+    marginRight: 10,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tema.superficieAtiva,
-  },
-  botaoBusca: {
-    backgroundColor: tema.primaria,
-    alignSelf: 'stretch',
-    minWidth: m.compacta ? 48 : 0,
-    paddingHorizontal: m.compacta ? 0 : 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  textoBotao: {
-    color: tema.textoInvertido,
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
   },
 }));
 

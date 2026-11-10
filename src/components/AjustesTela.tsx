@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Linking,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -29,6 +28,8 @@ import {
   IconeServidor,
   IconeSol,
 } from '../tema/Icones';
+import Tocavel from './Tocavel';
+import { raios } from '../tema/raios';
 
 type Props = {
   origem: 'planilha' | 'exemplo';
@@ -145,13 +146,13 @@ const AjustesTela: React.FC<Props> = ({
             const ativo = preferencia === opcao.valor;
             const corIcone = ativo ? tema.primariaTexto : tema.textoSecundario;
             return (
-              <Pressable
+              <Tocavel
                 key={opcao.valor}
                 onPress={() => definirPreferencia(opcao.valor)}
                 style={[estilos.chip, ativo && estilos.chipAtivo]}>
                 <opcao.Icone tamanho={15} cor={corIcone} />
                 <Text style={[estilos.textoChip, ativo && estilos.textoChipAtivo]}>{opcao.rotulo}</Text>
-              </Pressable>
+              </Tocavel>
             );
           })}
         </View>
@@ -161,7 +162,7 @@ const AjustesTela: React.FC<Props> = ({
           {OPCOES_ESCALA.map((opcao) => {
             const ativo = escalaAtiva === opcao.valor;
             return (
-              <Pressable
+              <Tocavel
                 key={opcao.valor}
                 onPress={() => definirEscalaTexto(opcao.valor)}
                 accessibilityRole="button"
@@ -177,7 +178,7 @@ const AjustesTela: React.FC<Props> = ({
                   maxFontSizeMultiplier={1.2}>
                   {opcao.rotulo}
                 </Text>
-              </Pressable>
+              </Tocavel>
             );
           })}
         </View>
@@ -202,9 +203,9 @@ const AjustesTela: React.FC<Props> = ({
           rotulo="Campos neste aparelho"
           valor={`${totalCampos} (o do SIG é o padrão)`}
         />
-        <Pressable onPress={aoAbrirCampos} style={estilos.botaoSecundarioLargo}>
+        <Tocavel onPress={aoAbrirCampos} style={estilos.botaoSecundarioLargo}>
           <Text style={estilos.textoBotaoSecundario}>Gerenciar campos</Text>
-        </Pressable>
+        </Tocavel>
       </Cartao>
 
       <Cartao tema={tema}>
@@ -215,9 +216,9 @@ const AjustesTela: React.FC<Props> = ({
         <Campo tema={tema} rotulo="Origem dos dados" valor={origem === 'planilha' ? 'Planilha importada' : 'Dados de exemplo'} />
         <Campo tema={tema} rotulo="Competências carregadas" valor={String(totalRegistros)} />
         <Campo tema={tema} rotulo="Armazenamento" valor="Local, neste aparelho (AsyncStorage)" />
-        <Pressable onPress={confirmarLimpeza} style={estilos.botaoPerigo}>
+        <Tocavel onPress={confirmarLimpeza} style={estilos.botaoPerigo}>
           <Text style={estilos.textoBotaoPerigo}>Limpar dados locais</Text>
-        </Pressable>
+        </Tocavel>
       </Cartao>
 
       <Cartao tema={tema}>
@@ -247,12 +248,12 @@ const AjustesTela: React.FC<Props> = ({
         </View>
 
         <View style={[estilos.linhaBotoes, estreita && estilos.linhaBotoesEmpilhada]}>
-          <Pressable onPress={salvarIntegracao} style={estilos.botaoSecundario}>
+          <Tocavel onPress={salvarIntegracao} style={estilos.botaoSecundario}>
             <Text style={estilos.textoBotaoSecundario}>Salvar endereço</Text>
-          </Pressable>
-          <Pressable onPress={solicitarIntegracao} style={estilos.botaoPrimario}>
+          </Tocavel>
+          <Tocavel onPress={solicitarIntegracao} style={estilos.botaoPrimario}>
             <Text style={estilos.textoBotaoPrimario}>Solicitar integração</Text>
-          </Pressable>
+          </Tocavel>
         </View>
 
         <View style={[estilos.selo, { backgroundColor: tema.alertaFundo }]}>
@@ -290,7 +291,7 @@ const criarEstilos = (tema: Tema) =>
     iconeTitulo: {
       width: 36,
       height: 36,
-      borderRadius: 12,
+      borderRadius: raios.m,
       backgroundColor: tema.primariaFundo,
       alignItems: 'center',
       justifyContent: 'center',
@@ -298,7 +299,7 @@ const criarEstilos = (tema: Tema) =>
     titulo: { color: tema.texto, fontSize: 26, fontWeight: '700', letterSpacing: -0.5 },
     cartao: {
       backgroundColor: tema.fundoElevado,
-      borderRadius: 18,
+      borderRadius: raios.g,
       borderWidth: 1,
       borderColor: tema.borda,
       padding: 16,
@@ -315,7 +316,7 @@ const criarEstilos = (tema: Tema) =>
     faixaChips: { flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap', alignItems: 'center' },
     rotuloEscala: {
       color: tema.textoTerciario,
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.8,
@@ -327,7 +328,7 @@ const criarEstilos = (tema: Tema) =>
       gap: 6,
       paddingHorizontal: 14,
       paddingVertical: 9,
-      borderRadius: 999,
+      borderRadius: raios.pilula,
       backgroundColor: tema.superficie,
       borderWidth: 1,
       borderColor: tema.borda,
@@ -338,7 +339,7 @@ const criarEstilos = (tema: Tema) =>
     bloco: { marginTop: 12 },
     rotulo: {
       color: tema.textoTerciario,
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.8,
@@ -349,7 +350,7 @@ const criarEstilos = (tema: Tema) =>
       backgroundColor: tema.superficie,
       borderWidth: 1,
       borderColor: tema.borda,
-      borderRadius: 10,
+      borderRadius: raios.p,
       paddingHorizontal: 12,
       paddingVertical: 10,
       color: tema.texto,
@@ -360,17 +361,17 @@ const criarEstilos = (tema: Tema) =>
     botaoPrimario: {
       flex: 1,
       backgroundColor: tema.primaria,
-      borderRadius: 12,
+      borderRadius: raios.m,
       paddingVertical: 13,
       alignItems: 'center',
     },
-    textoBotaoPrimario: { color: tema.textoInvertido, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+    textoBotaoPrimario: { color: tema.sobrePrimaria, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
     botaoSecundario: {
       flex: 1,
       backgroundColor: tema.superficie,
       borderWidth: 1,
       borderColor: tema.borda,
-      borderRadius: 12,
+      borderRadius: raios.m,
       paddingVertical: 13,
       alignItems: 'center',
     },
@@ -380,7 +381,7 @@ const criarEstilos = (tema: Tema) =>
       alignSelf: 'flex-start',
       paddingHorizontal: 16,
       paddingVertical: 12,
-      borderRadius: 12,
+      borderRadius: raios.m,
       backgroundColor: tema.superficie,
       borderWidth: 1,
       borderColor: tema.borda,
@@ -390,7 +391,7 @@ const criarEstilos = (tema: Tema) =>
       alignSelf: 'flex-start',
       paddingHorizontal: 14,
       paddingVertical: 10,
-      borderRadius: 10,
+      borderRadius: raios.p,
       backgroundColor: tema.erroFundo,
     },
     textoBotaoPerigo: { color: tema.erro, fontSize: 12, fontWeight: '700' },
@@ -399,7 +400,7 @@ const criarEstilos = (tema: Tema) =>
       alignSelf: 'flex-start',
       paddingHorizontal: 12,
       paddingVertical: 8,
-      borderRadius: 999,
+      borderRadius: raios.pilula,
     },
     textoSelo: { fontSize: 11, fontWeight: '700' },
     rodape: {

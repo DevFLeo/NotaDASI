@@ -1,18 +1,21 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Modal, ScrollView, Text, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ContatoProtegido from './ContatoProtegido';
 import {
   calcularSituacao,
-  corPorSituacao,
   rotuloSituacao,
   type Registro,
 } from '../data/registros';
 import { useArrastarParaFechar } from '../hooks/useArrastarParaFechar';
 import { criarEstilos } from '../tema/estilos';
-import { useEstilos, useMetricas } from '../tema/ThemeContext';
+import { IconeEstrela } from '../tema/Icones';
+import { coresDaSituacao } from '../tema/situacao';
+import { useEstilos, useMetricas, useTema } from '../tema/ThemeContext';
+import Tocavel from './Tocavel';
+import { raios } from '../tema/raios';
 
 type Props = {
   registro: Registro | null;
@@ -32,6 +35,7 @@ const DetalheRegistro: React.FC<Props> = ({
   aoExcluir,
   aoAlternarFavorito,
 }) => {
+  const tema = useTema();
   const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosDetalhe);
   const insets = useSafeAreaInsets();
@@ -42,7 +46,7 @@ const DetalheRegistro: React.FC<Props> = ({
   }
 
   const situacao = calcularSituacao(registro);
-  const cor = corPorSituacao[situacao];
+  const { cor, fundo: fundoSelo } = coresDaSituacao(tema, situacao);
 
   return (
     <Modal visible animationType="slide" transparent onRequestClose={aoFechar}>
@@ -59,7 +63,7 @@ const DetalheRegistro: React.FC<Props> = ({
 
           <ScrollView contentContainerStyle={estilos.conteudo} showsVerticalScrollIndicator={false}>
             <View style={estilos.linhaTopo}>
-              <View style={[estilos.selo, { backgroundColor: `${cor}22` }]}>
+              <View style={[estilos.selo, { backgroundColor: fundoSelo }]}>
                 <Text
                   style={[estilos.textoSelo, { color: cor }]}
                   maxFontSizeMultiplier={metricas.fonteMaxDensa}>
@@ -68,13 +72,17 @@ const DetalheRegistro: React.FC<Props> = ({
               </View>
 
               {aoAlternarFavorito ? (
-                <Pressable
+                <Tocavel
                   onPress={() => aoAlternarFavorito(registro)}
                   accessibilityRole="button"
                   accessibilityLabel={registro.favorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                   hitSlop={12}>
-                  <Text style={estilos.estrela}>{registro.favorito ? '★' : '☆'}</Text>
-                </Pressable>
+                  <IconeEstrela
+                    tamanho={24}
+                    cor={registro.favorito ? tema.favorito : tema.textoTerciario}
+                    preenchida={registro.favorito === true}
+                  />
+                </Tocavel>
               ) : null}
             </View>
 
@@ -158,7 +166,7 @@ const DetalheRegistro: React.FC<Props> = ({
               aqui. */}
           <View style={[estilos.rodape, { paddingBottom: insets.bottom + 4 }]}>
             {aoExcluir ? (
-              <Pressable
+              <Tocavel
                 onPress={() => aoExcluir(registro)}
                 style={estilos.botaoExcluir}
                 accessibilityRole="button"
@@ -166,24 +174,34 @@ const DetalheRegistro: React.FC<Props> = ({
                 <Text style={estilos.textoBotaoExcluir} maxFontSizeMultiplier={metricas.fonteMaxDensa}>
                   Excluir
                 </Text>
-              </Pressable>
+              </Tocavel>
             ) : null}
-            {aoEditar ? (
-              <Pressable
-                onPress={() => aoEditar(registro)}
-                style={estilos.botaoEditar}
-                accessibilityRole="button"
-                accessibilityLabel="Editar competência">
-                <Text style={estilos.textoBotaoEditar} maxFontSizeMultiplier={metricas.fonteMaxDensa}>
-                  Editar
-                </Text>
-              </Pressable>
-            ) : null}
-            <Pressable onPress={aoFechar} style={estilos.botaoFechar} accessibilityRole="button">
-              <Text style={estilos.textoBotaoFechar} maxFontSizeMultiplier={metricas.fonteMaxDensa}>
+            {/* Excluir fica sozinho à esquerda, longe do botão principal: os
+                dois colados convidavam ao toque errado. À direita, a ação que
+                faz o trabalho andar (Editar) é a cheia; Fechar é a discreta —
+                e só vira a principal quando não há o que editar. */}
+            <View style={estilos.espacoRodape} />
+            <Tocavel
+              onPress={aoFechar}
+              style={aoEditar ? estilos.botaoSecundario : estilos.botaoPrimario}
+              accessibilityRole="button">
+              <Text
+                style={aoEditar ? estilos.textoBotaoSecundario : estilos.textoBotaoPrimario}
+                maxFontSizeMultiplier={metricas.fonteMaxDensa}>
                 Fechar
               </Text>
-            </Pressable>
+            </Tocavel>
+            {aoEditar ? (
+              <Tocavel
+                onPress={() => aoEditar(registro)}
+                style={estilos.botaoPrimario}
+                accessibilityRole="button"
+                accessibilityLabel="Editar competência">
+                <Text style={estilos.textoBotaoPrimario} maxFontSizeMultiplier={metricas.fonteMaxDensa}>
+                  Editar
+                </Text>
+              </Tocavel>
+            ) : null}
           </View>
         </Animated.View>
       </GestureHandlerRootView>
@@ -226,8 +244,8 @@ const criarEstilosDetalhe = criarEstilos((tema, m) => ({
     alignSelf: 'center',
     maxHeight: m.alturaMaxModal,
     backgroundColor: tema.fundoElevado,
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
+    borderTopLeftRadius: raios.xg,
+    borderTopRightRadius: raios.xg,
     paddingHorizontal: m.compacta ? 16 : 22,
     paddingTop: 10,
     borderTopWidth: 1,
@@ -241,7 +259,7 @@ const criarEstilosDetalhe = criarEstilos((tema, m) => ({
   puxador: {
     width: 40,
     height: 4,
-    borderRadius: 999,
+    borderRadius: raios.pilula,
     backgroundColor: tema.bordaForte,
   },
   conteudo: { paddingBottom: 16 },
@@ -260,14 +278,10 @@ const criarEstilosDetalhe = criarEstilos((tema, m) => ({
     alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 999,
-  },
-  estrela: {
-    fontSize: 24,
-    color: tema.favorito,
+    borderRadius: raios.pilula,
   },
   textoSelo: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -293,7 +307,7 @@ const criarEstilosDetalhe = criarEstilos((tema, m) => ({
   blocoLargo: { width: '100%' },
   rotulo: {
     color: tema.textoTerciario,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -311,29 +325,32 @@ const criarEstilosDetalhe = criarEstilos((tema, m) => ({
     minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: raios.m,
     backgroundColor: tema.erroFundo,
   },
   textoBotaoExcluir: { color: tema.erro, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
-  botaoEditar: {
+  espacoRodape: { flexGrow: 1 },
+  botaoSecundario: {
     minHeight: 48,
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    borderRadius: 14,
+    paddingHorizontal: 18,
+    borderRadius: raios.m,
     backgroundColor: tema.superficie,
+    borderWidth: 1,
+    borderColor: tema.borda,
   },
-  textoBotaoEditar: { color: tema.texto, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
-  botaoFechar: {
-    flexGrow: 1,
-    flexBasis: 120,
+  textoBotaoSecundario: { color: tema.texto, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  botaoPrimario: {
     minHeight: 48,
+    minWidth: 112,
+    paddingHorizontal: 22,
     backgroundColor: tema.primaria,
-    borderRadius: 14,
+    borderRadius: raios.m,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  textoBotaoFechar: {
-    color: tema.textoInvertido,
+  textoBotaoPrimario: {
+    color: tema.sobrePrimaria,
     fontSize: 13,
     fontWeight: '700',
     textTransform: 'uppercase',

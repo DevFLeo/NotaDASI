@@ -21,6 +21,7 @@ import {
   type Campo,
 } from '../data/campos';
 import { textoPesquisavel, type Registro } from '../data/registros';
+import { IconeMais } from '../tema/Icones';
 import { useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
 import BuscaLupa from './BuscaLupa';
@@ -445,7 +446,7 @@ const MapaMental: React.FC<Props> = ({
               ? 'Adicionar competência a este setor'
               : 'Adicionar nova secretaria ou setor'
         }>
-        <Text style={estilos.textoFab}>+</Text>
+        <IconeMais tamanho={24} cor={tema.sobrePrimaria} />
       </Pressable>
     </View>
   );
@@ -865,7 +866,6 @@ const criarEstilos = (tema: Tema) =>
       shadowOpacity: 0.3,
       shadowRadius: 10,
     },
-    textoFab: { color: tema.textoInvertido, fontSize: 26, fontWeight: '600', lineHeight: 28 },
   });
 
 export default MapaMental;

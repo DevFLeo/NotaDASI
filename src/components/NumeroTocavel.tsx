@@ -11,6 +11,7 @@ import {
 import { pareceTelefone, paraDiscagem } from '../data/telefone';
 import { criarEstilos } from '../tema/estilos';
 import { useEstilos } from '../tema/ThemeContext';
+import { raios } from '../tema/raios';
 
 type Props = {
   texto: string;
@@ -100,7 +101,7 @@ const criarEstilosNumero = criarEstilos((tema) => ({
     maxWidth: '100%',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 10,
+    borderRadius: raios.p,
     backgroundColor: tema.superficie,
     borderWidth: 1,
     borderColor: tema.borda,
@@ -115,7 +116,7 @@ const criarEstilosNumero = criarEstilos((tema) => ({
   },
   dica: {
     color: tema.textoTerciario,
-    fontSize: 9,
+    fontSize: 11,
     marginTop: 2,
   },
 }));

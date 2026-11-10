@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Text, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import AjustesTela from '../src/components/AjustesTela';
 import ListaAnotacoes from '../src/components/ListaAnotacoes';
@@ -13,6 +13,8 @@ import { useSessao } from '../src/auth/useSessao';
 import { criarEstilos } from '../src/tema/estilos';
 import { AreaDeLayout, useEstilos, useMetricas, useTema } from '../src/tema/ThemeContext';
 import { IconeEngrenagem, IconeLista } from '../src/tema/Icones';
+import Tocavel from '../src/components/Tocavel';
+import { raios } from '../src/tema/raios';
 
 /**
  * Casca do PC: barra lateral à esquerda, mapa mental em foco à direita.
@@ -171,7 +173,7 @@ const CascaPC: React.FC = () => {
           opção ficasse no canto superior esquerdo, antes de qualquer outra
           coisa, porque é ela que decide o que todo o resto da tela mostra. */}
       <View style={estilos.topo}>
-        <Pressable
+        <Tocavel
           onPress={() => acionar('campos')}
           accessibilityRole="button"
           accessibilityState={{ selected: painel === 'campos' }}
@@ -182,7 +184,7 @@ const CascaPC: React.FC = () => {
             {app.campoAtivo.nome}
           </Text>
           <IconeSeta tamanho={14} cor={tema.textoSecundario} paraDireita={painel !== 'campos'} />
-        </Pressable>
+        </Tocavel>
 
         <View style={estilos.tituloTopo}>
           <Text style={estilos.marca}>NotaDASI</Text>
@@ -192,7 +194,7 @@ const CascaPC: React.FC = () => {
         </View>
 
         {contaAtual ? (
-          <Pressable
+          <Tocavel
             onPress={() => acionar('ajustes')}
             accessibilityRole="button"
             accessibilityLabel={`Conta ${contaAtual.nome}. Clique para abrir os ajustes.`}
@@ -203,7 +205,7 @@ const CascaPC: React.FC = () => {
             <Text style={estilos.nomeConta} numberOfLines={1}>
               {contaAtual.nome}
             </Text>
-          </Pressable>
+          </Tocavel>
         ) : null}
       </View>
 
@@ -231,14 +233,14 @@ const CascaPC: React.FC = () => {
               barra fica reduzida de qualquer jeito, e um botão que não obedece
               é pior que botão nenhum. */}
           {metricas.largura >= LIMITE_BARRA_LARGA ? (
-            <Pressable
+            <Tocavel
               onPress={() => guardarBarra(!barraReduzida)}
               accessibilityRole="button"
               accessibilityLabel={barraReduzida ? 'Expandir a barra' : 'Reduzir a barra'}
               style={estilos.botaoRecolher}>
               <IconeSeta tamanho={16} cor={tema.textoSecundario} paraDireita={barraReduzida} />
               {barraReduzida ? null : <Text style={estilos.textoRecolher}>Reduzir</Text>}
-            </Pressable>
+            </Tocavel>
           ) : null}
         </View>
 
@@ -323,7 +325,7 @@ const ItemBarra: React.FC<{
   const cor = ativo ? tema.primariaTexto : tema.textoSecundario;
 
   return (
-    <Pressable
+    <Tocavel
       onPress={aoTocar}
       accessibilityRole="tab"
       accessibilityState={{ selected: ativo }}
@@ -335,7 +337,7 @@ const ItemBarra: React.FC<{
           {rotulo}
         </Text>
       )}
-    </Pressable>
+    </Tocavel>
   );
 };
 
@@ -359,7 +361,7 @@ const criarEstilosPC = criarEstilos((tema) => ({
     maxWidth: 320,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: 14,
+    borderRadius: raios.m,
     borderWidth: 1,
     borderColor: tema.borda,
     backgroundColor: tema.superficie,
@@ -367,7 +369,7 @@ const criarEstilosPC = criarEstilos((tema) => ({
   botaoCampoAtivo: { borderColor: tema.primaria, backgroundColor: tema.primariaFundo },
   rotuloCampo: {
     color: tema.textoTerciario,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -392,7 +394,7 @@ const criarEstilosPC = criarEstilos((tema) => ({
     paddingLeft: 6,
     paddingRight: 14,
     paddingVertical: 6,
-    borderRadius: 999,
+    borderRadius: raios.pilula,
     borderWidth: 1,
     borderColor: tema.borda,
     backgroundColor: tema.superficie,
@@ -424,8 +426,7 @@ const criarEstilosPC = criarEstilos((tema) => ({
     gap: 12,
     minHeight: 48,
     paddingHorizontal: 14,
-    borderRadius: 14,
-    backgroundColor: tema.superficie,
+    borderRadius: raios.m,
   },
   itemReduzido: { justifyContent: 'center', paddingHorizontal: 0 },
   itemAtivo: { backgroundColor: tema.primariaFundo },
@@ -444,7 +445,7 @@ const criarEstilosPC = criarEstilos((tema) => ({
     justifyContent: 'center',
     gap: 8,
     minHeight: 40,
-    borderRadius: 12,
+    borderRadius: raios.m,
     backgroundColor: tema.superficie,
   },
   textoRecolher: { color: tema.textoSecundario, fontSize: 11, fontWeight: '700' },

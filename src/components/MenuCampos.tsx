@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,6 +24,8 @@ import { useArrastarParaFechar } from '../hooks/useArrastarParaFechar';
 import { useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
 import { IconeX } from '../tema/Icones';
+import Tocavel from './Tocavel';
+import { raios } from '../tema/raios';
 
 type Props = {
   visivel: boolean;
@@ -106,7 +107,7 @@ const MenuCampos: React.FC<Props> = ({
           const total = contarItens(campo);
 
           return (
-            <Pressable
+            <Tocavel
               key={campo.id}
               onPress={() => {
                 aoTrocar(campo.id);
@@ -134,41 +135,41 @@ const MenuCampos: React.FC<Props> = ({
 
               {campo.tipo === 'livre' ? (
                 <View style={estilos.acoesLinha}>
-                  <Pressable
+                  <Tocavel
                     onPress={() => setEdicao({ modo: 'editar', campo })}
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={`Editar o formulário de ${campo.nome}`}
                     style={estilos.botaoLinha}>
                     <Text style={estilos.textoBotaoLinha}>Editar</Text>
-                  </Pressable>
-                  <Pressable
+                  </Tocavel>
+                  <Tocavel
                     onPress={() => confirmarExclusao(campo)}
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={`Excluir ${campo.nome}`}
                     style={estilos.botaoExcluirLinha}>
                     <IconeX tamanho={13} cor={tema.erro} />
-                  </Pressable>
+                  </Tocavel>
                 </View>
               ) : (
                 <Text style={estilos.seloPadrao}>Padrão</Text>
               )}
-            </Pressable>
+            </Tocavel>
           );
         })}
       </ScrollView>
 
       <View style={estilos.rodape}>
-        <Pressable onPress={aoFechar} style={estilos.botaoCancelar}>
+        <Tocavel onPress={aoFechar} style={estilos.botaoCancelar}>
           <Text style={estilos.textoBotaoCancelar}>Fechar</Text>
-        </Pressable>
-        <Pressable
+        </Tocavel>
+        <Tocavel
           onPress={() => setEdicao({ modo: 'criar' })}
           style={estilos.botaoSalvar}
           accessibilityRole="button">
           <Text style={estilos.textoBotaoSalvar}>Adicionar novo campo</Text>
-        </Pressable>
+        </Tocavel>
       </View>
     </>
   );
@@ -309,7 +310,7 @@ const EditorDeCampo: React.FC<{
                   style={[estilos.input, estilos.inputRequisito]}
                 />
                 {eTitulo ? null : (
-                  <Pressable
+                  <Tocavel
                     onPress={() =>
                       setRequisitos((atual) =>
                         atual.filter((item) => item.id !== requisito.id),
@@ -320,12 +321,12 @@ const EditorDeCampo: React.FC<{
                     accessibilityLabel={`Remover ${requisito.rotulo || 'requisito'}`}
                     style={estilos.botaoExcluirLinha}>
                     <IconeX tamanho={13} cor={tema.erro} />
-                  </Pressable>
+                  </Tocavel>
                 )}
               </View>
 
               <View style={estilos.faixaOpcoes}>
-                <Pressable
+                <Tocavel
                   onPress={() =>
                     alterarRequisito(requisito.id, {
                       tipo: TIPOS[(TIPOS.indexOf(requisito.tipo) + 1) % TIPOS.length],
@@ -335,7 +336,7 @@ const EditorDeCampo: React.FC<{
                   accessibilityLabel={`Tipo: ${ROTULO_TIPO[requisito.tipo]}. Tocar para trocar.`}
                   style={estilos.chip}>
                   <Text style={estilos.textoChip}>{ROTULO_TIPO[requisito.tipo]}</Text>
-                </Pressable>
+                </Tocavel>
 
                 {eTitulo ? (
                   <View style={[estilos.chip, estilos.chipAtivo]}>
@@ -344,7 +345,7 @@ const EditorDeCampo: React.FC<{
                     </Text>
                   </View>
                 ) : (
-                  <Pressable
+                  <Tocavel
                     onPress={() =>
                       alterarRequisito(requisito.id, { obrigatorio: !requisito.obrigatorio })
                     }
@@ -358,14 +359,14 @@ const EditorDeCampo: React.FC<{
                       ]}>
                       {requisito.obrigatorio ? 'Obrigatório' : 'Opcional'}
                     </Text>
-                  </Pressable>
+                  </Tocavel>
                 )}
               </View>
             </View>
           );
         })}
 
-        <Pressable
+        <Tocavel
           onPress={() =>
             setRequisitos((atual) => [
               ...atual,
@@ -375,18 +376,18 @@ const EditorDeCampo: React.FC<{
           style={estilos.botaoAcrescentar}
           accessibilityRole="button">
           <Text style={estilos.textoBotaoAcrescentar}>+ Acrescentar requisito</Text>
-        </Pressable>
+        </Tocavel>
       </ScrollView>
 
       <View style={estilos.rodape}>
-        <Pressable onPress={aoCancelar} style={estilos.botaoCancelar}>
+        <Tocavel onPress={aoCancelar} style={estilos.botaoCancelar}>
           <Text style={estilos.textoBotaoCancelar}>Cancelar</Text>
-        </Pressable>
-        <Pressable onPress={confirmar} style={estilos.botaoSalvar}>
+        </Tocavel>
+        <Tocavel onPress={confirmar} style={estilos.botaoSalvar}>
           <Text style={estilos.textoBotaoSalvar}>
             {edicao?.modo === 'editar' ? 'Salvar' : 'Criar campo'}
           </Text>
-        </Pressable>
+        </Tocavel>
       </View>
     </>
   );
@@ -424,8 +425,8 @@ const criarEstilos = (tema: Tema) =>
     painel: {
       maxHeight: '88%',
       backgroundColor: tema.fundoElevado,
-      borderTopLeftRadius: 26,
-      borderTopRightRadius: 26,
+      borderTopLeftRadius: raios.xg,
+      borderTopRightRadius: raios.xg,
       paddingHorizontal: 22,
       paddingTop: 10,
       borderTopWidth: 1,
@@ -443,7 +444,7 @@ const criarEstilos = (tema: Tema) =>
       paddingTop: 18,
     },
     areaPuxador: { alignItems: 'center', paddingVertical: 8, marginBottom: 6 },
-    puxador: { width: 40, height: 4, borderRadius: 999, backgroundColor: tema.bordaForte },
+    puxador: { width: 40, height: 4, borderRadius: raios.pilula, backgroundColor: tema.bordaForte },
     titulo: { color: tema.texto, fontSize: 18, fontWeight: '700', marginBottom: 4 },
     descricao: { color: tema.textoSecundario, fontSize: 12, lineHeight: 18, marginBottom: 8 },
     scroll: { flexShrink: 1 },
@@ -453,7 +454,7 @@ const criarEstilos = (tema: Tema) =>
       gap: 10,
       marginTop: 10,
       padding: 14,
-      borderRadius: 16,
+      borderRadius: raios.g,
       borderWidth: 1,
       borderColor: tema.borda,
       backgroundColor: tema.superficie,
@@ -467,7 +468,7 @@ const criarEstilos = (tema: Tema) =>
     botaoLinha: {
       paddingHorizontal: 10,
       paddingVertical: 7,
-      borderRadius: 999,
+      borderRadius: raios.pilula,
       backgroundColor: tema.fundoElevado,
       borderWidth: 1,
       borderColor: tema.borda,
@@ -483,7 +484,7 @@ const criarEstilos = (tema: Tema) =>
     },
     seloPadrao: {
       color: tema.textoTerciario,
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.6,
@@ -500,7 +501,7 @@ const criarEstilos = (tema: Tema) =>
     bloco: { marginTop: 10 },
     rotulo: {
       color: tema.textoTerciario,
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.8,
@@ -510,7 +511,7 @@ const criarEstilos = (tema: Tema) =>
       backgroundColor: tema.superficie,
       borderWidth: 1,
       borderColor: tema.borda,
-      borderRadius: 10,
+      borderRadius: raios.p,
       paddingHorizontal: 12,
       paddingVertical: 10,
       color: tema.texto,
@@ -520,7 +521,7 @@ const criarEstilos = (tema: Tema) =>
     cartaoRequisito: {
       marginTop: 10,
       padding: 12,
-      borderRadius: 16,
+      borderRadius: raios.g,
       borderWidth: 1,
       borderColor: tema.borda,
       backgroundColor: tema.fundo,
@@ -530,7 +531,7 @@ const criarEstilos = (tema: Tema) =>
     chip: {
       paddingHorizontal: 12,
       paddingVertical: 7,
-      borderRadius: 999,
+      borderRadius: raios.pilula,
       backgroundColor: tema.superficie,
       borderWidth: 1,
       borderColor: tema.borda,
@@ -541,7 +542,7 @@ const criarEstilos = (tema: Tema) =>
     botaoAcrescentar: {
       marginTop: 12,
       paddingVertical: 12,
-      borderRadius: 14,
+      borderRadius: raios.m,
       alignItems: 'center',
       borderWidth: 1,
       borderStyle: 'dashed',
@@ -558,7 +559,7 @@ const criarEstilos = (tema: Tema) =>
     botaoCancelar: {
       flex: 1,
       paddingVertical: 14,
-      borderRadius: 14,
+      borderRadius: raios.m,
       alignItems: 'center',
       backgroundColor: tema.superficie,
     },
@@ -566,12 +567,12 @@ const criarEstilos = (tema: Tema) =>
     botaoSalvar: {
       flex: 1.4,
       paddingVertical: 14,
-      borderRadius: 14,
+      borderRadius: raios.m,
       alignItems: 'center',
       backgroundColor: tema.primaria,
     },
     textoBotaoSalvar: {
-      color: tema.textoInvertido,
+      color: tema.sobrePrimaria,
       fontSize: 13,
       fontWeight: '700',
       textTransform: 'uppercase',

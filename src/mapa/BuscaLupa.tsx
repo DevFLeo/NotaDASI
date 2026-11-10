@@ -1,9 +1,11 @@
 import React, { useRef, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
 import { IconeLupa, IconeX } from '../tema/Icones';
+import Tocavel from '../components/Tocavel';
+import { raios } from '../tema/raios';
 
 type Props = {
   valor: string;
@@ -85,23 +87,23 @@ const BuscaLupa: React.FC<Props> = ({
             onSubmitEditing={() => entrada.current?.blur()}
           />
 
-          <Pressable
+          <Tocavel
             onPress={fechar}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Fechar busca"
             style={estilos.botaoFechar}>
             <IconeX tamanho={13} cor={tema.textoSecundario} />
-          </Pressable>
+          </Tocavel>
         </>
       ) : (
-        <Pressable
+        <Tocavel
           onPress={abrir}
           accessibilityRole="button"
           accessibilityLabel="Buscar no mapa"
           style={estilos.botaoLupa}>
           <IconeLupa tamanho={17} cor={tema.primariaTexto} />
-        </Pressable>
+        </Tocavel>
       )}
     </Animated.View>
   );
@@ -113,7 +115,7 @@ const criarEstilos = (tema: Tema) =>
       height: 40,
       flexDirection: 'row',
       alignItems: 'center',
-      borderRadius: 999,
+      borderRadius: raios.pilula,
       borderWidth: 1,
       borderColor: tema.borda,
       backgroundColor: tema.fundoElevado,

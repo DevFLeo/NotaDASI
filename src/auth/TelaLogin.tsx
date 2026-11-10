@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 import { SENHA_INICIAL, type Conta } from './contas';
 import { useSessao } from './useSessao';
 import { criarEstilos } from '../tema/estilos';
 import { useEstilos, useMetricas, useTema } from '../tema/ThemeContext';
+import Tocavel from '../components/Tocavel';
+import { raios } from '../tema/raios';
 
 /**
  * Porta de entrada do app — a MESMA no celular e no PC.
@@ -63,7 +65,7 @@ const TelaLogin: React.FC = () => {
             const dica = SENHA_INICIAL[conta.usuario];
 
             return (
-              <Pressable
+              <Tocavel
                 key={conta.usuario}
                 onPress={() => escolher(conta)}
                 accessibilityRole="button"
@@ -80,7 +82,7 @@ const TelaLogin: React.FC = () => {
                   </Text>
                 </View>
                 {conta.padrao && dica ? <Text style={estilos.selo}>senha: {dica}</Text> : null}
-              </Pressable>
+              </Tocavel>
             );
           })}
 
@@ -118,9 +120,9 @@ const TelaLogin: React.FC = () => {
 
           {erro ? <Text style={estilos.erro}>{erro}</Text> : null}
 
-          <Pressable onPress={confirmar} accessibilityRole="button" style={estilos.botao}>
+          <Tocavel onPress={confirmar} accessibilityRole="button" style={estilos.botao}>
             <Text style={estilos.textoBotao}>Entrar</Text>
-          </Pressable>
+          </Tocavel>
 
           <Text style={estilos.rodape}>
             As contas ficam salvas só neste {metricas.expandida ? 'computador' : 'aparelho'}. Trocar
@@ -146,7 +148,7 @@ const criarEstilosLogin = criarEstilos((tema, m) => ({
     // ocupa a largura toda.
     maxWidth: Math.min(460, m.larguraMaxModal),
     backgroundColor: tema.fundoElevado,
-    borderRadius: 24,
+    borderRadius: raios.xg,
     borderWidth: 1,
     borderColor: tema.borda,
     padding: m.compacta ? 18 : 26,
@@ -174,7 +176,7 @@ const criarEstilosLogin = criarEstilos((tema, m) => ({
     gap: 10,
     marginTop: 10,
     padding: 14,
-    borderRadius: 16,
+    borderRadius: raios.g,
     borderWidth: 1,
     borderColor: tema.borda,
     backgroundColor: tema.superficie,
@@ -186,9 +188,9 @@ const criarEstilosLogin = criarEstilos((tema, m) => ({
   descricaoConta: { color: tema.textoSecundario, fontSize: 11, marginTop: 3, lineHeight: 15 },
   selo: {
     color: tema.textoTerciario,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
-    borderRadius: 999,
+    borderRadius: raios.pilula,
     borderWidth: 1,
     borderColor: tema.borda,
     paddingHorizontal: 8,
@@ -205,7 +207,7 @@ const criarEstilosLogin = criarEstilos((tema, m) => ({
     borderWidth: 1,
     borderColor: tema.borda,
     backgroundColor: tema.superficie,
-    borderRadius: 14,
+    borderRadius: raios.m,
     paddingHorizontal: 14,
     // Alvo de toque confortável no celular; no PC vira uma caixa normal.
     minHeight: 48,
@@ -217,12 +219,12 @@ const criarEstilosLogin = criarEstilos((tema, m) => ({
   botao: {
     marginTop: 22,
     minHeight: 50,
-    borderRadius: 16,
+    borderRadius: raios.g,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tema.primaria,
   },
-  textoBotao: { color: '#ffffff', fontSize: 15, fontWeight: '800', letterSpacing: 0.4 },
+  textoBotao: { color: tema.sobrePrimaria, fontSize: 15, fontWeight: '800', letterSpacing: 0.4 },
   rodape: { color: tema.textoTerciario, fontSize: 11, lineHeight: 16, marginTop: 18 },
 }));
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Pressable, StatusBar, Text, View } from 'react-native';
+import { StatusBar, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { FadeIn, runOnJS } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,8 @@ import { useSegurarParaAbrir } from './src/hooks/useSegurarParaAbrir';
 import { criarEstilos } from './src/tema/estilos';
 import { ThemeProvider, useEstilos, useMetricas, useTema } from './src/tema/ThemeContext';
 import { IconeEngrenagem, IconeLista, IconeMapa } from './src/tema/Icones';
+import Tocavel from './src/components/Tocavel';
+import { raios } from './src/tema/raios';
 
 type Aba = 'lista' | 'mapa' | 'ajustes';
 
@@ -200,7 +202,7 @@ const BotaoAba: React.FC<{
   const segurar = useSegurarParaAbrir(aoSegurar);
 
   return (
-    <Pressable
+    <Tocavel
       onPress={aoTocar}
       {...segurar}
       accessibilityRole="tab"
@@ -216,7 +218,7 @@ const BotaoAba: React.FC<{
         adjustsFontSizeToFit>
         {rotulo}
       </Text>
-    </Pressable>
+    </Tocavel>
   );
 };
 
@@ -256,15 +258,15 @@ const criarEstilosApp = criarEstilos((tema, m) => ({
     minHeight: 48,
     paddingVertical: m.compacta ? 8 : 12,
     paddingHorizontal: 4,
-    borderRadius: 14,
-    backgroundColor: tema.superficie,
+    borderRadius: raios.m,
   },
+  // Só a aba ativa tem fundo: com as três em pílula, a ativa mal se destacava.
   abaAtiva: {
     backgroundColor: tema.primariaFundo,
   },
   textoAba: {
     color: tema.textoSecundario,
-    fontSize: m.compacta ? 10 : 12,
+    fontSize: m.compacta ? 11 : 12,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: m.compacta ? 0.3 : 0.7,

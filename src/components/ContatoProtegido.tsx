@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import type { Contato } from '../data/registros';
 import { criarEstilos } from '../tema/estilos';
 import { useEstilos } from '../tema/ThemeContext';
+import Tocavel from './Tocavel';
+import { raios } from '../tema/raios';
 
 type Props = {
   contato?: Contato;
@@ -28,7 +30,7 @@ const ContatoProtegido: React.FC<Props> = ({ contato }) => {
     <View style={estilos.container}>
       <Text style={estilos.rotulo}>Contato pessoal</Text>
 
-      <Pressable
+      <Tocavel
         onPress={() => setRevelado((atual) => !atual)}
         accessibilityRole="button"
         accessibilityLabel={
@@ -42,7 +44,7 @@ const ContatoProtegido: React.FC<Props> = ({ contato }) => {
         ))}
 
         <Text style={estilos.dica}>{revelado ? 'toque para ocultar' : '🔒 toque para revelar'}</Text>
-      </Pressable>
+      </Tocavel>
     </View>
   );
 };
@@ -57,7 +59,7 @@ const criarEstilosContato = criarEstilos((tema) => ({
     },
     rotulo: {
       color: tema.textoTerciario,
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: 0.8,
@@ -65,7 +67,7 @@ const criarEstilosContato = criarEstilos((tema) => ({
     },
     area: {
       backgroundColor: tema.superficie,
-      borderRadius: 12,
+      borderRadius: raios.m,
       borderWidth: 1,
       borderColor: tema.borda,
       paddingHorizontal: 12,
@@ -82,7 +84,7 @@ const criarEstilosContato = criarEstilos((tema) => ({
     },
     dica: {
       color: tema.textoTerciario,
-      fontSize: 10,
+      fontSize: 11,
       marginTop: 6,
     },
 }));

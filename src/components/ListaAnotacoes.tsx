@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Platform, Pressable, Text, View, type ListRenderItemInfo } from 'react-native';
+import { FlatList, Platform, Text, View, type ListRenderItemInfo } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeInUp,
@@ -18,7 +18,10 @@ import {
 } from '../data/campos';
 import { criarEstilosEscalaveis } from '../tema/estilos';
 import { limitarEscalaTexto } from '../tema/responsivo';
+import { IconeMais } from '../tema/Icones';
 import { useEscalaTexto, useEstilos, useMetricas, useTema } from '../tema/ThemeContext';
+import Tocavel from './Tocavel';
+import { raios } from '../tema/raios';
 
 type Props = {
   campo: Campo;
@@ -40,6 +43,7 @@ const normalizar = (texto: string): string =>
  * rótulo + valor, na ordem em que foi definido.
  */
 const ListaAnotacoes: React.FC<Props> = ({ campo, anotacoes, aoAbrir, aoCriar }) => {
+  const temaFab = useTema();
   const metricas = useMetricas();
   const estilos = useEstilos(criarEstilosAnotacoes);
   const [escalaTexto, definirEscalaTexto] = useEscalaTexto();
@@ -145,13 +149,13 @@ const ListaAnotacoes: React.FC<Props> = ({ campo, anotacoes, aoAbrir, aoCriar })
         />
       </GestureDetector>
 
-      <Pressable
+      <Tocavel
         onPress={aoCriar}
         style={estilos.fab}
         accessibilityRole="button"
         accessibilityLabel={`Adicionar item em ${campo.nome}`}>
-        <Text style={estilos.textoFab}>+</Text>
-      </Pressable>
+        <IconeMais tamanho={26} cor={temaFab.sobrePrimaria} />
+      </Tocavel>
     </View>
   );
 };
@@ -174,7 +178,7 @@ const CartaoAnotacaoBase: React.FC<{
       entering={FadeInUp.delay(Math.min(indice, 8) * 60).springify()}
       layout={LinearTransition.springify()}
       style={[estilos.itemGrade, estilos.cartao]}>
-      <Pressable
+      <Tocavel
         android_ripple={{ color: tema.superficieAtiva }}
         onPress={() => aoAbrir(anotacao)}
         accessibilityRole="button"
@@ -190,7 +194,7 @@ const CartaoAnotacaoBase: React.FC<{
             <NumeroTocavel texto={texto} estiloTexto={estilos.valor} numberOfLines={3} />
           </View>
         ))}
-      </Pressable>
+      </Tocavel>
     </Animated.View>
   );
 };
@@ -202,7 +206,7 @@ const criarEstilosAnotacoes = criarEstilosEscalaveis((tema, m) => ({
   cabecalho: { paddingTop: 12 },
   selo: {
     color: tema.primariaTexto,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.9,
@@ -225,7 +229,7 @@ const criarEstilosAnotacoes = criarEstilosEscalaveis((tema, m) => ({
   linhaGrade: { gap: m.espaco },
   itemGrade: m.colunas > 1 ? { flex: 1, maxWidth: `${100 / m.colunas}%` } : {},
   cartao: {
-    borderRadius: 22,
+    borderRadius: raios.g,
     marginBottom: m.espaco,
     borderWidth: 1,
     borderColor: tema.borda,
@@ -242,7 +246,7 @@ const criarEstilosAnotacoes = criarEstilosEscalaveis((tema, m) => ({
   bloco: { marginTop: 12 },
   rotulo: {
     color: tema.textoTerciario,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -267,7 +271,6 @@ const criarEstilosAnotacoes = criarEstilosEscalaveis((tema, m) => ({
     shadowOpacity: 0.3,
     shadowRadius: 10,
   },
-  textoFab: { color: tema.textoInvertido, fontSize: 28, fontWeight: '600', lineHeight: 30 },
 }));
 
 export default ListaAnotacoes;
