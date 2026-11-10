@@ -2,23 +2,27 @@
 
 ## Como rodar
 
-**No PC (navegador) — o jeito mais rápido, não precisa de celular nem emulador:**
+São **três modos**, do mais rápido ao mais completo. Os três partem do mesmo
+código (`App.tsx` + `src/`) e da mesma base de dados.
+
+| Modo | Comando | Precisa de |
+|---|---|---|
+| **Node — navegador** | `npm run dev` | Só Node 22.11+ |
+| **Android SDK — aparelho/emulador** | `npm run android` | Node + JDK 17 + Android SDK (NDK e CMake) |
+| **Casca do `App.tsx`** | qualquer um dos dois | é a tela de celular — ver [seção 3](#3-rodando-a-parte-do-apptsx-a-casca-do-celular) |
+
+Antes de qualquer um deles, uma vez só:
 
 ```bash
 npm install
-npm run dev
 ```
 
-Abra **http://localhost:5173**.
+> **Na rede da Prefeitura**, `registry.npmjs.org` está bloqueado pelo firewall
+> (a conexão TLS é cortada; Google e GitHub passam normalmente). Se o
+> `npm install` travar ou der `ECONNRESET`, use o espelho oficial:
+> `npm install --registry https://registry.yarnpkg.com`
 
-**No Android (aparelho ou emulador):**
-
-```bash
-npm install
-npm run android
-```
-
-Nos dois alvos o app pede uma conta na entrada. As três que existem numa
+Nos três modos o app pede uma conta na entrada. As três que existem numa
 instalação nova:
 
 | Conta | Senha inicial |
@@ -30,15 +34,195 @@ instalação nova:
 A senha é trocável em *Ajustes → Conta*, e a sessão fica salva — só é pedida de
 novo se você sair. Ver [Contas e acesso](#contas-e-acesso).
 
+---
+
+### 1. Com Node (navegador)
+
+O jeito mais rápido: não precisa de celular, emulador, JDK nem Android SDK.
+Só do Node.
+
+```bash
+node --version    # precisa ser >= 22.11 (o package.json exige em "engines")
+npm run dev
+```
+
+Abra **http://localhost:5173**. Se a porta estiver ocupada, o Vite sobe em
+5174, 5175... — use a que ele imprimir no terminal.
+
+O Vite recarrega sozinho a cada arquivo salvo, inclusive os de `src/` e o
+próprio `App.tsx`.
+
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento em `localhost:5173` |
+| `npm run dev:build` | Build de produção em `pc/dist/` |
+| `npm run dev:preview` | Serve o build de produção já gerado |
+| `npm test` | Testes (Jest) — rodam em Node, sem emulador |
+| `npm run lint` | ESLint |
+| `npx tsc --noEmit -p tsconfig.json` | Checa os tipos do alvo Android |
+| `npx tsc --noEmit -p pc/tsconfig.json` | Checa os tipos do alvo PC |
+
+Os três comandos `dev*` usam o mesmo `pc/vite.config.mts`. A entrada é
+`pc/main.tsx`, que é o equivalente ao `index.js` do Android — ver
+[pc/README.md](pc/README.md).
+
+> Dependências pré-empacotadas velhas depois de mexer no `package.json`:
+> `rm -rf node_modules/.vite && npm run dev`.
+
+---
+
+### 2. Com o Android SDK (aparelho ou emulador)
+
+#### 2.1 Pré-requisitos
+
+- Node.js 22.11+
+- JDK 17
+- Android SDK com **NDK** e **CMake** — obrigatórios, porque o projeto compila
+  o `cpp/` junto
+- Um emulador ou um aparelho com depuração USB
+
+Confira o que já está instalado:
+
+```bash
+node --version                     # >= 22.11
+java -version                      # 17
+echo $ANDROID_HOME                 # no PowerShell: echo $env:ANDROID_HOME
+```
+
+#### 2.2 Variáveis de ambiente (Windows, PowerShell)
+
+```powershell
+setx ANDROID_HOME "$env:LOCALAPPDATA\Android\Sdk"
+setx PATH "$env:PATH;$env:LOCALAPPDATA\Android\Sdk\platform-tools;$env:LOCALAPPDATA\Android\Sdk\emulator"
+```
+
+Feche e reabra o terminal depois do `setx` — ele só vale para processos novos.
+
+#### 2.3 Instalar NDK e CMake pela linha de comando
+
+```bash
+sdkmanager "ndk;27.1.12297006" "cmake;3.22.1" "platform-tools" "platforms;android-35"
+```
+
+Pelo Android Studio, o mesmo caminho é *SDK Manager → SDK Tools*, marcando
+**NDK (Side by side)** e **CMake**.
+
+#### 2.4 Subir um emulador (ou plugar o aparelho)
+
+```bash
+emulator -list-avds                       # lista os emuladores existentes
+emulator -avd NotaDASI_Emulator           # sobe um deles
+adb devices                               # confirme que aparece como "device"
+```
+
+#### 2.5 Instalar e rodar
+
+```bash
+npm run android
+```
+
+O Gradle compila a biblioteca nativa automaticamente — não há passo manual de
+compilação do C++. O Metro sobe junto; se preferir controlá-lo em outro
+terminal, use `npm start` (ou `npx react-native start --reset-cache` quando o
+cache estiver velho).
+
+#### 2.6 Gerar o APK
+
+```bash
+cd android
+./gradlew assembleRelease          # no Windows: .\gradlew.bat assembleRelease
+```
+
+O arquivo sai em `android/app/build/outputs/apk/release/`.
+
+Para gerar só o bundle JS, sem o build completo:
+
+```bash
+npx react-native bundle \
+  --platform android \
+  --dev false \
+  --entry-file index.js \
+  --bundle-output android/app/src/main/assets/index.android.bundle \
+  --assets-dest android/app/src/main/res
+```
+
+O conteúdo gerado em `android/app/src/main/assets/` é **artefato de build** —
+está no `.gitignore` e é recriado a cada release. Se ele existir e estiver
+velho, o app pode abrir com uma tela de semanas atrás sem dar erro nenhum; a
+armadilha inteira está em [TUTORIAL.md](TUTORIAL.md#o-app-abre-com-a-tela-antiga).
+
+---
+
+### 3. Rodando a parte do `App.tsx` (a casca do celular)
+
+`App.tsx` **não é um alvo que se roda sozinho** — é um módulo React, sem
+servidor próprio. Ele é montado por uma das duas entradas:
+
+| Entrada | Alvo | O que monta |
+|---|---|---|
+| `index.js` | Android | `AppRegistry.registerComponent(App)` — o `export default` do `App.tsx` |
+| `pc/main.tsx` | Navegador | `Provedores` + `PortaDeEntrada` + `RaizPC` — e a `RaizPC` cai no `AppConteudo`, exportado do mesmo `App.tsx` |
+
+O arquivo exporta três coisas:
+
+- `AppConteudo` — a casca do celular: conteúdo em cima, abas embaixo
+  (Lista / Mapa mental / Ajustes), uma tela por vez;
+- `Provedores` — `SafeAreaProvider`, tema, sessão e gestos;
+- `App` (default) — os dois juntos, que é o que o Android registra.
+
+**Para ver essa casca rodando, há dois caminhos:**
+
+```bash
+# a) no aparelho/emulador — é a casca nativa, a de verdade
+npm run android
+
+# b) no navegador, sem Android nenhum
+npm run dev
+```
+
+No caminho **(b)**, estreite a janela para **menos de 900px** de largura: a
+`pc/RaizPC.tsx` devolve o controle ao `AppConteudo` do `App.tsx` e as abas do
+celular aparecem no lugar da barra lateral. Arrastar a borda da janela alterna
+entre as duas cascas na hora, porque as duas leem o mesmo estado
+(`src/app/useAplicacao.ts`). O DevTools em modo dispositivo (`F12` → ícone de
+celular) faz o mesmo.
+
+Para travar a casca do celular no navegador e não depender do tamanho da
+janela, suba o corte em [`pc/RaizPC.tsx`](pc/RaizPC.tsx):
+
+```ts
+const LIMITE_CASCA_PC = 900;   // 99999 => sempre a casca do App.tsx
+```
+
+**Sem abrir o app**, a casca também roda nos testes — é lá que ela é montada
+de cabo a rabo em Node puro:
+
+```bash
+npx jest __tests__/App.test.tsx      # monta o App.tsx
+npx jest __tests__/entrada.test.tsx  # login + porta de entrada
+npm test                             # tudo
+```
+
+> Mexer em `App.tsx` muda os **dois** alvos. É esse o objetivo: a casca do PC
+> (`pc/CascaPC.tsx`) é a única tela que existe só no navegador; todo o resto é
+> código compartilhado.
+
+---
+
 Os dois alvos rodam o **mesmo código** (`App.tsx` + `src/`) e carregam a **mesma
 base de dados** (as competências de `src/data/registros.gerado.ts`). O que muda
 é só a **casca**: as abas embaixo no celular, a barra lateral com o mapa em foco
 no PC. O alvo PC vive em [`pc/`](pc/) — veja [pc/README.md](pc/README.md) para
 os detalhes, inclusive o que **não** é compartilhado entre os dois.
 
-> **Na rede da Prefeitura**, `registry.npmjs.org` está bloqueado pelo firewall.
-> Se o `npm install` travar ou der `ECONNRESET`, use o espelho oficial:
-> `npm install --registry https://registry.yarnpkg.com`
+### Importando a planilha real
+
+```bash
+npm run importar-xlsx -- sua_planilha.xlsx --ts src/data/registros.gerado.ts
+```
+
+Enquanto `registros.gerado.ts` não existir, o app usa os dados de exemplo de
+`registros.ts` e exibe "dados de exemplo" no subtítulo.
 
 ---
 
@@ -378,52 +562,6 @@ celular — é melhor que espremer três colunas em 700px.
 Abrir e fechar o painel **não desloca o mapa**: ele mede a própria área (não a
 janela) e desloca a câmera por metade da diferença, então o que estava no centro
 continua no centro.
-
----
-
-## Pré-requisitos
-
-- Node.js 22.11+
-- JDK 17
-- Android SDK com **NDK** e **CMake** (necessários para compilar `cpp/`)
-- Emulador Android ou aparelho físico conectado
-
-## Como rodar
-
-```bash
-npm install
-npm run android
-```
-
-O Gradle compila a biblioteca nativa automaticamente — não há passo manual de compilação do C++.
-
-> **Rede bloqueando o registro do npm?** Em algumas redes corporativas/governamentais o domínio `registry.npmjs.org` fica inacessível (timeout), mesmo com `github.com` e `nodejs.org` normais. Se o `npm install` travar ou falhar com `ECONNRESET`, use o mirror oficial do Yarn (mesmos pacotes):
-> ```bash
-> npm install --registry=https://registry.yarnpkg.com/
-> ```
-
-### Gerando o bundle JS manualmente
-
-O `npm run android` já empacota o bundle via Gradle. Para gerar o bundle de produção sem rodar o build completo:
-
-```bash
-npx react-native bundle \
-  --platform android \
-  --dev false \
-  --entry-file index.js \
-  --bundle-output android/app/src/main/assets/index.android.bundle \
-  --assets-dest android/app/src/main/res
-```
-
-O conteúdo gerado em `android/app/src/main/assets/` é **artefato de build** — está no `.gitignore` e é recriado a cada release.
-
-### Importando a planilha real
-
-```bash
-npm run importar-xlsx -- sua_planilha.xlsx --ts src/data/registros.gerado.ts
-```
-
-Enquanto `registros.gerado.ts` não existir, o app usa os dados de exemplo de `registros.ts` e exibe "dados de exemplo" no subtítulo.
 
 ---
 
