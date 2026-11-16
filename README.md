@@ -319,15 +319,14 @@ android/
     layout/nota_header.xml         Referência de cabeçalho nativo
     drawable/fundo_header.xml      Fundo do cabeçalho
 
-<<<<<<< Updated upstream
-pc/                                Alvo navegador — ver pc/README.md
+pc/                                Alvo navegador (React Native Web) — ver pc/README.md
   main.tsx                         Entrada: provedores + login + RaizPC
   RaizPC.tsx                       Escolhe a casca conforme a largura da janela
   CascaPC.tsx                      Barra lateral, mapa em foco, painel 35/65
   vite.config.mts                  Resolução por plataforma, worklets, aliases
   shims/                           O que o react-native-web não tem
-=======
-web/                               Versão web (React + Vite) — npm run dev
+
+web/                               Versão web alternativa (React + Vite) — npm run dev:web
   index.html                       Casca da página
   vite.config.ts                   Porta 5173 + permissão para ler ../src/data
   src/
@@ -340,7 +339,6 @@ web/                               Versão web (React + Vite) — npm run dev
     documentos/armazenamento.ts    localStorage, leitura de arquivo, exportar/importar JSON
     documentos/PainelDocumentos.tsx  Formulário e lista do acervo
     componentes/DetalheRegistro.tsx  Modal da competência + documentos do dono
->>>>>>> Stashed changes
 
 scripts/
   importacao_de_xlsx.py            Converte a planilha do levantamento em TypeScript

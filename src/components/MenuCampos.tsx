@@ -71,8 +71,8 @@ const MenuCampos: React.FC<Props> = ({
   embutido = false,
 }) => {
   const tema = useTema();
-  const estilos = criarEstilos(tema);
-  const { gesto, estiloArrasto, deslocY } = useArrastarParaFechar(aoFechar);
+  const { gesto, estiloArrasto, deslocY, telaCheia, alternarTelaCheia } = useArrastarParaFechar(aoFechar);
+  const estilos = criarEstilos(tema, telaCheia);
   const [edicao, setEdicao] = useState<Edicao>(null);
 
   useEffect(() => {
@@ -94,7 +94,19 @@ const MenuCampos: React.FC<Props> = ({
 
   const conteudo = (
     <>
-      <Text style={estilos.titulo}>Campos</Text>
+      <View style={estilos.linhaCabecalho}>
+        <Text style={estilos.titulo}>Campos</Text>
+        {!embutido ? (
+          <Pressable
+            onPress={alternarTelaCheia}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={telaCheia ? 'Restaurar tamanho' : 'Tela cheia'}
+            style={estilos.botaoIcone}>
+            <Text style={estilos.textoBotaoIcone}>{telaCheia ? '🗕' : '⤢'}</Text>
+          </Pressable>
+        ) : null}
+      </View>
       <Text style={estilos.descricao}>
         Cada campo é um cofre separado, com os próprios itens e o próprio formulário de
         cadastro. Nada passa de um campo para o outro.
@@ -183,12 +195,24 @@ const MenuCampos: React.FC<Props> = ({
       ) : (
         <Modal visible={visivel} animationType="slide" transparent onRequestClose={aoFechar}>
           <GestureHandlerRootView style={estilos.fundo}>
-            <Animated.View style={estiloArrasto}>
-              <View style={estilos.painel}>
+            <Animated.View
+              style={[
+                estiloArrasto,
+                estilos.wrapperModal,
+                telaCheia && estilos.wrapperTelaCheia,
+              ]}>
+              <View style={[estilos.painel, telaCheia && estilos.painelTelaCheia]}>
                 <GestureDetector gesture={gesto}>
-                  <View style={estilos.areaPuxador}>
+                  <Pressable
+                    onPress={alternarTelaCheia}
+                    style={estilos.areaPuxador}
+                    accessibilityRole="button"
+                    accessibilityLabel={telaCheia ? 'Reduzir tamanho' : 'Arraste para cima para tela cheia'}>
                     <View style={estilos.puxador} />
-                  </View>
+                    <Text style={estilos.dicaArrasto}>
+                      {telaCheia ? 'Arraste para baixo para reduzir ⇣' : 'Arraste para cima para tela cheia ⇡'}
+                    </Text>
+                  </Pressable>
                 </GestureDetector>
 
                 {conteudo}
@@ -232,8 +256,8 @@ const EditorDeCampo: React.FC<{
   embutido: boolean;
 }> = ({ edicao, aoCancelar, aoConfirmar, embutido }) => {
   const tema = useTema();
-  const estilos = criarEstilos(tema);
-  const { gesto, estiloArrasto, deslocY } = useArrastarParaFechar(aoCancelar);
+  const { gesto, estiloArrasto, deslocY, telaCheia, alternarTelaCheia } = useArrastarParaFechar(aoCancelar);
+  const estilos = criarEstilos(tema, telaCheia);
 
   const [nome, setNome] = useState('');
   const [requisitos, setRequisitos] = useState<RequisitoCampo[]>(formularioPadrao);
@@ -273,9 +297,21 @@ const EditorDeCampo: React.FC<{
 
   const conteudo = (
     <>
-      <Text style={estilos.titulo}>
-        {edicao?.modo === 'editar' ? 'Editar campo' : 'Novo campo'}
-      </Text>
+      <View style={estilos.linhaCabecalho}>
+        <Text style={estilos.titulo}>
+          {edicao?.modo === 'editar' ? 'Editar campo' : 'Novo campo'}
+        </Text>
+        {!embutido ? (
+          <Pressable
+            onPress={alternarTelaCheia}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={telaCheia ? 'Restaurar tamanho' : 'Tela cheia'}
+            style={estilos.botaoIcone}>
+            <Text style={estilos.textoBotaoIcone}>{telaCheia ? '🗕' : '⤢'}</Text>
+          </Pressable>
+        ) : null}
+      </View>
       <Text style={estilos.descricao}>
         Defina o que o cadastro deste cofre precisa ter. O primeiro item é o título que
         aparece na lista e no mapa.
@@ -400,14 +436,26 @@ const EditorDeCampo: React.FC<{
   return (
     <Modal visible={edicao !== null} animationType="slide" transparent onRequestClose={aoCancelar}>
       <GestureHandlerRootView style={estilos.fundo}>
-        <Animated.View style={estiloArrasto}>
+        <Animated.View
+          style={[
+            estiloArrasto,
+            estilos.wrapperModal,
+            telaCheia && estilos.wrapperTelaCheia,
+          ]}>
           <KeyboardAvoidingView
-            style={estilos.painel}
+            style={[estilos.painel, telaCheia && estilos.painelTelaCheia]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <GestureDetector gesture={gesto}>
-              <View style={estilos.areaPuxador}>
+              <Pressable
+                onPress={alternarTelaCheia}
+                style={estilos.areaPuxador}
+                accessibilityRole="button"
+                accessibilityLabel={telaCheia ? 'Reduzir tamanho' : 'Arraste para cima para tela cheia'}>
                 <View style={estilos.puxador} />
-              </View>
+                <Text style={estilos.dicaArrasto}>
+                  {telaCheia ? 'Arraste para baixo para reduzir ⇣' : 'Arraste para cima para tela cheia ⇡'}
+                </Text>
+              </Pressable>
             </GestureDetector>
 
             {conteudo}
@@ -418,19 +466,73 @@ const EditorDeCampo: React.FC<{
   );
 };
 
-const criarEstilos = (tema: Tema) =>
+const criarEstilos = (tema: Tema, telaCheia = false) =>
   StyleSheet.create({
     fundo: { flex: 1, justifyContent: 'flex-end', backgroundColor: tema.overlay },
+    wrapperModal: {
+      width: '100%',
+      height: '68%',
+      maxHeight: '92%',
+      minHeight: 380,
+    },
+    wrapperTelaCheia: {
+      height: '100%',
+      maxHeight: '100%',
+      flex: 1,
+    },
     painel: {
-      maxHeight: '88%',
+      flex: 1,
       backgroundColor: tema.fundoElevado,
       borderTopLeftRadius: 26,
       borderTopRightRadius: 26,
       paddingHorizontal: 22,
-      paddingTop: 10,
+      paddingTop: 8,
       borderTopWidth: 1,
       borderColor: tema.borda,
+      overflow: 'hidden',
     },
+    painelTelaCheia: {
+      borderTopLeftRadius: 0,
+      borderTopRightRadius: 0,
+      height: '100%',
+      maxHeight: '100%',
+    },
+    areaPuxador: {
+      alignItems: 'center',
+      paddingVertical: 10,
+      marginBottom: 4,
+      width: '100%',
+      ...(Platform.OS === 'web' ? { cursor: 'ns-resize' } : {}),
+    },
+    puxador: {
+      width: 52,
+      height: 5,
+      borderRadius: 999,
+      backgroundColor: tema.bordaForte,
+      marginBottom: 4,
+    },
+    dicaArrasto: {
+      fontSize: 10,
+      color: tema.textoTerciario,
+      letterSpacing: 0.3,
+    },
+    linhaCabecalho: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 4,
+    },
+    botaoIcone: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: tema.superficie,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: tema.borda,
+    },
+    textoBotaoIcone: { color: tema.textoSecundario, fontSize: 14, fontWeight: '700' },
     /**
      * Versão PC do `painel`: mesma pele, mas ocupa a altura toda da coluna de
      * 35% em vez de subir do rodapé com cantos arredondados.
@@ -446,7 +548,7 @@ const criarEstilos = (tema: Tema) =>
     puxador: { width: 40, height: 4, borderRadius: 999, backgroundColor: tema.bordaForte },
     titulo: { color: tema.texto, fontSize: 18, fontWeight: '700', marginBottom: 4 },
     descricao: { color: tema.textoSecundario, fontSize: 12, lineHeight: 18, marginBottom: 8 },
-    scroll: { flexShrink: 1 },
+    scroll: { flex: 1, minHeight: 0 },
     linhaCampo: {
       flexDirection: 'row',
       alignItems: 'center',

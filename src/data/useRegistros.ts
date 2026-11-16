@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { carregarRegistros as carregarRegistrosBase, obterOrigemDados } from './fonte';
-import type { NovoRegistro, Registro } from './registros';
+import type { ComentarioRegistro, EntradaAuditoria, NovoRegistro, Registro } from './registros';
 
 const CHAVE_CRIADOS = '@notadasi:registros-criados';
 const CHAVE_EDICOES = '@notadasi:registros-edicoes';
@@ -154,6 +154,75 @@ export function useRegistros() {
     });
   }, []);
 
+  const adicionarComentario = useCallback(
+    (
+      id: string,
+      comentario: {
+        usuario: string;
+        nome: string;
+        papel: string;
+        texto: string;
+        destinatario?: 'dasi' | 'gerente' | 'secretario' | 'todos';
+      },
+    ) => {
+      const novoComentario: ComentarioRegistro = {
+        ...comentario,
+        id: `coment-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        dataHora: new Date().toISOString(),
+      };
+
+      const atualizarLista = (registro: Registro): Registro => ({
+        ...registro,
+        comentarios: [...(registro.comentarios ?? []), novoComentario],
+      });
+
+      const éCriadoLocal = criados.some((item) => item.id === id);
+      if (éCriadoLocal) {
+        setCriados((atual) => {
+          const proximo = atual.map((item) => (item.id === id ? atualizarLista(item) : item));
+          gravarJson(CHAVE_CRIADOS, proximo);
+          return proximo;
+        });
+      } else {
+        setEdicoes((atual) => {
+          const registroBase = atual[id] ?? base.find((r) => r.id === id);
+          if (!registroBase) return atual;
+          const proximo = { ...atual, [id]: atualizarLista(registroBase) };
+          gravarJson(CHAVE_EDICOES, proximo);
+          return proximo;
+        });
+      }
+    },
+    [base, criados],
+  );
+
+  const salvarNotaPessoal = useCallback(
+    (id: string, usuario: string, texto: string) => {
+      const atualizarLista = (registro: Registro): Registro => ({
+        ...registro,
+        notasPessoais: { ...(registro.notasPessoais ?? {}), [usuario]: texto },
+      });
+
+      const éCriadoLocal = criados.some((item) => item.id === id);
+      if (éCriadoLocal) {
+        setCriados((atual) => {
+          const proximo = atual.map((item) => (item.id === id ? atualizarLista(item) : item));
+          gravarJson(CHAVE_CRIADOS, proximo);
+          return proximo;
+        });
+      } else {
+        setEdicoes((atual) => {
+          const registroBase = atual[id] ?? base.find((r) => r.id === id);
+          if (!registroBase) return atual;
+          const proximo = { ...atual, [id]: atualizarLista(registroBase) };
+          gravarJson(CHAVE_EDICOES, proximo);
+          return proximo;
+        });
+      }
+    },
+    [base, criados],
+  );
+
   /** Apaga tudo que foi criado/editado/excluído/favoritado localmente. A base importada não é afetada. */
   const limparDadosLocais = useCallback(() => {
     setCriados([]);
@@ -174,6 +243,8 @@ export function useRegistros() {
     atualizarRegistro,
     excluirRegistro,
     alternarFavorito,
+    adicionarComentario,
+    salvarNotaPessoal,
     limparDadosLocais,
   };
 }

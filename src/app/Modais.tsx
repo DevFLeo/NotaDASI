@@ -3,6 +3,7 @@ import DetalheRegistro from '../components/DetalheRegistro';
 import FormularioAnotacao from '../components/FormularioAnotacao';
 import FormularioRegistro from '../components/FormularioRegistro';
 import MenuCampos from '../components/MenuCampos';
+import { useSessao } from '../auth/useSessao';
 import type { Aplicacao } from './useAplicacao';
 
 type Props = {
@@ -24,11 +25,28 @@ type Props = {
  * (abas embaixo x barra lateral), e essa parte cada plataforma desenha por si.
  */
 export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
+  const { contaAtual } = useSessao();
+
   // Extraídos antes do JSX: dentro de uma arrow o TypeScript perde o
   // estreitamento de `app.formulario?.modo === 'editar'` e exigiria um `!`.
   const anotacaoEmEdicao =
     app.anotacaoEmEdicao?.modo === 'editar' ? app.anotacaoEmEdicao.anotacao : null;
   const registroEmEdicao = app.formulario?.modo === 'editar' ? app.formulario.registro : null;
+
+  const lidarComentario = (id: string, texto: string) => {
+    if (!contaAtual) return;
+    app.adicionarComentario(id, {
+      usuario: contaAtual.usuario,
+      nome: contaAtual.nome,
+      papel: contaAtual.papel,
+      texto,
+    });
+  };
+
+  const lidarNotaPessoal = (id: string, texto: string) => {
+    if (!contaAtual) return;
+    app.salvarNotaPessoal(id, contaAtual.usuario, texto);
+  };
 
   return (
     <>
@@ -38,6 +56,8 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
         aoEditar={app.abrirEdicao}
         aoExcluir={app.pedirExclusao}
         aoAlternarFavorito={app.alternarFavoritoDoRegistro}
+        aoAdicionarComentario={lidarComentario}
+        aoSalvarNotaPessoal={lidarNotaPessoal}
       />
 
       {ocultarMenuCampos ? null : (
@@ -70,6 +90,9 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
         aoSalvar={app.salvarFormulario}
         aoCancelar={app.fecharFormulario}
         aoExcluir={registroEmEdicao ? () => app.pedirExclusao(registroEmEdicao) : undefined}
+        aoAdicionarComentario={
+          registroEmEdicao ? (texto) => lidarComentario(registroEmEdicao.id, texto) : undefined
+        }
       />
     </>
   );

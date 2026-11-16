@@ -42,6 +42,8 @@ export function useAplicacao() {
     atualizarRegistro,
     excluirRegistro,
     alternarFavorito,
+    adicionarComentario,
+    salvarNotaPessoal,
     limparDadosLocais,
   } = useRegistros();
 
@@ -190,6 +192,8 @@ export function useAplicacao() {
     salvarFormulario,
     pedirExclusao,
     alternarFavoritoDoRegistro,
+    adicionarComentario,
+    salvarNotaPessoal,
 
     // Itens de campo livre
     anotacaoEmEdicao,

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -20,7 +21,7 @@ import {
   type Anotacao,
   type Campo,
 } from '../data/campos';
-import { textoPesquisavel, type Registro } from '../data/registros';
+import { calcularSituacao, rotuloSituacao, textoPesquisavel, type Registro } from '../data/registros';
 import { useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
 import BuscaLupa from './BuscaLupa';
@@ -378,7 +379,7 @@ const MapaMental: React.FC<Props> = ({
                 apagado={idsEncontrados !== null && !idsEncontrados.has(no.id)}
                 aoSoltar={registrarPosicao}
                 aoTocar={() => {
-                  if (no.tipo === 'setor') {
+                  if (no.tipo === 'setor' || no.id.startsWith('sec-')) {
                     alternarSetor(no.rotulo);
                   } else if (no.tipo === 'competencia' && no.registro) {
                     aoSelecionar?.(no.registro);
@@ -396,7 +397,7 @@ const MapaMental: React.FC<Props> = ({
         <Text style={estilos.textoDica}>
           {eCampoLivre
             ? 'Toque num item para editar · arraste os nós · pinça para zoom'
-            : 'Toque num setor para abrir · arraste os nós · pinça ou +/− para zoom'}
+            : 'Toque numa secretaria para abrir · arraste os nós · pinça ou +/− para zoom'}
         </Text>
       </View>
 
@@ -631,6 +632,18 @@ const NoArrastavel: React.FC<PropsNo> = ({
   const inicioX = useSharedValue(0);
   const inicioY = useSharedValue(0);
   const arrastando = useSharedValue(0);
+  const arrastoMovimentou = useSharedValue(false);
+
+  // Debounce para evitar múltiplos disparos no mesmo clique
+  const ultimoDisparo = useRef(0);
+  const dispararToque = useCallback(() => {
+    const agora = Date.now();
+    if (agora - ultimoDisparo.current < 250) {
+      return;
+    }
+    ultimoDisparo.current = agora;
+    aoTocar();
+  }, [aoTocar]);
 
   // Se o layout automatico recalcular (ex.: expandiu uma secretaria), acompanha.
   const referencia = useRef(posicaoInicial);
@@ -643,27 +656,37 @@ const NoArrastavel: React.FC<PropsNo> = ({
   }, [posicaoInicial, x, y]);
 
   const gestoArrastar = Gesture.Pan()
+    .minDistance(6) // Só ativa arrasto se o ponteiro mover pelo menos 6px
     .onBegin(() => {
       inicioX.value = x.value;
       inicioY.value = y.value;
       arrastando.value = 1;
+      arrastoMovimentou.value = false;
     })
     .onUpdate((evento) => {
+      if (Math.hypot(evento.translationX, evento.translationY) >= 6) {
+        arrastoMovimentou.value = true;
+      }
       x.value = inicioX.value + evento.translationX;
       y.value = inicioY.value + evento.translationY;
     })
-    .onEnd(() => {
+    .onEnd((evento) => {
       arrastando.value = 0;
-      runOnJS(aoSoltar)(no.id, x.value, y.value);
+      const moveu = Math.hypot(evento.translationX, evento.translationY);
+      if (!arrastoMovimentou.value || moveu < 6) {
+        // Se movimentou menos de 6px, foi um clique/toque deliberado!
+        runOnJS(dispararToque)();
+      } else {
+        runOnJS(aoSoltar)(no.id, x.value, y.value);
+      }
     });
 
-  const gestoToque = Gesture.Tap().maxDuration(250).onEnd(() => {
-    runOnJS(aoTocar)();
-  });
+  const gestoToque = Gesture.Tap()
+    .maxDuration(600)
+    .onEnd(() => {
+      runOnJS(dispararToque)();
+    });
 
-  // O toque so dispara se nao virou arrasto. Segurar um no nao faz nada de
-  // proposito: o menu de campos mora no "segurar" da barra de abas, e aqui o
-  // gesto longo competiria com o arrasto do no.
   const gesto = Gesture.Exclusive(gestoArrastar, gestoToque);
 
   const estilo = useAnimatedStyle(() => ({
@@ -683,16 +706,39 @@ const NoArrastavel: React.FC<PropsNo> = ({
         ? estilos.noSetor
         : estilos.noCompetencia;
 
+  const textoDicaTooltip = no.registro
+    ? `${no.registro.competencia}\n\nSetor: ${no.registro.setor} (${no.registro.setorSigla})\nResponsável: ${no.registro.responsavel} (${no.registro.cargo})\nStatus: ${rotuloSituacao[calcularSituacao(no.registro)]}\n\n(Clique para abrir a visualização detalhada completa)`
+    : no.subtitulo
+      ? `${no.rotulo} — ${no.subtitulo}\n(Clique para expandir/recolher)`
+      : no.rotulo;
+
   return (
     <GestureDetector gesture={gesto}>
       <Animated.View
-        style={[
-          estilos.no,
-          estiloPorTipo,
-          estiloPorTipoDeBusca,
-          { width: no.largura, minHeight: no.altura, borderColor: `${no.cor}88` },
-          estilo,
-        ]}>
+        {...(Platform.OS === 'web'
+          ? {
+              onClick: (e: any) => {
+                e?.stopPropagation?.();
+                dispararToque();
+              },
+              title: textoDicaTooltip,
+              style: [
+                estilos.no,
+                estiloPorTipo,
+                estiloPorTipoDeBusca,
+                { width: no.largura, minHeight: no.altura, borderColor: `${no.cor}88`, cursor: 'pointer' },
+                estilo,
+              ],
+            }
+          : {
+              style: [
+                estilos.no,
+                estiloPorTipo,
+                estiloPorTipoDeBusca,
+                { width: no.largura, minHeight: no.altura, borderColor: `${no.cor}88` },
+                estilo,
+              ],
+            })}>
         {no.registro?.favorito ? <Text style={estilos.estrelaNo}>★</Text> : null}
         <Text
           style={[estilos.rotuloNo, no.tipo === 'raiz' && estilos.rotuloRaiz]}

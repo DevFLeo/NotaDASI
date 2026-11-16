@@ -86,8 +86,8 @@ describe('casca do PC', () => {
     expect(conteudo).toContain('Campo');
     expect(conteudo).toContain('Acompanhamento do SIG');
 
-    // O mapa mental é o foco: aparece sem ninguém pedir, com os dados reais.
-    expect(conteudo).toContain('DRCF');
+    // O mapa mental é o foco: aparece sem ninguém pedir, com as Secretarias e dados reais.
+    expect(conteudo).toMatch(/DRCF|SEMUR/);
     expect(conteudo).toContain('Ajustar à tela');
 
     // Os dois itens da barra existem mesmo quando ela está reduzida a ícones

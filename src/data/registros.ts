@@ -15,6 +15,27 @@ export type Contato = {
   ramal?: string;
 };
 
+export type EntradaAuditoria = {
+  id: string;
+  dataHora: string;
+  usuario: string;
+  nome: string;
+  papel: string;
+  acao: 'CRIACAO' | 'EDICAO' | 'EXCLUSAO' | 'COMENTARIO';
+  detalhes: string;
+  camposAlterados?: string[];
+};
+
+export type ComentarioRegistro = {
+  id: string;
+  dataHora: string;
+  usuario: string;
+  nome: string;
+  papel: string;
+  texto: string;
+  destinatario?: 'dasi' | 'gerente' | 'secretario' | 'todos';
+};
+
 export type Registro = {
   id: string;
 
@@ -54,6 +75,15 @@ export type Registro = {
 
   contatoInstitucional?: Contato;
   contatoPessoal?: Contato;
+
+  // Governança, auditoria e comentários (DASI, Chefe DGEO, Secretaria)
+  criadoPor?: { usuario: string; nome: string; papel: string };
+  criadoEm?: string;
+  atualizadoPor?: { usuario: string; nome: string; papel: string };
+  atualizadoEm?: string;
+  historicoAuditoria?: EntradaAuditoria[];
+  comentarios?: ComentarioRegistro[];
+  notasPessoais?: Record<string, string>;
 
   // Estado local do app (favoritar) — NAO existe na planilha, gerenciado
   // inteiramente pelo useRegistros/AsyncStorage. Excecao a regra acima.

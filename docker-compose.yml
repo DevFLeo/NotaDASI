@@ -1,0 +1,20 @@
+services:
+  notadasi:
+    container_name: notadasi
+    image: notadasi:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    environment:
+      - NODE_ENV=production
+      - BASE_PATH=/
+      - PG_SCHEMA=notadasi
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

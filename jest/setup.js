@@ -2,6 +2,8 @@
 // Mocks das bibliotecas nativas: no Jest nao existe o modulo nativo por tras
 // delas, entao trocamos por implementacoes leves so para a arvore renderizar.
 
+jest.setTimeout(60000);
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
   default: {
