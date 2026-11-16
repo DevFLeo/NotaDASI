@@ -51,17 +51,19 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
 
   return (
     <>
-      <LimiteDeErro aoResetar={() => app.setSelecionado(null)} titulo="Erro ao abrir detalhes">
-        <DetalheRegistro
-          registro={app.selecionado}
-          aoFechar={() => app.setSelecionado(null)}
-          aoEditar={app.abrirEdicao}
-          aoExcluir={app.pedirExclusao}
-          aoAlternarFavorito={app.alternarFavoritoDoRegistro}
-          aoAdicionarComentario={lidarComentario}
-          aoSalvarNotaPessoal={lidarNotaPessoal}
-        />
-      </LimiteDeErro>
+      {app.selecionado ? (
+        <LimiteDeErro aoResetar={() => app.setSelecionado(null)} titulo="Erro ao abrir detalhes">
+          <DetalheRegistro
+            registro={app.selecionado}
+            aoFechar={() => app.setSelecionado(null)}
+            aoEditar={app.abrirEdicao}
+            aoExcluir={app.pedirExclusao}
+            aoAlternarFavorito={app.alternarFavoritoDoRegistro}
+            aoAdicionarComentario={lidarComentario}
+            aoSalvarNotaPessoal={lidarNotaPessoal}
+          />
+        </LimiteDeErro>
+      ) : null}
 
       {ocultarMenuCampos ? null : (
         <LimiteDeErro aoResetar={app.fecharMenuCampos} titulo="Erro ao abrir menu de campos">

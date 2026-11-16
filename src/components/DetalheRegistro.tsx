@@ -55,44 +55,9 @@ const DetalheRegistro: React.FC<Props> = ({
     registro && contaAtual ? registro.notasPessoais?.[contaAtual.usuario] ?? '' : '',
   );
 
-  if (!registro) {
-    return null;
-  }
-
-  const situacao = calcularSituacao(registro);
-  const corSituacao = corPorSituacao[situacao];
-
   const eChefeDgeo = contaAtual?.papel === 'gerente';
   const eSecretaria = contaAtual?.papel === 'secretario';
   const eDasi = contaAtual?.papel === 'dasi' || (!eChefeDgeo && !eSecretaria);
-
-  const ePC = metricas.expandida;
-  const estilos = criarEstilosDetalhe(tema, metricas, telaCheia);
-
-  const enviarComentario = () => {
-    if (!novoComentario.trim() || !aoAdicionarComentario) return;
-    aoAdicionarComentario(registro.id, novoComentario.trim());
-    setNovoComentario('');
-  };
-
-  const salvarMinhaNota = () => {
-    if (aoSalvarNotaPessoal) {
-      aoSalvarNotaPessoal(registro.id, notaPessoal);
-    }
-  };
-
-  const copiarTexto = (texto: string, rotulo: string) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(texto);
-      Alert.alert('Copiado', `${rotulo} copiado para a área de transferência.`);
-    }
-  };
-
-  const temContatosInstitucionais = Boolean(
-    registro.contatoInstitucional?.email ||
-      registro.contatoInstitucional?.telefone ||
-      registro.contatoInstitucional?.ramal,
-  );
 
   useEffect(() => {
     if (Platform.OS !== 'web' || !registro) return;
@@ -123,6 +88,41 @@ const DetalheRegistro: React.FC<Props> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [aoFechar, aoEditar, aoAlternarFavorito, eChefeDgeo, registro]);
+
+  if (!registro) {
+    return null;
+  }
+
+  const situacao = calcularSituacao(registro);
+  const corSituacao = corPorSituacao[situacao];
+
+  const ePC = metricas.expandida;
+  const estilos = criarEstilosDetalhe(tema, metricas, telaCheia);
+
+  const enviarComentario = () => {
+    if (!novoComentario.trim() || !aoAdicionarComentario) return;
+    aoAdicionarComentario(registro.id, novoComentario.trim());
+    setNovoComentario('');
+  };
+
+  const salvarMinhaNota = () => {
+    if (aoSalvarNotaPessoal) {
+      aoSalvarNotaPessoal(registro.id, notaPessoal);
+    }
+  };
+
+  const copiarTexto = (texto: string, rotulo: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(texto);
+      Alert.alert('Copiado', `${rotulo} copiado para a área de transferência.`);
+    }
+  };
+
+  const temContatosInstitucionais = Boolean(
+    registro.contatoInstitucional?.email ||
+      registro.contatoInstitucional?.telefone ||
+      registro.contatoInstitucional?.ramal,
+  );
 
   return (
     <Modal visible animationType="slide" transparent onRequestClose={aoFechar}>
