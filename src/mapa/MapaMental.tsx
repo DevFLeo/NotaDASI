@@ -199,10 +199,20 @@ const MapaMental: React.FC<Props> = ({
     });
   }, [aoCriar, expandidos, registros]);
 
+  const ultimoTempoSetor = useRef<{ [sigla: string]: number }>({});
   const alternarSetor = useCallback((sigla: string) => {
+    const agora = Date.now();
+    const anterior = ultimoTempoSetor.current[sigla] || 0;
+    ultimoTempoSetor.current[sigla] = agora;
+
     setExpandidos((atual) => {
       const proximo = new Set(atual);
       if (proximo.has(sigla)) {
+        // Se foi aberto há menos de 650ms, foi um clique duplo/rápido (2x) para abrir!
+        // Mantém aberto em vez de fechar imediatamente.
+        if (agora - anterior < 650) {
+          return proximo;
+        }
         proximo.delete(sigla);
       } else {
         proximo.add(sigla);
@@ -694,14 +704,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
   const arrastando = useSharedValue(0);
   const arrastoMovimentou = useSharedValue(false);
 
-  // Debounce para evitar múltiplos disparos no mesmo clique
-  const ultimoDisparo = useRef(0);
   const dispararToque = useCallback(() => {
-    const agora = Date.now();
-    if (agora - ultimoDisparo.current < 250) {
-      return;
-    }
-    ultimoDisparo.current = agora;
     aoTocar();
   }, [aoTocar]);
 
@@ -716,7 +719,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
   }, [posicaoInicial, x, y]);
 
   const gestoArrastar = Gesture.Pan()
-    .minDistance(6) // Só ativa arrasto se o ponteiro mover pelo menos 6px
+    .minDistance(8) // Só ativa arrasto se o ponteiro mover pelo menos 8px
     .onBegin(() => {
       inicioX.value = x.value;
       inicioY.value = y.value;
@@ -724,7 +727,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
       arrastoMovimentou.value = false;
     })
     .onUpdate((evento) => {
-      if (Math.hypot(evento.translationX, evento.translationY) >= 6) {
+      if (Math.hypot(evento.translationX, evento.translationY) >= 8) {
         arrastoMovimentou.value = true;
       }
       x.value = inicioX.value + evento.translationX;
@@ -733,9 +736,10 @@ const NoArrastavel: React.FC<PropsNo> = ({
     .onEnd((evento) => {
       arrastando.value = 0;
       const moveu = Math.hypot(evento.translationX, evento.translationY);
-      if (!arrastoMovimentou.value || moveu < 6) {
-        // Se movimentou menos de 6px, foi um clique/toque deliberado!
-        runOnJS(dispararToque)();
+      if (!arrastoMovimentou.value || moveu < 8) {
+        if (Platform.OS !== 'web') {
+          runOnJS(dispararToque)();
+        }
       } else {
         runOnJS(aoSoltar)(no.id, x.value, y.value);
       }
@@ -744,7 +748,9 @@ const NoArrastavel: React.FC<PropsNo> = ({
   const gestoToque = Gesture.Tap()
     .maxDuration(600)
     .onEnd(() => {
-      runOnJS(dispararToque)();
+      if (Platform.OS !== 'web') {
+        runOnJS(dispararToque)();
+      }
     });
 
   const gesto = Gesture.Exclusive(gestoArrastar, gestoToque);
@@ -767,7 +773,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
         : estilos.noCompetencia;
 
   const textoDicaTooltip = no.registro
-    ? `${no.registro.competencia}\n\nSetor: ${no.registro.setor} (${no.registro.setorSigla})\nResponsável: ${no.registro.responsavel} (${no.registro.cargo})\nStatus: ${rotuloSituacao[calcularSituacao(no.registro)]}\n\n(Clique para abrir a visualização detalhada completa)`
+    ? `${no.registro.competencia}\n\nSetor: ${no.registro.setor} (${no.registro.setorSigla})\nResponsável: ${no.registro.responsavel} (${no.registro.cargo})\nStatus: ${rotuloSituacao[calcularSituacao(no.registro)]}\n\n(Clique ou duplo clique para abrir a visualização detalhada)`
     : no.subtitulo
       ? `${no.rotulo} — ${no.subtitulo}\n(Clique para expandir/recolher)`
       : no.rotulo;
@@ -779,7 +785,11 @@ const NoArrastavel: React.FC<PropsNo> = ({
           ? {
               onClick: (e: any) => {
                 e?.stopPropagation?.();
-                dispararToque();
+                aoTocar();
+              },
+              onDoubleClick: (e: any) => {
+                e?.stopPropagation?.();
+                aoTocar();
               },
               title: textoDicaTooltip,
               style: [
