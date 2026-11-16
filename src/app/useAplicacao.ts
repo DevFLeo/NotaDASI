@@ -38,6 +38,8 @@ export function useAplicacao() {
   const {
     registros,
     origem,
+    aceiteExcel,
+    nomePlanilhaAtiva,
     criarRegistro,
     atualizarRegistro,
     excluirRegistro,
@@ -45,6 +47,10 @@ export function useAplicacao() {
     adicionarComentario,
     salvarNotaPessoal,
     limparDadosLocais,
+    salvarAceiteExcel,
+    reverterAceiteExcel,
+    carregarBasePlanilha,
+    restaurarBasePadrao,
   } = useRegistros();
 
   const {
@@ -165,6 +171,12 @@ export function useAplicacao() {
     // Dados
     registros,
     origem,
+    aceiteExcel,
+    nomePlanilhaAtiva,
+    salvarAceiteExcel,
+    reverterAceiteExcel,
+    carregarBasePlanilha,
+    restaurarBasePadrao,
     campos,
     campoAtivo,
     anotacoes,

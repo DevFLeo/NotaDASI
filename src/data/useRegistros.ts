@@ -7,6 +7,22 @@ const CHAVE_CRIADOS = '@notadasi:registros-criados';
 const CHAVE_EDICOES = '@notadasi:registros-edicoes';
 const CHAVE_EXCLUIDOS = '@notadasi:registros-excluidos';
 const CHAVE_FAVORITOS = '@notadasi:registros-favoritos';
+const CHAVE_ACEITE_EXCEL = '@notadasi:aceite-excel';
+const CHAVE_BASE_CUSTOMIZADA = '@notadasi:base-customizada';
+const CHAVE_NOME_PLANILHA = '@notadasi:nome-planilha';
+
+export type AceiteExcelInfo = {
+  aceito: boolean;
+  dataHora: string;
+  usuario: string;
+  nome: string;
+  papel: string;
+  justificativa: string;
+  totalRegistros: number;
+  totalQuebras: number;
+  quebrasToleradas: string[];
+  nomeArquivo?: string;
+};
 
 type MapaEdicoes = Record<string, Registro>;
 
@@ -47,7 +63,11 @@ export const gerarIdRegistro = (): string =>
  */
 export function useRegistros() {
   const base = useMemo(() => carregarRegistrosBase(), []);
-  const origem = useMemo(() => obterOrigemDados(), []);
+  const origemBase = useMemo(() => obterOrigemDados(), []);
+
+  const [basePlanilha, setBasePlanilha] = useState<Registro[]>([]);
+  const [nomePlanilhaAtiva, setNomePlanilhaAtiva] = useState<string>('');
+  const [aceiteExcel, setAceiteExcel] = useState<AceiteExcelInfo | null>(null);
 
   const [criados, setCriados] = useState<Registro[]>([]);
   const [edicoes, setEdicoes] = useState<MapaEdicoes>({});
@@ -63,24 +83,56 @@ export function useRegistros() {
       lerJson<MapaEdicoes>(CHAVE_EDICOES, {}),
       lerJson<string[]>(CHAVE_EXCLUIDOS, []),
       lerJson<string[]>(CHAVE_FAVORITOS, []),
-    ]).then(([criadosSalvos, edicoesSalvas, excluidosSalvos, favoritosSalvos]) => {
-      if (!ativo) {
-        return;
-      }
-      setCriados(criadosSalvos);
-      setEdicoes(edicoesSalvas);
-      setExcluidos(new Set(excluidosSalvos));
-      setFavoritos(new Set(favoritosSalvos));
-      setCarregado(true);
-    });
+      lerJson<AceiteExcelInfo | null>(CHAVE_ACEITE_EXCEL, null),
+      lerJson<Registro[]>(CHAVE_BASE_CUSTOMIZADA, []),
+      AsyncStorage.getItem(CHAVE_NOME_PLANILHA).catch(() => null),
+    ]).then(
+      ([
+        criadosSalvos,
+        edicoesSalvas,
+        excluidosSalvos,
+        favoritosSalvos,
+        aceiteSalvo,
+        baseCustomSalva,
+        nomePlanilhaSalva,
+      ]) => {
+        if (!ativo) {
+          return;
+        }
+        setCriados(criadosSalvos);
+        setEdicoes(edicoesSalvas);
+        setExcluidos(new Set(excluidosSalvos));
+        setFavoritos(new Set(favoritosSalvos));
+        if (aceiteSalvo && aceiteSalvo.aceito) {
+          setAceiteExcel(aceiteSalvo);
+        }
+        if (Array.isArray(baseCustomSalva) && baseCustomSalva.length > 0) {
+          setBasePlanilha(baseCustomSalva);
+        }
+        if (nomePlanilhaSalva) {
+          setNomePlanilhaAtiva(nomePlanilhaSalva);
+        }
+        setCarregado(true);
+      },
+    );
 
     return () => {
       ativo = false;
     };
   }, []);
 
+  const baseEfetiva = useMemo(
+    () => (basePlanilha.length > 0 ? basePlanilha : base),
+    [basePlanilha, base],
+  );
+
+  const origem: 'planilha' | 'exemplo' = useMemo(() => {
+    if (basePlanilha.length > 0) return 'planilha';
+    return origemBase;
+  }, [basePlanilha.length, origemBase]);
+
   const registros = useMemo(() => {
-    const baseVisivel = base
+    const baseVisivel = baseEfetiva
       .filter((registro) => !excluidos.has(registro.id))
       .map((registro) => edicoes[registro.id] ?? registro);
 
@@ -90,7 +142,7 @@ export function useRegistros() {
       ...registro,
       favorito: favoritos.has(registro.id),
     }));
-  }, [base, edicoes, excluidos, criados, favoritos]);
+  }, [baseEfetiva, edicoes, excluidos, criados, favoritos]);
 
   const criarRegistro = useCallback((dados: NovoRegistro): Registro => {
     const registro: Registro = { ...dados, id: gerarIdRegistro() };
@@ -235,10 +287,89 @@ export function useRegistros() {
     gravarJson(CHAVE_FAVORITOS, []);
   }, []);
 
+  const salvarAceiteExcel = useCallback(
+    (dados: {
+      usuario: string;
+      nome: string;
+      papel: string;
+      justificativa: string;
+      totalRegistros: number;
+      totalQuebras: number;
+      quebrasToleradas: string[];
+      nomeArquivo?: string;
+    }) => {
+      const info: AceiteExcelInfo = {
+        aceito: true,
+        dataHora: new Date().toISOString(),
+        usuario: dados.usuario,
+        nome: dados.nome,
+        papel: dados.papel,
+        justificativa: dados.justificativa,
+        totalRegistros: dados.totalRegistros,
+        totalQuebras: dados.totalQuebras,
+        quebrasToleradas: dados.quebrasToleradas,
+        nomeArquivo: dados.nomeArquivo || nomePlanilhaAtiva || 'DIAGNOSTICO_DE_ADESAO_AO_SISTEMA_GEO_360_(2).xlsx',
+      };
+      setAceiteExcel(info);
+      gravarJson(CHAVE_ACEITE_EXCEL, info);
+
+      // Registra entrada de auditoria nas edições dos registros
+      const entradaAuditoria: EntradaAuditoria = {
+        id: `audit-aceite-${Date.now()}`,
+        dataHora: info.dataHora,
+        usuario: dados.usuario,
+        nome: dados.nome,
+        papel: dados.papel,
+        acao: 'ACEITE_EXCEL',
+        detalhes: `Aceite da planilha homologado nas configurações pelo DASI (${dados.totalQuebras} quebras regimentais toleradas). Despacho: ${dados.justificativa}`,
+      };
+
+      setEdicoes((atual) => {
+        const proximo = { ...atual };
+        const idAlvo = (basePlanilha[0] || base[0])?.id;
+        if (idAlvo) {
+          const reg = proximo[idAlvo] ?? (basePlanilha.find((r) => r.id === idAlvo) || base.find((r) => r.id === idAlvo));
+          if (reg) {
+            proximo[idAlvo] = {
+              ...reg,
+              historicoAuditoria: [...(reg.historicoAuditoria ?? []), entradaAuditoria],
+            };
+          }
+        }
+        gravarJson(CHAVE_EDICOES, proximo);
+        return proximo;
+      });
+    },
+    [basePlanilha, base, nomePlanilhaAtiva],
+  );
+
+  const reverterAceiteExcel = useCallback(() => {
+    setAceiteExcel(null);
+    AsyncStorage.removeItem(CHAVE_ACEITE_EXCEL).catch(() => {});
+  }, []);
+
+  const carregarBasePlanilha = useCallback((novos: Registro[], nomeArquivo: string = 'planilha_importada.xlsx') => {
+    setBasePlanilha(novos);
+    setNomePlanilhaAtiva(nomeArquivo);
+    gravarJson(CHAVE_BASE_CUSTOMIZADA, novos);
+    AsyncStorage.setItem(CHAVE_NOME_PLANILHA, nomeArquivo).catch(() => {});
+  }, []);
+
+  const restaurarBasePadrao = useCallback(() => {
+    setBasePlanilha([]);
+    setNomePlanilhaAtiva('');
+    setAceiteExcel(null);
+    AsyncStorage.removeItem(CHAVE_BASE_CUSTOMIZADA).catch(() => {});
+    AsyncStorage.removeItem(CHAVE_NOME_PLANILHA).catch(() => {});
+    AsyncStorage.removeItem(CHAVE_ACEITE_EXCEL).catch(() => {});
+  }, []);
+
   return {
     registros,
     origem,
     carregado,
+    aceiteExcel,
+    nomePlanilhaAtiva,
     criarRegistro,
     atualizarRegistro,
     excluirRegistro,
@@ -246,5 +377,9 @@ export function useRegistros() {
     adicionarComentario,
     salvarNotaPessoal,
     limparDadosLocais,
+    salvarAceiteExcel,
+    reverterAceiteExcel,
+    carregarBasePlanilha,
+    restaurarBasePadrao,
   };
 }

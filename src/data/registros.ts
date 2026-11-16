@@ -21,7 +21,7 @@ export type EntradaAuditoria = {
   usuario: string;
   nome: string;
   papel: string;
-  acao: 'CRIACAO' | 'EDICAO' | 'EXCLUSAO' | 'COMENTARIO';
+  acao: 'CRIACAO' | 'EDICAO' | 'EXCLUSAO' | 'COMENTARIO' | 'ACEITE_EXCEL';
   detalhes: string;
   camposAlterados?: string[];
 };

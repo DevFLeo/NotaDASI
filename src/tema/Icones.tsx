@@ -136,3 +136,44 @@ export const IconeX: React.FC<PropsIcone> = ({ tamanho = 16, cor }) => (
     <Path d="M6 6l12 12M18 6 6 18" stroke={cor} strokeWidth={2} strokeLinecap="round" />
   </Svg>
 );
+
+/** Planilha / Tabela — usado no Aceite do Excel. */
+export const IconePlanilha: React.FC<PropsIcone> = ({ tamanho = 18, cor }) => (
+  <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M4 4h16c.55 0 1 .45 1 1v14c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1Z"
+      stroke={cor}
+      strokeWidth={1.8}
+      strokeLinecap="round"
+    />
+    <Path d="M3 10h18M3 15h18M9 4v16M15 4v16" stroke={cor} strokeWidth={1.5} strokeLinecap="round" />
+  </Svg>
+);
+
+/** Check em círculo — status de homologação / aceite. */
+export const IconeCheckCirculo: React.FC<PropsIcone> = ({ tamanho = 18, cor }) => (
+  <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Circle cx={12} cy={12} r={9} stroke={cor} strokeWidth={1.8} />
+    <Path d="m8.5 12 2.5 2.5 5-5" stroke={cor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+/** Alerta triangular — quebra de regras detectada. */
+export const IconeAlerta: React.FC<PropsIcone> = ({ tamanho = 18, cor }) => (
+  <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="m12 3 9.5 16.5c.3.5.08 1.1-.48 1.1H2.98c-.56 0-.78-.6-.48-1.1L12 3Z"
+      stroke={cor}
+      strokeWidth={1.8}
+      strokeLinejoin="round"
+    />
+    <Path d="M12 9v4.5M12 17h.01" stroke={cor} strokeWidth={2} strokeLinecap="round" />
+  </Svg>
+);
+
+/** Upload / Importar arquivo. */
+export const IconeUpload: React.FC<PropsIcone> = ({ tamanho = 18, cor }) => (
+  <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 4v11M8 8l4-4 4 4" stroke={cor} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);

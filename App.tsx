@@ -107,10 +107,17 @@ export const AppConteudo: React.FC = () => {
               <AjustesTela
                 origem={app.origem}
                 totalRegistros={app.registros.length}
+                registros={app.registros}
                 aoLimparDados={app.limparDadosLocais}
                 campoAtivo={app.campoAtivo}
                 totalCampos={app.campos.length}
                 aoAbrirCampos={app.abrirMenuCampos}
+                aceiteExcel={app.aceiteExcel}
+                nomePlanilhaAtiva={app.nomePlanilhaAtiva}
+                aoSalvarAceiteExcel={app.salvarAceiteExcel}
+                aoReverterAceiteExcel={app.reverterAceiteExcel}
+                aoCarregarBasePlanilha={app.carregarBasePlanilha}
+                aoRestaurarBasePadrao={app.restaurarBasePadrao}
               />
             )}
           </Animated.View>
