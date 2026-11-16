@@ -94,6 +94,36 @@ const DetalheRegistro: React.FC<Props> = ({
       registro.contatoInstitucional?.ramal,
   );
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !registro) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput =
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        aoFechar();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault();
+        if (aoEditar && !eChefeDgeo) {
+          aoEditar(registro);
+        }
+        return;
+      }
+      if (!isInput && (e.key === 'f' || e.key === 'F')) {
+        e.preventDefault();
+        aoAlternarFavorito?.(registro);
+        return;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [aoFechar, aoEditar, aoAlternarFavorito, eChefeDgeo, registro]);
+
   return (
     <Modal visible animationType="slide" transparent onRequestClose={aoFechar}>
       <GestureHandlerRootView style={estilos.fundo}>
@@ -597,7 +627,7 @@ const DetalheRegistro: React.FC<Props> = ({
                 onPress={aoFechar}
                 style={estilos.botaoFechar}
                 accessibilityRole="button">
-                <Text style={estilos.textoBotaoFechar}>FECHAR</Text>
+                <Text style={estilos.textoBotaoFechar}>{ePC ? 'FECHAR [Esc]' : 'FECHAR'}</Text>
               </Pressable>
 
               {aoEditar && !eChefeDgeo ? (
@@ -605,9 +635,9 @@ const DetalheRegistro: React.FC<Props> = ({
                   onPress={() => aoEditar(registro)}
                   style={estilos.botaoEditar}
                   accessibilityRole="button"
-                  accessibilityLabel="Editar competência">
+                  accessibilityLabel="Editar competência (Ctrl+E)">
                   <Text style={estilos.iconeBotaoEditar}>✏️</Text>
-                  <Text style={estilos.textoBotaoEditar}>EDITAR</Text>
+                  <Text style={estilos.textoBotaoEditar}>{ePC ? 'EDITAR [Ctrl+E]' : 'EDITAR'}</Text>
                 </Pressable>
               ) : null}
             </View>

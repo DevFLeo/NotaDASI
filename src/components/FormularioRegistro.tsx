@@ -135,6 +135,24 @@ const FormularioRegistro: React.FC<Props> = ({
     aoSalvar(dadosComAuditoria);
   };
 
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !visivel) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        aoCancelar();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'Enter')) {
+        e.preventDefault();
+        confirmarSalvar();
+        return;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visivel, aoCancelar, dados, edicaoBloqueada, novoComentario, aoAdicionarComentario, contaAtual, aoSalvar]);
+
   const estilos = criarEstilos(tema, metricas, telaCheia);
 
   return (
@@ -477,11 +495,17 @@ const FormularioRegistro: React.FC<Props> = ({
                 </Pressable>
               ) : null}
               <Pressable onPress={aoCancelar} style={estilos.botaoCancelar}>
-                <Text style={estilos.textoBotaoCancelar}>Cancelar</Text>
+                <Text style={estilos.textoBotaoCancelar}>
+                  {metricas.expandida ? 'Cancelar [Esc]' : 'Cancelar'}
+                </Text>
               </Pressable>
               <Pressable onPress={confirmarSalvar} style={estilos.botaoSalvar}>
                 <Text style={estilos.textoBotaoSalvar}>
-                  {edicaoBloqueada ? 'Declarar Comentário' : 'Salvar'}
+                  {edicaoBloqueada
+                    ? 'Declarar Comentário'
+                    : metricas.expandida
+                    ? 'Salvar [Ctrl+S]'
+                    : 'Salvar'}
                 </Text>
               </Pressable>
             </View>

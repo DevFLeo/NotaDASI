@@ -349,6 +349,64 @@ const MapaMental: React.FC<Props> = ({
     deslocY.value = withSpring(alturaTela / 2 - centroY * novaEscala, { damping: 20 });
   }, [alturaTela, deslocX, deslocY, escala, larguraTela, nos, posicaoDe]);
 
+  // Suporte a zoom suave pela roda do mouse no PC (Web)
+  const containerRef = useRef<any>(null);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !containerRef.current) return;
+    const el = containerRef.current;
+    const node = el.getScrollableNode?.() || el;
+    if (!node || !node.addEventListener) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY;
+      // Rolagem para cima aproxima; para baixo afasta
+      const fator = delta < 0 ? 1.13 : 0.88;
+      const rect = node.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const escalaAtual = escala.value;
+      const novaEscala = limitarEscala(escalaAtual * fator);
+      const fatorReal = novaEscala / escalaAtual;
+
+      deslocX.value = mouseX - (mouseX - deslocX.value) * fatorReal;
+      deslocY.value = mouseY - (mouseY - deslocY.value) * fatorReal;
+      escala.value = novaEscala;
+    };
+
+    node.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      node.removeEventListener('wheel', handleWheel);
+    };
+  }, [deslocX, deslocY, escala]);
+
+  // Atalhos de teclado no PC (+/-, 0 para centralizar, F para ajustar)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        aplicarZoom(FATOR_ZOOM_BOTAO);
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault();
+        aplicarZoom(1 / FATOR_ZOOM_BOTAO);
+      } else if (e.key === '0') {
+        e.preventDefault();
+        centralizarMapa();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        ajustarATela();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [aplicarZoom, centralizarMapa, ajustarATela]);
+
   if (!carregado) {
     return (
       <View style={estilos.carregando}>
@@ -358,7 +416,7 @@ const MapaMental: React.FC<Props> = ({
   }
 
   return (
-    <View style={estilos.container} onLayout={aoMedirArea}>
+    <View ref={containerRef} style={estilos.container} onLayout={aoMedirArea}>
       <GestureDetector gesture={gestoCamera}>
         <View style={estilos.areaGesto} collapsable={false}>
           <Animated.View style={[estilos.camera, estiloCamera]}>
@@ -395,9 +453,11 @@ const MapaMental: React.FC<Props> = ({
 
       <View style={estilos.dica} pointerEvents="none">
         <Text style={estilos.textoDica}>
-          {eCampoLivre
-            ? 'Toque num item para editar · arraste os nós · pinça para zoom'
-            : 'Toque numa secretaria para abrir · arraste os nós · pinça ou +/− para zoom'}
+          {Platform.OS === 'web'
+            ? 'PC: Roda do mouse p/ zoom · Arraste p/ mover · [ + / − ] zoom · [ 0 ] centralizar · [ F ] ajustar'
+            : eCampoLivre
+              ? 'Toque num item para editar · arraste os nós · pinça para zoom'
+              : 'Toque numa secretaria para abrir · arraste os nós · pinça ou +/− para zoom'}
         </Text>
       </View>
 
@@ -764,6 +824,7 @@ const criarEstilos = (tema: Tema) =>
     },
     areaGesto: {
       flex: 1,
+      cursor: (Platform.OS === 'web' ? 'grab' : undefined) as any,
     },
     camera: {
       position: 'absolute',
