@@ -83,7 +83,6 @@ const CartaoRegistroBase: React.FC<PropsCartao> = ({
         android_ripple={{ color: tema.superficieAtiva }}
         onPress={() => aoSelecionar(registro)}
         {...(Platform.OS === 'web' ? { onDoubleClick: () => aoSelecionar(registro) } : {})}
-        accessibilityRole="button"
         accessibilityLabel={`${rotuloSituacao[situacao]}. ${registro.competencia}`}
         style={estilos.areaCartao}>
         <View style={estilos.cabecalhoCartao}>

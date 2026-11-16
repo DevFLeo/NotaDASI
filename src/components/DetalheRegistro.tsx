@@ -33,6 +33,10 @@ type Props = {
   aoAlternarFavorito?: (registro: Registro) => void;
   aoAdicionarComentario?: (id: string, texto: string) => void;
   aoSalvarNotaPessoal?: (id: string, texto: string) => void;
+  aoNavegarAnterior?: () => void;
+  aoNavegarProximo?: () => void;
+  indiceNoSetor?: number;
+  totalNoSetor?: number;
 };
 
 const DetalheRegistro: React.FC<Props> = ({
@@ -43,6 +47,10 @@ const DetalheRegistro: React.FC<Props> = ({
   aoAlternarFavorito,
   aoAdicionarComentario,
   aoSalvarNotaPessoal,
+  aoNavegarAnterior,
+  aoNavegarProximo,
+  indiceNoSetor,
+  totalNoSetor,
 }) => {
   const tema = useTema();
   const metricas = useMetricas();
@@ -72,6 +80,16 @@ const DetalheRegistro: React.FC<Props> = ({
         aoFechar();
         return;
       }
+      if (!isInput && e.key === 'ArrowLeft' && aoNavegarAnterior) {
+        e.preventDefault();
+        aoNavegarAnterior();
+        return;
+      }
+      if (!isInput && e.key === 'ArrowRight' && aoNavegarProximo) {
+        e.preventDefault();
+        aoNavegarProximo();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'e' || e.key === 'E')) {
         e.preventDefault();
         if (aoEditar && !eChefeDgeo) {
@@ -87,7 +105,7 @@ const DetalheRegistro: React.FC<Props> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [aoFechar, aoEditar, aoAlternarFavorito, eChefeDgeo, registro]);
+  }, [aoFechar, aoEditar, aoAlternarFavorito, aoNavegarAnterior, aoNavegarProximo, eChefeDgeo, registro]);
 
   if (!registro) {
     return null;
@@ -131,6 +149,14 @@ const DetalheRegistro: React.FC<Props> = ({
       transparent
       onRequestClose={aoFechar}>
       <GestureHandlerRootView style={estilos.fundo}>
+        {/* Backdrop escurecido clicável: fecha o modal imediatamente ao clicar fora */}
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={aoFechar}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar detalhes ao clicar fora"
+        />
+
         <Animated.View style={[estilos.wrapperAnimado, estiloArrasto]}>
           <View style={estilos.painel}>
             {/* Puxador para expandir / reduzir */}
@@ -168,6 +194,31 @@ const DetalheRegistro: React.FC<Props> = ({
               </View>
 
               <View style={estilos.acoesTopo}>
+                {/* Navegador entre competências do mesmo setor */}
+                {aoNavegarAnterior && aoNavegarProximo && totalNoSetor && totalNoSetor > 1 ? (
+                  <View style={estilos.faixaNavegacao}>
+                    <Pressable
+                      onPress={aoNavegarAnterior}
+                      accessibilityRole="button"
+                      accessibilityLabel="Competência anterior (Seta esquerda)"
+                      {...(Platform.OS === 'web' ? { title: 'Anterior [←]' } : {})}
+                      style={estilos.botaoNavegacao}>
+                      <Text style={estilos.textoBotaoNavegacao}>‹</Text>
+                    </Pressable>
+                    <Text style={estilos.textoContadorNavegacao}>
+                      {(indiceNoSetor ?? 0) + 1}/{totalNoSetor}
+                    </Text>
+                    <Pressable
+                      onPress={aoNavegarProximo}
+                      accessibilityRole="button"
+                      accessibilityLabel="Próxima competência (Seta direita)"
+                      {...(Platform.OS === 'web' ? { title: 'Próxima [→]' } : {})}
+                      style={estilos.botaoNavegacao}>
+                      <Text style={estilos.textoBotaoNavegacao}>›</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+
                 {aoAlternarFavorito ? (
                   <Pressable
                     onPress={() => aoAlternarFavorito(registro)}
@@ -616,6 +667,30 @@ const DetalheRegistro: React.FC<Props> = ({
                 </Pressable>
               ) : null}
 
+              {aoNavegarAnterior && aoNavegarProximo && totalNoSetor && totalNoSetor > 1 ? (
+                <View style={estilos.grupoNavRodape}>
+                  <Pressable
+                    onPress={aoNavegarAnterior}
+                    style={estilos.botaoNavRodape}
+                    accessibilityRole="button"
+                    accessibilityLabel="Competência anterior (Seta esquerda)"
+                    {...(Platform.OS === 'web' ? { title: 'Anterior [←]' } : {})}>
+                    <Text style={estilos.textoBotaoNavRodape}>← Ant.</Text>
+                  </Pressable>
+                  <Text style={estilos.textoContadorRodape}>
+                    {(indiceNoSetor ?? 0) + 1}/{totalNoSetor}
+                  </Text>
+                  <Pressable
+                    onPress={aoNavegarProximo}
+                    style={estilos.botaoNavRodape}
+                    accessibilityRole="button"
+                    accessibilityLabel="Próxima competência (Seta direita)"
+                    {...(Platform.OS === 'web' ? { title: 'Próxima [→]' } : {})}>
+                    <Text style={estilos.textoBotaoNavRodape}>Próx. →</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
               <Pressable
                 onPress={aoFechar}
                 style={estilos.botaoFechar}
@@ -874,6 +949,39 @@ const criarEstilosDetalhe = (
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
+    },
+    faixaNavegacao: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: tema.superficie,
+      borderWidth: 1,
+      borderColor: tema.borda,
+      borderRadius: 8,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+    },
+    botaoNavegacao: {
+      width: 24,
+      height: 24,
+      borderRadius: 6,
+      backgroundColor: tema.fundoElevado,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: tema.borda,
+    },
+    textoBotaoNavegacao: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: tema.texto,
+      lineHeight: 16,
+    },
+    textoContadorNavegacao: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.textoSecundario,
+      paddingHorizontal: 4,
     },
     estrela: {
       fontSize: 20,
@@ -1381,6 +1489,36 @@ const criarEstilosDetalhe = (
       fontSize: 12,
       fontWeight: '800',
       letterSpacing: 0.5,
+    },
+    grupoNavRodape: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: tema.superficie,
+      borderWidth: 1,
+      borderColor: tema.borda,
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      minHeight: 44,
+    },
+    botaoNavRodape: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: 6,
+      backgroundColor: tema.fundoElevado,
+      borderWidth: 1,
+      borderColor: tema.borda,
+    },
+    textoBotaoNavRodape: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.texto,
+    },
+    textoContadorRodape: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.textoSecundario,
+      paddingHorizontal: 4,
     },
     botaoFechar: {
       flex: 1,

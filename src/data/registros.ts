@@ -88,6 +88,9 @@ export type Registro = {
   // Estado local do app (favoritar) — NAO existe na planilha, gerenciado
   // inteiramente pelo useRegistros/AsyncStorage. Excecao a regra acima.
   favorito?: boolean;
+
+  /** Timestamp único de seleção para forçar re-render limpo e montagem do modal */
+  _stamp?: number;
 };
 
 /** Um novo registro ainda nao tem id: ele e gerado ao criar (ver useRegistros). */

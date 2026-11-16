@@ -54,6 +54,7 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
       {app.selecionado ? (
         <LimiteDeErro aoResetar={() => app.setSelecionado(null)} titulo="Erro ao abrir detalhes">
           <DetalheRegistro
+            key={`detalhe-${app.selecionado.id}-${app.selecionado._stamp ?? 0}`}
             registro={app.selecionado}
             aoFechar={() => app.setSelecionado(null)}
             aoEditar={app.abrirEdicao}
@@ -61,6 +62,10 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
             aoAlternarFavorito={app.alternarFavoritoDoRegistro}
             aoAdicionarComentario={lidarComentario}
             aoSalvarNotaPessoal={lidarNotaPessoal}
+            aoNavegarAnterior={app.posicaoSelecionado.total > 1 ? app.navegarRegistroAnterior : undefined}
+            aoNavegarProximo={app.posicaoSelecionado.total > 1 ? app.navegarProximoRegistro : undefined}
+            indiceNoSetor={app.posicaoSelecionado.indice}
+            totalNoSetor={app.posicaoSelecionado.total}
           />
         </LimiteDeErro>
       ) : null}

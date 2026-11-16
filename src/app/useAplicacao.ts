@@ -30,10 +30,20 @@ export type EstadoAnotacao = { modo: 'criar' } | { modo: 'editar'; anotacao: Ano
 export type Aplicacao = ReturnType<typeof useAplicacao>;
 
 export function useAplicacao() {
-  const [selecionado, setSelecionado] = useState<Registro | null>(null);
+  const [selecionado, setSelecionadoState] = useState<Registro | null>(null);
   const [formulario, setFormulario] = useState<EstadoFormulario>(null);
   const [menuCampos, setMenuCampos] = useState(false);
   const [anotacaoEmEdicao, setAnotacaoEmEdicao] = useState<EstadoAnotacao>(null);
+
+  const selecionarRegistro = useCallback((registro: Registro | null) => {
+    if (!registro) {
+      setSelecionadoState(null);
+    } else {
+      // Sempre gera uma nova referência com timestamp único para forçar o React
+      // a remontar/reabrir os modais sem risco de bailout por igualdade referencial.
+      setSelecionadoState({ ...registro, _stamp: Date.now() });
+    }
+  }, []);
 
   const {
     registros,
@@ -111,9 +121,9 @@ export function useAplicacao() {
   }, []);
 
   const abrirEdicao = useCallback((registro: Registro) => {
-    setSelecionado(null);
+    selecionarRegistro(null);
     setFormulario({ modo: 'editar', registro });
-  }, []);
+  }, [selecionarRegistro]);
 
   const fecharFormulario = useCallback(() => setFormulario(null), []);
 
@@ -143,14 +153,54 @@ export function useAplicacao() {
           style: 'destructive',
           onPress: () => {
             excluirRegistro(registro.id);
-            setSelecionado(null);
+            selecionarRegistro(null);
             setFormulario(null);
           },
         },
       ]);
     },
-    [excluirRegistro],
+    [excluirRegistro, selecionarRegistro],
   );
+
+  /**
+   * Posição da competência selecionada dentro do seu próprio setor,
+   * permitindo navegação instantânea no PC através de botões [← Anterior] [Próximo →] e setas do teclado.
+   */
+  const posicaoSelecionado = useMemo(() => {
+    if (!selecionado) {
+      return { indice: 0, total: 0, lista: [] as Registro[] };
+    }
+    const setorAlvo = (selecionado.setorSigla || selecionado.setor || '').trim().toUpperCase();
+    const lista = registros.filter(
+      (r) => (r.setorSigla || r.setor || '').trim().toUpperCase() === setorAlvo,
+    );
+    const indice = lista.findIndex((r) => r.id === selecionado.id);
+    return {
+      indice: indice >= 0 ? indice : 0,
+      total: lista.length,
+      lista,
+    };
+  }, [selecionado, registros]);
+
+  const navegarRegistroAnterior = useCallback(() => {
+    if (!selecionado || posicaoSelecionado.total <= 1) return;
+    const { lista, indice } = posicaoSelecionado;
+    const anteriorIdx = (indice - 1 + lista.length) % lista.length;
+    const anterior = lista[anteriorIdx];
+    if (anterior) {
+      selecionarRegistro(anterior);
+    }
+  }, [selecionado, posicaoSelecionado, selecionarRegistro]);
+
+  const navegarProximoRegistro = useCallback(() => {
+    if (!selecionado || posicaoSelecionado.total <= 1) return;
+    const { lista, indice } = posicaoSelecionado;
+    const proximoIdx = (indice + 1) % lista.length;
+    const proximo = lista[proximoIdx];
+    if (proximo) {
+      selecionarRegistro(proximo);
+    }
+  }, [selecionado, posicaoSelecionado, selecionarRegistro]);
 
   const valorInicialFormulario = useMemo(
     () =>
@@ -195,7 +245,10 @@ export function useAplicacao() {
 
     // Registro selecionado / formulário de competência
     selecionado,
-    setSelecionado,
+    setSelecionado: selecionarRegistro,
+    posicaoSelecionado,
+    navegarRegistroAnterior,
+    navegarProximoRegistro,
     formulario,
     valorInicialFormulario,
     abrirCriacao,

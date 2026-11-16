@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { Platform } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import {
   runOnJS,
@@ -60,6 +61,11 @@ export function useArrastarParaFechar(aoFechar: () => void): {
 
         // Puxar para baixo fecha
         if (transY > DISTANCIA_PARA_FECHAR || velY > VELOCIDADE_PARA_FECHAR) {
+          if (Platform.OS === 'web') {
+            deslocY.value = 0;
+            runOnJS(aoFechar)();
+            return;
+          }
           deslocY.value = withTiming(800, { duration: 200 }, () => {
             runOnJS(aoFechar)();
           });

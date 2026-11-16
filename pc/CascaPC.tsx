@@ -578,6 +578,7 @@ const CascaPC: React.FC = () => {
             campo={app.campoAtivo}
             registros={app.registros}
             anotacoes={app.anotacoes}
+            idSelecionado={app.selecionado?.id}
             aoSelecionar={app.setSelecionado}
             aoCriar={app.abrirCriacao}
             aoAbrirAnotacao={app.abrirAnotacao}

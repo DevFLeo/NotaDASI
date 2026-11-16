@@ -33,6 +33,7 @@ type Props = {
   campo: Campo;
   registros: Registro[];
   anotacoes: Anotacao[];
+  idSelecionado?: string;
   aoSelecionar?: (registro: Registro) => void;
   /**
    * Abre o formulario de criacao. Se um setor estiver expandido no momento,
@@ -75,6 +76,7 @@ const MapaMental: React.FC<Props> = ({
   campo,
   registros,
   anotacoes,
+  idSelecionado,
   aoSelecionar,
   aoCriar,
   aoAbrirAnotacao,
@@ -261,7 +263,10 @@ const MapaMental: React.FC<Props> = ({
   // partir do inicio do gesto) — assim compõe corretamente com o pinça
   // rodando ao mesmo tempo (Gesture.Simultaneous), sem os dois gestos
   // sobrescreverem o valor um do outro.
+  // minDistance(6) garante que um clique do mouse ou toque estático sobre um nó
+  // NUNCA seja capturado como pan da câmera.
   const gestoPan = Gesture.Pan()
+    .minDistance(6)
     .averageTouches(true)
     .onChange((evento) => {
       deslocX.value += evento.changeX;
@@ -445,6 +450,7 @@ const MapaMental: React.FC<Props> = ({
                 no={no}
                 posicaoInicial={posicaoDe(no)}
                 apagado={idsEncontrados !== null && !idsEncontrados.has(no.id)}
+                selecionado={no.registro?.id === idSelecionado}
                 aoSoltar={registrarPosicao}
                 aoTocar={() => {
                   if (no.tipo === 'setor' || no.id.startsWith('sec-')) {
@@ -684,6 +690,7 @@ type PropsNo = {
   posicaoInicial: { x: number; y: number };
   /** Fora do resultado da busca: continua no lugar, mas em segundo plano. */
   apagado: boolean;
+  selecionado?: boolean;
   aoSoltar: (id: string, x: number, y: number) => void;
   aoTocar: () => void;
 };
@@ -693,6 +700,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
   no,
   posicaoInicial,
   apagado,
+  selecionado,
   aoSoltar,
   aoTocar,
 }) => {
@@ -704,7 +712,14 @@ const NoArrastavel: React.FC<PropsNo> = ({
   const arrastando = useSharedValue(0);
   const arrastoMovimentou = useSharedValue(false);
 
+  // Debounce de 200ms para evitar duplo acionamento concorrente (ex: RNGH + DOM click)
+  const ultimoDisparo = useRef(0);
   const dispararToque = useCallback(() => {
+    const agora = Date.now();
+    if (agora - ultimoDisparo.current < 200) {
+      return;
+    }
+    ultimoDisparo.current = agora;
     aoTocar();
   }, [aoTocar]);
 
@@ -737,20 +752,16 @@ const NoArrastavel: React.FC<PropsNo> = ({
       arrastando.value = 0;
       const moveu = Math.hypot(evento.translationX, evento.translationY);
       if (!arrastoMovimentou.value || moveu < 8) {
-        if (Platform.OS !== 'web') {
-          runOnJS(dispararToque)();
-        }
+        runOnJS(dispararToque)();
       } else {
         runOnJS(aoSoltar)(no.id, x.value, y.value);
       }
     });
 
   const gestoToque = Gesture.Tap()
-    .maxDuration(600)
+    .maxDuration(500)
     .onEnd(() => {
-      if (Platform.OS !== 'web') {
-        runOnJS(dispararToque)();
-      }
+      runOnJS(dispararToque)();
     });
 
   const gesto = Gesture.Exclusive(gestoArrastar, gestoToque);
@@ -759,7 +770,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
     transform: [
       { translateX: x.value - no.largura / 2 },
       { translateY: y.value - no.altura / 2 },
-      { scale: withSpring(arrastando.value ? 1.06 : 1, { damping: 20 }) },
+      { scale: withSpring(arrastando.value ? 1.06 : selecionado ? 1.03 : 1, { damping: 20 }) },
     ],
   }));
 
@@ -785,18 +796,24 @@ const NoArrastavel: React.FC<PropsNo> = ({
           ? {
               onClick: (e: any) => {
                 e?.stopPropagation?.();
-                aoTocar();
+                dispararToque();
               },
               onDoubleClick: (e: any) => {
                 e?.stopPropagation?.();
-                aoTocar();
+                dispararToque();
               },
               title: textoDicaTooltip,
               style: [
                 estilos.no,
                 estiloPorTipo,
                 estiloPorTipoDeBusca,
-                { width: no.largura, minHeight: no.altura, borderColor: `${no.cor}88`, cursor: 'pointer' },
+                selecionado && estilos.noSelecionado,
+                {
+                  width: no.largura,
+                  minHeight: no.altura,
+                  borderColor: selecionado ? '#2563eb' : `${no.cor}88`,
+                  cursor: 'pointer',
+                },
                 estilo,
               ],
             }
@@ -805,10 +822,16 @@ const NoArrastavel: React.FC<PropsNo> = ({
                 estilos.no,
                 estiloPorTipo,
                 estiloPorTipoDeBusca,
-                { width: no.largura, minHeight: no.altura, borderColor: `${no.cor}88` },
+                selecionado && estilos.noSelecionado,
+                {
+                  width: no.largura,
+                  minHeight: no.altura,
+                  borderColor: selecionado ? '#2563eb' : `${no.cor}88`,
+                },
                 estilo,
               ],
             })}>
+        {selecionado ? <View style={estilos.pontoSelecionado} /> : null}
         {no.registro?.favorito ? <Text style={estilos.estrelaNo}>★</Text> : null}
         <Text
           style={[estilos.rotuloNo, no.tipo === 'raiz' && estilos.rotuloRaiz]}
@@ -862,6 +885,25 @@ const criarEstilos = (tema: Tema) =>
     },
     noCompetencia: {
       backgroundColor: tema.superficie,
+    },
+    noSelecionado: {
+      borderWidth: 2.5,
+      borderColor: '#2563eb',
+      shadowColor: '#2563eb',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.5,
+      shadowRadius: 10,
+      elevation: 6,
+      zIndex: 50,
+    },
+    pontoSelecionado: {
+      position: 'absolute',
+      top: 6,
+      left: 6,
+      width: 7,
+      height: 7,
+      borderRadius: 999,
+      backgroundColor: '#2563eb',
     },
     noApagado: {
       opacity: 0.22,
