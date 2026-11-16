@@ -41,7 +41,9 @@ const ContatoProtegido: React.FC<Props> = ({ contato }) => {
           </Text>
         ))}
 
-        <Text style={estilos.dica}>{revelado ? 'toque para ocultar' : '🔒 toque para revelar'}</Text>
+        <Text style={estilos.dica}>
+          {revelado ? 'Toque para ocultar' : 'Dado pessoal protegido — clique para visualizar'}
+        </Text>
       </Pressable>
     </View>
   );

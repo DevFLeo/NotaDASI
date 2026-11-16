@@ -125,7 +125,11 @@ const DetalheRegistro: React.FC<Props> = ({
   );
 
   return (
-    <Modal visible animationType="slide" transparent onRequestClose={aoFechar}>
+    <Modal
+      visible
+      animationType={Platform.OS === 'web' ? 'none' : 'slide'}
+      transparent
+      onRequestClose={aoFechar}>
       <GestureHandlerRootView style={estilos.fundo}>
         <Animated.View style={[estilos.wrapperAnimado, estiloArrasto]}>
           <View style={estilos.painel}>
@@ -184,7 +188,7 @@ const DetalheRegistro: React.FC<Props> = ({
                   accessibilityRole="button"
                   accessibilityLabel={telaCheia ? 'Restaurar tamanho' : 'Tela cheia'}
                   style={estilos.botaoIcone}>
-                  <Text style={estilos.textoBotaoIcone}>{telaCheia ? '🗕' : '⤢'}</Text>
+                  <Text style={estilos.textoBotaoIcone}>{telaCheia ? '[-]' : '[+]'}</Text>
                 </Pressable>
 
                 <Pressable
@@ -205,7 +209,7 @@ const DetalheRegistro: React.FC<Props> = ({
               {/* Card Hero: Atribuição Regimental */}
               <View style={estilos.cardHero}>
                 <View style={estilos.linhaHeroTopo}>
-                  <Text style={estilos.tagHero}>📜 ATRIBUIÇÃO REGIMENTAL AVALIADA</Text>
+                  <Text style={estilos.tagHero}>ATRIBUIÇÃO REGIMENTAL AVALIADA</Text>
                   <Text style={estilos.idRegistro}>ID: {registro.id}</Text>
                 </View>
                 <Text style={estilos.tituloCompetencia} selectable>
@@ -220,7 +224,6 @@ const DetalheRegistro: React.FC<Props> = ({
                   {/* Card: Lotação e Chefia Responsável */}
                   <View style={estilos.card}>
                     <View style={estilos.cabecalhoCard}>
-                      <Text style={estilos.iconeCard}>🏛️</Text>
                       <View style={estilos.titulosCard}>
                         <Text style={estilos.tituloSecao}>Lotação & Responsáveis</Text>
                         <Text style={estilos.subtituloSecao}>Estrutura Organizacional da Prefeitura</Text>
@@ -242,7 +245,6 @@ const DetalheRegistro: React.FC<Props> = ({
                       </Text>
 
                       <View style={estilos.linhaChefia}>
-                        <Text style={estilos.iconePessoa}>👤</Text>
                         <Text style={estilos.valorChefia} selectable>
                           <Text style={estilos.cargoDestaque}>
                             {registro.departamentoCargo || 'Direção'}:{' '}
@@ -272,7 +274,6 @@ const DetalheRegistro: React.FC<Props> = ({
                       </Text>
 
                       <View style={estilos.linhaChefia}>
-                        <Text style={estilos.iconePessoa}>👤</Text>
                         <Text style={estilos.valorChefia} selectable>
                           <Text style={estilos.cargoDestaque}>{registro.cargo || 'Responsável'}: </Text>
                           {registro.responsavel || 'Não informado'}
@@ -294,9 +295,8 @@ const DetalheRegistro: React.FC<Props> = ({
                                 )
                               }
                               style={estilos.pillContato}>
-                              <Text style={estilos.iconeContatoPill}>📞</Text>
                               <Text style={estilos.textoContatoPill} selectable>
-                                {registro.contatoInstitucional.telefone}
+                                Tel: {registro.contatoInstitucional.telefone}
                               </Text>
                             </Pressable>
                           ) : null}
@@ -318,9 +318,8 @@ const DetalheRegistro: React.FC<Props> = ({
                                 )
                               }
                               style={estilos.pillContato}>
-                              <Text style={estilos.iconeContatoPill}>✉️</Text>
                               <Text style={estilos.textoContatoPill} selectable>
-                                {registro.contatoInstitucional.email}
+                                E-mail: {registro.contatoInstitucional.email}
                               </Text>
                             </Pressable>
                           ) : null}
@@ -328,7 +327,7 @@ const DetalheRegistro: React.FC<Props> = ({
                       ) : (
                         <View style={estilos.alertaSemContato}>
                           <Text style={estilos.textoAlertaSemContato}>
-                            ⚠️ Contato institucional pendente de adesão no diagnóstico.
+                            Contato institucional pendente de adesão no diagnóstico.
                           </Text>
                         </View>
                       )}
@@ -341,7 +340,6 @@ const DetalheRegistro: React.FC<Props> = ({
                   {/* Card: Diagnóstico de Adesão ao SIG Geo 360 */}
                   <View style={estilos.card}>
                     <View style={estilos.cabecalhoCard}>
-                      <Text style={estilos.iconeCard}>🛰️</Text>
                       <View style={estilos.titulosCard}>
                         <Text style={estilos.tituloSecao}>Diagnóstico do SIG Geo 360</Text>
                         <Text style={estilos.subtituloSecao}>Respostas da adesão setorial</Text>
@@ -382,7 +380,6 @@ const DetalheRegistro: React.FC<Props> = ({
                   {/* Card: Problemas e Chamados Técnicos */}
                   <View style={estilos.card}>
                     <View style={estilos.cabecalhoCard}>
-                      <Text style={estilos.iconeCard}>⚠️</Text>
                       <View style={estilos.titulosCard}>
                         <Text style={estilos.tituloSecao}>Situação Operacional & Chamados</Text>
                         <Text style={estilos.subtituloSecao}>Ocorrências reportadas no SIG</Text>
@@ -408,7 +405,7 @@ const DetalheRegistro: React.FC<Props> = ({
                     {registro.temProblema || registro.detalheProblema ? (
                       <View style={estilos.caixaAlertaProblema}>
                         <Text style={estilos.tituloAlertaProblema}>
-                          🚨 Detalhamento do Impedimento Técnico:
+                          Detalhamento do Impedimento Técnico:
                         </Text>
                         <Text style={estilos.textoDetalheProblema} selectable>
                           {registro.detalheProblema || 'Problema assinalado sem descrição formal.'}
@@ -417,7 +414,7 @@ const DetalheRegistro: React.FC<Props> = ({
                     ) : (
                       <View style={estilos.caixaSemProblema}>
                         <Text style={estilos.textoSemProblema}>
-                          ✅ Sem impedimentos operacionais registrados para esta competência.
+                          Sem impedimentos operacionais registrados para esta competência.
                         </Text>
                       </View>
                     )}
@@ -438,7 +435,6 @@ const DetalheRegistro: React.FC<Props> = ({
                   {/* Card: Camadas Espaciais & Módulos */}
                   <View style={estilos.card}>
                     <View style={estilos.cabecalhoCard}>
-                      <Text style={estilos.iconeCard}>🗺️</Text>
                       <View style={estilos.titulosCard}>
                         <Text style={estilos.tituloSecao}>Camadas & Módulos do SIG</Text>
                         <Text style={estilos.subtituloSecao}>Permissões e fluxos de trabalho</Text>
@@ -450,7 +446,7 @@ const DetalheRegistro: React.FC<Props> = ({
                         <Text style={estilos.rotuloCampo}>Módulo do SIG</Text>
                         <View style={estilos.tagModulo}>
                           <Text style={estilos.textoTagModulo} numberOfLines={1}>
-                            📦 {registro.moduloSig || 'Cadastro padrão'}
+                            {registro.moduloSig || 'Cadastro padrão'}
                           </Text>
                         </View>
                       </View>
@@ -494,7 +490,6 @@ const DetalheRegistro: React.FC<Props> = ({
                   {/* Card: Pareceres & Comentários Oficiais */}
                   <View style={estilos.card}>
                     <View style={estilos.cabecalhoCard}>
-                      <Text style={estilos.iconeCard}>💬</Text>
                       <View style={estilos.titulosCard}>
                         <Text style={estilos.tituloSecao}>Pareceres & Comentários</Text>
                         <Text style={estilos.subtituloSecao}>
@@ -572,7 +567,6 @@ const DetalheRegistro: React.FC<Props> = ({
                   {eSecretaria && (
                     <View style={[estilos.card, { borderColor: '#8b5cf644', backgroundColor: '#8b5cf608' }]}>
                       <View style={estilos.cabecalhoCard}>
-                        <Text style={estilos.iconeCard}>📝</Text>
                         <View style={estilos.titulosCard}>
                           <Text style={[estilos.tituloSecao, { color: '#7c3aed' }]}>
                             Anotação Pessoal (Secretaria)
@@ -597,7 +591,6 @@ const DetalheRegistro: React.FC<Props> = ({
                   {/* Trilha de Auditoria */}
                   {(eDasi || eSecretaria) && registro.atualizadoEm ? (
                     <View style={estilos.blocoAuditoriaInfo}>
-                      <Text style={estilos.iconeEscudo}>🛡️</Text>
                       <Text style={estilos.textoAuditoria}>
                         Última alteração auditada por{' '}
                         <Text style={estilos.destaqueAuditoria}>
@@ -636,7 +629,6 @@ const DetalheRegistro: React.FC<Props> = ({
                   style={estilos.botaoEditar}
                   accessibilityRole="button"
                   accessibilityLabel="Editar competência (Ctrl+E)">
-                  <Text style={estilos.iconeBotaoEditar}>✏️</Text>
                   <Text style={estilos.textoBotaoEditar}>{ePC ? 'EDITAR [Ctrl+E]' : 'EDITAR'}</Text>
                 </Pressable>
               ) : null}
@@ -676,7 +668,7 @@ const PillStatus: React.FC<{
       corBorda = '#ef444440';
       corTexto = '#dc2626';
       texto = textoSim;
-      icone = '⚠️';
+      icone = '!';
     } else {
       corFundo = '#10b98115';
       corBorda = '#10b98140';

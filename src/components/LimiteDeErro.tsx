@@ -38,7 +38,6 @@ export class LimiteDeErro extends React.Component<Props, State> {
       return (
         <View style={estilos.container}>
           <View style={estilos.cartao}>
-            <Text style={estilos.icone}>⚠️</Text>
             <Text style={estilos.titulo}>
               {this.props.titulo || 'Ocorreu um erro nesta exibição'}
             </Text>

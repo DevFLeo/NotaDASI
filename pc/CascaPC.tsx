@@ -403,7 +403,7 @@ const CascaPC: React.FC = () => {
           style={estilos.botaoAtalhos}
           accessibilityRole="button"
           accessibilityLabel="Atalhos de teclado do PC">
-          <Text style={estilos.iconeAtalhos}>⌨️</Text>
+          <Text style={estilos.iconeAtalhos}>[ ? ]</Text>
         </Pressable>
 
         {/* Identificação de Conta */}
@@ -592,8 +592,7 @@ const CascaPC: React.FC = () => {
           <View style={estilos.janelaModalAtalhos}>
             <View style={estilos.topoModalAtalhos}>
               <View style={estilos.linhaTituloModalAtalhos}>
-                <Text style={estilos.iconeModalAtalhos}>⌨️</Text>
-                <Text style={estilos.tituloModalAtalhos}>Atalhos de Teclado no PC</Text>
+                <Text style={estilos.tituloModalAtalhos}>Atalhos de Teclado (PC)</Text>
               </View>
               <Pressable
                 onPress={() => setModalAtalhosAberto(false)}
