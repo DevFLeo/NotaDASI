@@ -2,6 +2,7 @@ import React from 'react';
 import DetalheRegistro from '../components/DetalheRegistro';
 import FormularioAnotacao from '../components/FormularioAnotacao';
 import FormularioRegistro from '../components/FormularioRegistro';
+import LimiteDeErro from '../components/LimiteDeErro';
 import MenuCampos from '../components/MenuCampos';
 import { useSessao } from '../auth/useSessao';
 import type { Aplicacao } from './useAplicacao';
@@ -50,50 +51,58 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
 
   return (
     <>
-      <DetalheRegistro
-        registro={app.selecionado}
-        aoFechar={() => app.setSelecionado(null)}
-        aoEditar={app.abrirEdicao}
-        aoExcluir={app.pedirExclusao}
-        aoAlternarFavorito={app.alternarFavoritoDoRegistro}
-        aoAdicionarComentario={lidarComentario}
-        aoSalvarNotaPessoal={lidarNotaPessoal}
-      />
+      <LimiteDeErro aoResetar={() => app.setSelecionado(null)} titulo="Erro ao abrir detalhes">
+        <DetalheRegistro
+          registro={app.selecionado}
+          aoFechar={() => app.setSelecionado(null)}
+          aoEditar={app.abrirEdicao}
+          aoExcluir={app.pedirExclusao}
+          aoAlternarFavorito={app.alternarFavoritoDoRegistro}
+          aoAdicionarComentario={lidarComentario}
+          aoSalvarNotaPessoal={lidarNotaPessoal}
+        />
+      </LimiteDeErro>
 
       {ocultarMenuCampos ? null : (
-        <MenuCampos
-          visivel={app.menuCampos}
-          campos={app.campos}
-          campoAtivo={app.campoAtivo}
-          contarItens={app.contarItens}
-          aoFechar={app.fecharMenuCampos}
-          aoTrocar={app.definirCampoAtivo}
-          aoCriar={app.criarCampo}
-          aoAtualizar={app.atualizarCampo}
-          aoExcluir={app.excluirCampo}
-        />
+        <LimiteDeErro aoResetar={app.fecharMenuCampos} titulo="Erro ao abrir menu de campos">
+          <MenuCampos
+            visivel={app.menuCampos}
+            campos={app.campos}
+            campoAtivo={app.campoAtivo}
+            contarItens={app.contarItens}
+            aoFechar={app.fecharMenuCampos}
+            aoTrocar={app.definirCampoAtivo}
+            aoCriar={app.criarCampo}
+            aoAtualizar={app.atualizarCampo}
+            aoExcluir={app.excluirCampo}
+          />
+        </LimiteDeErro>
       )}
 
-      <FormularioAnotacao
-        visivel={app.anotacaoEmEdicao !== null}
-        campo={app.campoAtivo}
-        anotacao={anotacaoEmEdicao}
-        aoSalvar={app.salvarAnotacao}
-        aoCancelar={app.fecharAnotacao}
-        aoExcluir={anotacaoEmEdicao ? () => app.pedirExclusaoAnotacao(anotacaoEmEdicao) : undefined}
-      />
+      <LimiteDeErro aoResetar={app.fecharAnotacao} titulo="Erro no formulário de anotação">
+        <FormularioAnotacao
+          visivel={app.anotacaoEmEdicao !== null}
+          campo={app.campoAtivo}
+          anotacao={anotacaoEmEdicao}
+          aoSalvar={app.salvarAnotacao}
+          aoCancelar={app.fecharAnotacao}
+          aoExcluir={anotacaoEmEdicao ? () => app.pedirExclusaoAnotacao(anotacaoEmEdicao) : undefined}
+        />
+      </LimiteDeErro>
 
-      <FormularioRegistro
-        visivel={app.formulario !== null}
-        tituloModal={app.formulario?.modo === 'editar' ? 'Editar competência' : 'Nova competência'}
-        valorInicial={app.valorInicialFormulario}
-        aoSalvar={app.salvarFormulario}
-        aoCancelar={app.fecharFormulario}
-        aoExcluir={registroEmEdicao ? () => app.pedirExclusao(registroEmEdicao) : undefined}
-        aoAdicionarComentario={
-          registroEmEdicao ? (texto) => lidarComentario(registroEmEdicao.id, texto) : undefined
-        }
-      />
+      <LimiteDeErro aoResetar={app.fecharFormulario} titulo="Erro no formulário de competência">
+        <FormularioRegistro
+          visivel={app.formulario !== null}
+          tituloModal={app.formulario?.modo === 'editar' ? 'Editar competência' : 'Nova competência'}
+          valorInicial={app.valorInicialFormulario}
+          aoSalvar={app.salvarFormulario}
+          aoCancelar={app.fecharFormulario}
+          aoExcluir={registroEmEdicao ? () => app.pedirExclusao(registroEmEdicao) : undefined}
+          aoAdicionarComentario={
+            registroEmEdicao ? (texto) => lidarComentario(registroEmEdicao.id, texto) : undefined
+          }
+        />
+      </LimiteDeErro>
     </>
   );
 };
