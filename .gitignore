@@ -89,3 +89,9 @@ node_modules/.vite/
 # Versao web (Vite)
 web/dist/
 web/node_modules/
+
+# Dados institucionais locais e backups portateis (NUNCA sobem para o GitHub)
+dados/local/
+*.notadasi.json
+src/data/registros.gerado.ts
+scripts/gerar_base_completa.mjs

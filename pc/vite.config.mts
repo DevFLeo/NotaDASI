@@ -115,6 +115,37 @@ const aplicarPluginDeWorklets = (): Plugin => ({
   },
 });
 
+const ID_BASE_LOCAL_VAZIA = '\0nota-dasi:registros-gerado-vazio';
+
+/**
+ * Como `src/data/registros.gerado.ts` fica fora do GitHub (.gitignore),
+ * num clone novo (ex.: segundo PC de desenvolvimento) esse arquivo pode ainda
+ * nao existir. Este plugin evita quebra de build devolvendo um array vazio ate
+ * que o desenvolvedor importe o backup local.
+ */
+const fallbackBaseLocal = (): Plugin => ({
+  name: 'nota-dasi:fallback-base-local',
+  enforce: 'pre',
+
+  resolveId(origem, importador) {
+    if (!importador) return null;
+    if (origem === './registros.gerado' || origem.endsWith('/registros.gerado')) {
+      const caminhoReal = path.resolve(path.dirname(importador), 'registros.gerado.ts');
+      if (!fs.existsSync(caminhoReal)) {
+        return ID_BASE_LOCAL_VAZIA;
+      }
+    }
+    return null;
+  },
+
+  load(id) {
+    if (id === ID_BASE_LOCAL_VAZIA) {
+      return 'export const registrosImportados = [];';
+    }
+    return null;
+  },
+});
+
 /**
  * Build do NotaDASI para o navegador (localhost), reaproveitando o código do
  * app Android sem duplicar nada.
@@ -125,6 +156,7 @@ export default defineConfig({
   root: pastaPc,
 
   plugins: [
+    fallbackBaseLocal(),
     resolverVariantesWeb(),
     aplicarPluginDeWorklets(),
     react(),

@@ -24,6 +24,7 @@ import {
   type RelatorioConformidade,
 } from '../data/validadorRegrasExcel';
 import { importarPlanilhaGenerica, parseCSVouTSV } from '../data/importadorPlanilha';
+import { gerarPacoteBackup, lerERestaurarBackupJson } from '../data/backupPortatil';
 import { ESCALA_TEXTO_PADRAO } from '../tema/responsivo';
 import {
   useEscalaTexto,
@@ -335,6 +336,80 @@ const AjustesTela: React.FC<Props> = ({
       URL.revokeObjectURL(url);
     } else {
       Alert.alert('Termo Exportado', `Termo exportado com ${relatorio.quebras.length} ressalvas registradas.`);
+    }
+  };
+
+  // Exportacao portatil de todos os dados locais para transferir entre PCs (fora do GitHub)
+  const exportarBackupCompleto = async () => {
+    try {
+      const pacote = await gerarPacoteBackup({
+        registros,
+        aceiteExcel,
+        nomePlanilhaAtiva,
+      });
+      const jsonStr = JSON.stringify(pacote, null, 2);
+      const dataStr = new Date().toISOString().slice(0, 10);
+      const nomeArquivo = `notadasi-dados-${dataStr}.json`;
+
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeArquivo;
+        a.click();
+        URL.revokeObjectURL(url);
+        Alert.alert(
+          'Exportação Concluída',
+          `${pacote.totalRegistros} competências exportadas para "${nomeArquivo}". Copie este arquivo para outro PC e use "Importar Base (.json)" ou "npm run dados:importar".`,
+        );
+      } else {
+        Alert.alert(
+          'Exportação Disponível no PC',
+          `Pacote gerado com ${pacote.totalRegistros} competências. No ambiente desktop (web), o arquivo ${nomeArquivo} é baixado diretamente.`,
+        );
+      }
+    } catch (err: any) {
+      Alert.alert('Falha na Exportação', err?.message || 'Não foi possível gerar o arquivo de backup.');
+    }
+  };
+
+  // Importacao portatil de arquivo .json exportado de outro PC
+  const importarBackupCompleto = () => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,application/json';
+      input.onchange = async (e: any) => {
+        const arquivo = e.target?.files?.[0];
+        if (!arquivo) return;
+        setCarregandoArquivo(true);
+        try {
+          const texto = await arquivo.text();
+          const resultado = await lerERestaurarBackupJson(texto, arquivo.name);
+          aoCarregarBasePlanilha?.(resultado.registros, resultado.nomeBase);
+          Alert.alert(
+            'Base Importada com Sucesso',
+            `${resultado.registros.length} competências carregadas a partir de "${arquivo.name}".` +
+              (resultado.camposRestaurados > 0
+                ? ` ${resultado.camposRestaurados} campos livres restaurados.`
+                : '') +
+              (resultado.posicoesRestauradas > 0
+                ? ` Posições do mapa mental restauradas.`
+                : ''),
+          );
+        } catch (err: any) {
+          Alert.alert('Falha na Importação', err?.message || 'Não foi possível ler o arquivo JSON.');
+        } finally {
+          setCarregandoArquivo(false);
+        }
+      };
+      input.click();
+    } else {
+      Alert.alert(
+        'Importação de Backup (.json)',
+        'A seleção de arquivo JSON está disponível na versão PC/Web ou via terminal com "npm run dados:importar <arquivo.json>".',
+      );
     }
   };
 
@@ -720,21 +795,42 @@ const AjustesTela: React.FC<Props> = ({
       <Cartao tema={tema}>
         <View style={estilos.linhaTituloSecao}>
           <IconeBanco tamanho={16} cor={tema.primaria} />
-          <Text style={estilos.tituloSecao}>Dados Locais</Text>
+          <Text style={estilos.tituloSecao}>Dados Locais e Portabilidade</Text>
         </View>
+        <Text style={estilos.descricao}>
+          Os dados institucionais ficam separados do repositório GitHub (.gitignore). Para levar suas
+          informações para outro PC de desenvolvimento, exporte o pacote completo em JSON e importe-o
+          na outra máquina.
+        </Text>
         <Campo
           tema={tema}
           rotulo="Origem dos dados"
           valor={
             nomePlanilhaAtiva
-              ? `Planilha personalizada: ${nomePlanilhaAtiva}`
+              ? `Base ativa: ${nomePlanilhaAtiva}`
               : origem === 'planilha'
-              ? 'Planilha oficial SIG Geo 360 (97 competências)'
-              : 'Dados de exemplo'
+              ? `Base local carregada (${totalRegistros} competências)`
+              : 'Dados de exemplo (fictícios)'
           }
         />
         <Campo tema={tema} rotulo="Competências carregadas" valor={String(totalRegistros)} />
         <Campo tema={tema} rotulo="Armazenamento" valor="Local, neste aparelho (AsyncStorage / IndexedDB)" />
+
+        <View style={[estilos.linhaBotoes, estreita && estilos.linhaBotoesEmpilhada]}>
+          <Pressable
+            onPress={exportarBackupCompleto}
+            accessibilityRole="button"
+            style={estilos.botaoPrimario}>
+            <Text style={estilos.textoBotaoPrimario}>Exportar Base (.json)</Text>
+          </Pressable>
+          <Pressable
+            onPress={importarBackupCompleto}
+            accessibilityRole="button"
+            style={estilos.botaoSecundario}>
+            <Text style={estilos.textoBotaoSecundario}>Importar Base (.json)</Text>
+          </Pressable>
+        </View>
+
         <Pressable onPress={confirmarLimpeza} style={estilos.botaoPerigo}>
           <Text style={estilos.textoBotaoPerigo}>Limpar dados locais</Text>
         </Pressable>
