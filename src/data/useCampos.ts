@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  CAMPO_CONTATOS,
   CAMPO_SIG,
+  ID_CAMPO_CONTATOS,
   ID_CAMPO_SIG,
   gerarIdAnotacao,
   gerarIdCampo,
@@ -69,7 +71,9 @@ export function useCampos() {
       // Um campo excluído noutra sessão não pode deixar o app apontando para o
       // vazio: na dúvida, volta para o campo do SIG.
       const existe =
-        ativoSalvo === ID_CAMPO_SIG || camposSalvos.some((campo) => campo.id === ativoSalvo);
+        ativoSalvo === ID_CAMPO_SIG ||
+        ativoSalvo === ID_CAMPO_CONTATOS ||
+        camposSalvos.some((campo) => campo.id === ativoSalvo);
       setIdAtivo(existe && ativoSalvo ? ativoSalvo : ID_CAMPO_SIG);
       setCarregado(true);
     });
@@ -79,7 +83,7 @@ export function useCampos() {
     };
   }, []);
 
-  const campos = useMemo<Campo[]>(() => [CAMPO_SIG, ...criados], [criados]);
+  const campos = useMemo<Campo[]>(() => [CAMPO_SIG, CAMPO_CONTATOS, ...criados], [criados]);
 
   const campoAtivo = useMemo<Campo>(
     () => campos.find((campo) => campo.id === idAtivo) ?? CAMPO_SIG,
@@ -130,10 +134,10 @@ export function useCampos() {
     });
   }, []);
 
-  /** Apaga o campo E tudo que havia dentro dele. O campo do SIG é intocável. */
+  /** Apaga o campo E tudo que havia dentro dele. Os campos embutidos (SIG e Contatos) são intocáveis. */
   const excluirCampo = useCallback(
     (id: string) => {
-      if (id === ID_CAMPO_SIG) {
+      if (id === ID_CAMPO_SIG || id === ID_CAMPO_CONTATOS) {
         return;
       }
 
@@ -207,8 +211,11 @@ export function useCampos() {
   );
 
   const totalDeItens = useCallback(
-    (campo: Campo, totalRegistrosSig: number) =>
-      campo.tipo === 'sig' ? totalRegistrosSig : (anotacoesPorCampo[campo.id] ?? []).length,
+    (campo: Campo, totalRegistrosSig: number, totalContatos: number = 0) => {
+      if (campo.tipo === 'sig') return totalRegistrosSig;
+      if (campo.tipo === 'contatos') return totalContatos;
+      return (anotacoesPorCampo[campo.id] ?? []).length;
+    },
     [anotacoesPorCampo],
   );
 

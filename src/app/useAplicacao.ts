@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import type { Anotacao, Campo } from '../data/campos';
+import type { ContatoIntegrado } from '../data/contatosIntegrados';
 import { registroEmBranco, type NovoRegistro, type Registro } from '../data/registros';
 import { useCampos } from '../data/useCampos';
+import { useContatos } from '../data/useContatos';
 import { useRegistros } from '../data/useRegistros';
 
 /**
@@ -31,6 +33,7 @@ export type Aplicacao = ReturnType<typeof useAplicacao>;
 
 export function useAplicacao() {
   const [selecionado, setSelecionadoState] = useState<Registro | null>(null);
+  const [contatoSelecionado, setContatoSelecionado] = useState<ContatoIntegrado | null>(null);
   const [formulario, setFormulario] = useState<EstadoFormulario>(null);
   const [menuCampos, setMenuCampos] = useState(false);
   const [anotacaoEmEdicao, setAnotacaoEmEdicao] = useState<EstadoAnotacao>(null);
@@ -52,6 +55,7 @@ export function useAplicacao() {
     nomePlanilhaAtiva,
     criarRegistro,
     atualizarRegistro,
+    atualizarContatoNoSig,
     excluirRegistro,
     alternarFavorito,
     adicionarComentario,
@@ -79,11 +83,23 @@ export function useAplicacao() {
     totalDeItens,
   } = useCampos();
 
-  const eCampoLivre = campoAtivo.tipo !== 'sig';
+  const {
+    contatos,
+    totalContatos,
+    totalDoSig: totalContatosDoSig,
+    totalManuais: totalContatosManuais,
+    totalSemContato: totalContatosSemCanal,
+    criarContatoManual,
+    atualizarContatoManual,
+    excluirContatoManual,
+  } = useContatos(registros);
+
+  const eCampoLivre = campoAtivo.tipo === 'livre';
+  const eCampoContatos = campoAtivo.tipo === 'contatos';
 
   const contarItens = useCallback(
-    (campo: Campo) => totalDeItens(campo, registros.length),
-    [totalDeItens, registros.length],
+    (campo: Campo) => totalDeItens(campo, registros.length, totalContatos),
+    [totalDeItens, registros.length, totalContatos],
   );
 
   const abrirMenuCampos = useCallback(() => setMenuCampos(true), []);
@@ -244,6 +260,18 @@ export function useAplicacao() {
     campoAtivo,
     anotacoes,
     eCampoLivre,
+    eCampoContatos,
+    contatos,
+    contatoSelecionado,
+    setContatoSelecionado,
+    totalContatos,
+    totalContatosDoSig,
+    totalContatosManuais,
+    totalContatosSemCanal,
+    atualizarContatoNoSig,
+    criarContatoManual,
+    atualizarContatoManual,
+    excluirContatoManual,
     limparDadosLocais,
 
     // Campos (cofres)

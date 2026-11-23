@@ -23,7 +23,8 @@ const MAPEAMENTO_COLUNAS: Record<string, string[]> = {
   temChamado: ['temchamadoaberto', 'temchamado', 'chamado'],
   detalheProblema: ['detalheoproblema', 'detalheproblema'],
   observacao: ['observacao', 'observacoes', 'obs'],
-  telefone: ['telefone', 'fone', 'contato', 'ramal'],
+  telefone: ['telefone', 'fone', 'contato', 'whatsapp', 'celular'],
+  ramal: ['ramal', 'extensao'],
   email: ['email', 'correio', 'contatodireto'],
 };
 
@@ -166,6 +167,7 @@ export function parseCSVouTSV(conteudo: string): Registro[] {
     cargo = cargoAnterior;
 
     const tel = obter('telefone');
+    const ramal = obter('ramal');
     const email = obter('email');
 
     const id = `imp-${Date.now()}-${i}`;
@@ -195,7 +197,14 @@ export function parseCSVouTSV(conteudo: string): Registro[] {
       temChamado: converterBooleano(obter('temChamado')),
       detalheProblema: obter('detalheProblema'),
       observacao: obter('observacao'),
-      contatoInstitucional: tel || email ? { telefone: tel, email } : undefined,
+      contatoInstitucional:
+        tel || email || ramal
+          ? {
+              ...(tel ? { telefone: tel } : {}),
+              ...(email ? { email } : {}),
+              ...(ramal ? { ramal } : {}),
+            }
+          : undefined,
     });
   }
 

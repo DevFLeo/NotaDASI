@@ -4,9 +4,10 @@ import {
   type Anotacao,
   type Campo,
 } from '../data/campos';
+import type { ContatoIntegrado } from '../data/contatosIntegrados';
 import { calcularSituacao, corPorSituacao, type Registro } from '../data/registros';
 
-export type TipoNo = 'raiz' | 'setor' | 'competencia' | 'anotacao';
+export type TipoNo = 'raiz' | 'setor' | 'competencia' | 'anotacao' | 'contato';
 
 export type NoMapa = {
   id: string;
@@ -21,6 +22,8 @@ export type NoMapa = {
   registro?: Registro;
   /** Preenchido só nos nós de campo livre (tipo 'anotacao'). */
   anotacao?: Anotacao;
+  /** Preenchido só nos nós do mapa de contatos (tipo 'contato'). */
+  contato?: ContatoIntegrado;
   cor: string;
 };
 
@@ -411,4 +414,124 @@ export const ligacoesPorCamada = (nos: NoMapa[]): LigacaoMapa[] => {
   });
 
   return ligacoes;
+};
+
+/**
+ * Mapa mental exclusivo da aba Contatos Institucionais:
+ *   Nível 1: Secretarias (anel limpo, sem sobreposição)
+ *   Nível 2: Setor / Setores daquela Secretaria (ao clicar na Secretaria)
+ *   Nível 3: Nome dos Contatos daquele Setor (ao clicar no Setor)
+ *
+ * Ao clicar duas vezes no nome do contato, abre o card de detalhes com
+ * cópia rápida e redirecionamento direto para o Telefone (`tel:`).
+ */
+export const montarMapaDeContatos = (
+  contatos: ContatoIntegrado[],
+  expandidos: Set<string>,
+): { nos: NoMapa[]; ligacoes: LigacaoMapa[] } => {
+  const nos: NoMapa[] = [];
+  const ligacoes: LigacaoMapa[] = [];
+
+  if (!contatos.length) return { nos, ligacoes };
+
+  // Agrupa por Secretaria
+  const porSecretaria = new Map<string, ContatoIntegrado[]>();
+  contatos.forEach((c) => {
+    const sec = (c.secretaria || 'GERAL').trim().toUpperCase();
+    porSecretaria.set(sec, [...(porSecretaria.get(sec) ?? []), c]);
+  });
+
+  const secretarias = [...porSecretaria.entries()].sort(([a], [b]) => a.localeCompare(b, 'pt-BR'));
+  const totalSec = secretarias.length;
+  const raioSec = Math.max(300, totalSec * 44);
+
+  secretarias.forEach(([siglaSec, listaSec], indice) => {
+    const angulo = (indice / Math.max(totalSec, 1)) * Math.PI * 2 - Math.PI / 2;
+    const cor = PALETA[indice % PALETA.length];
+
+    // Agrupa os contatos desta secretaria por Setor
+    const porSetor = new Map<string, ContatoIntegrado[]>();
+    listaSec.forEach((c) => {
+      const setorChave = (c.setorSigla || c.setor || 'Geral').trim();
+      porSetor.set(setorChave, [...(porSetor.get(setorChave) ?? []), c]);
+    });
+
+    const setores = [...porSetor.entries()].sort(([a], [b]) => a.localeCompare(b, 'pt-BR'));
+    const semCanal = listaSec.filter((c) => c.semContato).length;
+
+    const noSec: NoMapa = {
+      id: `sec-contato-${siglaSec}`,
+      tipo: 'raiz',
+      rotulo: siglaSec,
+      subtitulo: `${listaSec.length} contato${listaSec.length === 1 ? '' : 's'} · ${setores.length} setor${setores.length === 1 ? '' : 'es'}${semCanal ? ` · ${semCanal} pend.` : ''}`,
+      x: totalSec === 1 ? 0 : Math.cos(angulo) * raioSec,
+      y: totalSec === 1 ? 0 : Math.sin(angulo) * raioSec,
+      largura: LARGURA_SETOR + 24,
+      altura: ALTURA_SETOR + 12,
+      cor,
+    };
+    nos.push(noSec);
+
+    if (expandidos.has(siglaSec)) {
+      const raioSetores = 225;
+      const abertura = Math.PI * 0.72;
+
+      setores.forEach(([rotuloSetor, contatosDoSetor], p) => {
+        const fracao = setores.length === 1 ? 0.5 : p / (setores.length - 1);
+        const anguloSetor = angulo - abertura / 2 + fracao * abertura;
+
+        const noSetor: NoMapa = {
+          id: `setor-contato-${siglaSec}-${rotuloSetor}`,
+          tipo: 'setor',
+          rotulo: rotuloSetor,
+          subtitulo: `${contatosDoSetor.length} contato${contatosDoSetor.length === 1 ? '' : 's'}`,
+          paiId: noSec.id,
+          x: noSec.x + Math.cos(anguloSetor) * raioSetores,
+          y: noSec.y + Math.sin(anguloSetor) * raioSetores,
+          largura: LARGURA_SETOR,
+          altura: ALTURA_SETOR,
+          cor: PALETA[(indice + p + 1) % PALETA.length],
+        };
+        nos.push(noSetor);
+        ligacoes.push({
+          id: `lig-${noSec.id}-${noSetor.id}`,
+          origemId: noSec.id,
+          destinoId: noSetor.id,
+        });
+
+        if (expandidos.has(rotuloSetor)) {
+          const deslocamentoX = noSetor.x >= 0 ? 250 : -250;
+          const espacamentoY = 98;
+          const inicioY = noSetor.y - ((contatosDoSetor.length - 1) * espacamentoY) / 2;
+
+          contatosDoSetor.forEach((contato, pos) => {
+            const noContato: NoMapa = {
+              id: `contato-${contato.id}`,
+              tipo: 'contato',
+              rotulo: contato.nome,
+              subtitulo:
+                [contato.cargo, contato.telefone || contato.email || 'Sem canal cadastrado']
+                  .filter(Boolean)
+                  .join(' · '),
+              paiId: noSetor.id,
+              x: noSetor.x + deslocamentoX,
+              y: inicioY + pos * espacamentoY,
+              largura: LARGURA_COMPETENCIA,
+              altura: ALTURA_COMPETENCIA - 6,
+              contato,
+              cor: contato.semContato ? '#f59e0b' : '#2563eb',
+            };
+            nos.push(noContato);
+            ligacoes.push({
+              id: `lig-${noSetor.id}-${noContato.id}`,
+              origemId: noSetor.id,
+              destinoId: noContato.id,
+            });
+          });
+        }
+      });
+    }
+  });
+
+  return { nos, ligacoes };
 };

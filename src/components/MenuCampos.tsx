@@ -103,13 +103,13 @@ const MenuCampos: React.FC<Props> = ({
             accessibilityRole="button"
             accessibilityLabel={telaCheia ? 'Restaurar tamanho' : 'Tela cheia'}
             style={estilos.botaoIcone}>
-            <Text style={estilos.textoBotaoIcone}>{telaCheia ? '🗕' : '⤢'}</Text>
+            <Text style={estilos.textoBotaoIcone}>{telaCheia ? '[-]' : '[+]'}</Text>
           </Pressable>
         ) : null}
       </View>
       <Text style={estilos.descricao}>
-        Cada campo é um cofre separado, com os próprios itens e o próprio formulário de
-        cadastro. Nada passa de um campo para o outro.
+        Cada campo é um ambiente separado. O campo Contatos Institucionais integra-se
+        automaticamente aos contatos do SIG e das planilhas importadas.
       </Text>
 
       <ScrollView style={estilos.scroll} showsVerticalScrollIndicator={false}>
@@ -122,7 +122,9 @@ const MenuCampos: React.FC<Props> = ({
               key={campo.id}
               onPress={() => {
                 aoTrocar(campo.id);
-                aoFechar();
+                if (!embutido) {
+                  aoFechar();
+                }
               }}
               accessibilityRole="button"
               accessibilityState={{ selected: ativo }}
@@ -138,9 +140,11 @@ const MenuCampos: React.FC<Props> = ({
                     ? `Formulário do levantamento · ${total} competência${
                         total === 1 ? '' : 's'
                       }`
-                    : `${campo.formulario.length} campo${
-                        campo.formulario.length === 1 ? '' : 's'
-                      } no cadastro · ${total} item${total === 1 ? '' : 'ns'}`}
+                    : campo.tipo === 'contatos'
+                      ? `Integrado ao SIG · ${total} contato${total === 1 ? '' : 's'}`
+                      : `${campo.formulario.length} campo${
+                          campo.formulario.length === 1 ? '' : 's'
+                        } no cadastro · ${total} item${total === 1 ? '' : 'ns'}`}
                 </Text>
               </View>
 

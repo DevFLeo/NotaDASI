@@ -13,6 +13,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import AjustesTela from '../src/components/AjustesTela';
 import ListaAnotacoes from '../src/components/ListaAnotacoes';
+import ListaContatos from '../src/components/ListaContatos';
 import ListaRegistros from '../src/components/ListaRegistros';
 import MenuCampos from '../src/components/MenuCampos';
 import MapaMental from '../src/mapa/MapaMental';
@@ -510,7 +511,20 @@ const CascaPC: React.FC = () => {
             <View style={estilos.conteudoPainel}>
               <AreaDeLayout largura={areaPainel.largura} altura={areaPainel.altura - 40}>
                 {painel === 'lista' ? (
-                  app.eCampoLivre ? (
+                  app.eCampoContatos ? (
+                    <ListaContatos
+                      contatos={app.contatos}
+                      totalDoSig={app.totalContatosDoSig}
+                      totalManuais={app.totalContatosManuais}
+                      totalSemContato={app.totalContatosSemCanal}
+                      aoAbrirContato={app.setContatoSelecionado}
+                      aoAbrirRegistroSig={app.setSelecionado}
+                      aoAtualizarContatoSig={app.atualizarContatoNoSig}
+                      aoCriarContatoManual={app.criarContatoManual}
+                      aoAtualizarContatoManual={app.atualizarContatoManual}
+                      aoExcluirContatoManual={app.excluirContatoManual}
+                    />
+                  ) : app.eCampoLivre ? (
                     <ListaAnotacoes
                       campo={app.campoAtivo}
                       anotacoes={app.anotacoes}
@@ -566,8 +580,14 @@ const CascaPC: React.FC = () => {
                     campoAtivo={app.campoAtivo}
                     contarItens={app.contarItens}
                     aoFechar={fecharPainel}
-                    aoTrocar={app.definirCampoAtivo}
-                    aoCriar={app.criarCampo}
+                    aoTrocar={(id) => {
+                      app.definirCampoAtivo(id);
+                      guardarPainel('lista');
+                    }}
+                    aoCriar={(nome, form) => {
+                      app.criarCampo(nome, form);
+                      guardarPainel('lista');
+                    }}
                     aoAtualizar={app.atualizarCampo}
                     aoExcluir={app.excluirCampo}
                   />
@@ -600,8 +620,11 @@ const CascaPC: React.FC = () => {
             campo={app.campoAtivo}
             registros={app.registros}
             anotacoes={app.anotacoes}
+            contatos={app.contatos}
             idSelecionado={app.selecionado?.id}
+            idContatoSelecionado={app.contatoSelecionado?.id}
             aoSelecionar={app.setSelecionado}
+            aoSelecionarContato={app.setContatoSelecionado}
             aoCriar={app.abrirCriacao}
             aoAbrirAnotacao={app.abrirAnotacao}
             aoCriarAnotacao={app.criarNovaAnotacao}

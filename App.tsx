@@ -5,6 +5,7 @@ import Animated, { FadeIn, runOnJS } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AjustesTela from './src/components/AjustesTela';
 import ListaAnotacoes from './src/components/ListaAnotacoes';
+import ListaContatos from './src/components/ListaContatos';
 import ListaRegistros from './src/components/ListaRegistros';
 import MapaMental from './src/mapa/MapaMental';
 import Modais from './src/app/Modais';
@@ -116,7 +117,20 @@ export const AppConteudo: React.FC = () => {
         <View style={estilos.conteudo}>
           <Animated.View key={aba} entering={FadeIn.duration(160)} style={estilos.conteudo}>
             {aba === 'lista' ? (
-              app.eCampoLivre ? (
+              app.eCampoContatos ? (
+                <ListaContatos
+                  contatos={app.contatos}
+                  totalDoSig={app.totalContatosDoSig}
+                  totalManuais={app.totalContatosManuais}
+                  totalSemContato={app.totalContatosSemCanal}
+                  aoAbrirContato={app.setContatoSelecionado}
+                  aoAbrirRegistroSig={app.setSelecionado}
+                  aoAtualizarContatoSig={app.atualizarContatoNoSig}
+                  aoCriarContatoManual={app.criarContatoManual}
+                  aoAtualizarContatoManual={app.atualizarContatoManual}
+                  aoExcluirContatoManual={app.excluirContatoManual}
+                />
+              ) : app.eCampoLivre ? (
                 <ListaAnotacoes
                   campo={app.campoAtivo}
                   anotacoes={app.anotacoes}
@@ -153,8 +167,11 @@ export const AppConteudo: React.FC = () => {
                 campo={app.campoAtivo}
                 registros={app.registros}
                 anotacoes={app.anotacoes}
+                contatos={app.contatos}
                 idSelecionado={app.selecionado?.id}
+                idContatoSelecionado={app.contatoSelecionado?.id}
                 aoSelecionar={app.setSelecionado}
+                aoSelecionarContato={app.setContatoSelecionado}
                 aoCriar={app.abrirCriacao}
                 aoAbrirAnotacao={app.abrirAnotacao}
                 aoCriarAnotacao={app.criarNovaAnotacao}

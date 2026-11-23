@@ -35,8 +35,8 @@ export type RequisitoCampo = {
 export type Campo = {
   id: string;
   nome: string;
-  tipo: 'sig' | 'livre';
-  /** Vazio no campo do SIG, que usa o formulário fixo de competências. */
+  tipo: 'sig' | 'contatos' | 'livre';
+  /** Vazio nos campos embutidos (SIG e Contatos), que usam modelos próprios. */
   formulario: RequisitoCampo[];
   criadoEm: string;
 };
@@ -52,11 +52,20 @@ export type Anotacao = {
 };
 
 export const ID_CAMPO_SIG = 'sig';
+export const ID_CAMPO_CONTATOS = 'contatos';
 
 export const CAMPO_SIG: Campo = {
   id: ID_CAMPO_SIG,
   nome: 'Acompanhamento do SIG',
   tipo: 'sig',
+  formulario: [],
+  criadoEm: '',
+};
+
+export const CAMPO_CONTATOS: Campo = {
+  id: ID_CAMPO_CONTATOS,
+  nome: 'Contatos Institucionais',
+  tipo: 'contatos',
   formulario: [],
   criadoEm: '',
 };

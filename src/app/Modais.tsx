@@ -1,4 +1,5 @@
 import React from 'react';
+import DetalheContato from '../components/DetalheContato';
 import DetalheRegistro from '../components/DetalheRegistro';
 import FormularioAnotacao from '../components/FormularioAnotacao';
 import FormularioRegistro from '../components/FormularioRegistro';
@@ -82,6 +83,18 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
 
   return (
     <>
+      {app.contatoSelecionado ? (
+        <LimiteDeErro
+          aoResetar={() => app.setContatoSelecionado(null)}
+          titulo="Erro ao abrir detalhes do contato">
+          <DetalheContato
+            contato={app.contatoSelecionado}
+            aoFechar={() => app.setContatoSelecionado(null)}
+            aoAbrirRegistroSig={app.setSelecionado}
+          />
+        </LimiteDeErro>
+      ) : null}
+
       {app.selecionado ? (
         <LimiteDeErro aoResetar={() => app.setSelecionado(null)} titulo="Erro ao abrir detalhes">
           <DetalheRegistro

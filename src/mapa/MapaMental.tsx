@@ -21,20 +21,33 @@ import {
   type Anotacao,
   type Campo,
 } from '../data/campos';
+import {
+  textoPesquisavelContato,
+  type ContatoIntegrado,
+} from '../data/contatosIntegrados';
 import { calcularSituacao, rotuloSituacao, textoPesquisavel, type Registro } from '../data/registros';
 import { useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
 import BuscaLupa from './BuscaLupa';
-import { ligacoesPorCamada, montarMapa, montarMapaDeAnotacoes, type NoMapa } from './layout';
+import {
+  ligacoesPorCamada,
+  montarMapa,
+  montarMapaDeAnotacoes,
+  montarMapaDeContatos,
+  type NoMapa,
+} from './layout';
 import { lerPosicoes, salvarPosicoes, type PosicoesSalvas } from './posicoes';
 
 type Props = {
-  /** Cofre ativo: decide se o mapa é o do levantamento ou o de um campo livre. */
+  /** Cofre ativo: decide se o mapa é o do levantamento, contatos ou campo livre. */
   campo: Campo;
   registros: Registro[];
   anotacoes: Anotacao[];
+  contatos?: ContatoIntegrado[];
   idSelecionado?: string;
+  idContatoSelecionado?: string;
   aoSelecionar?: (registro: Registro) => void;
+  aoSelecionarContato?: (contato: ContatoIntegrado) => void;
   /**
    * Abre o formulario de criacao. Se um setor estiver expandido no momento,
    * MapaMental sugere os dados de lotacao dele (nova competencia no MESMO
@@ -76,8 +89,11 @@ const MapaMental: React.FC<Props> = ({
   campo,
   registros,
   anotacoes,
+  contatos = [],
   idSelecionado,
+  idContatoSelecionado,
   aoSelecionar,
+  aoSelecionarContato,
   aoCriar,
   aoAbrirAnotacao,
   aoCriarAnotacao,
@@ -109,7 +125,14 @@ const MapaMental: React.FC<Props> = ({
   const [termoBusca, setTermoBusca] = useState('');
   const [buscaAberta, setBuscaAberta] = useState(false);
 
-  const eCampoLivre = campo.tipo !== 'sig';
+  const eCampoLivre = campo.tipo === 'livre';
+  const eCampoContatos = campo.tipo === 'contatos';
+
+  // Ao trocar de campo (ex.: SIG -> Contatos), inicia com os nós recolhidos de forma limpa
+  useEffect(() => {
+    setExpandidos(new Set());
+    setIdFocado(null);
+  }, [campo.id]);
 
   useEffect(() => {
     let ativo = true;
@@ -128,15 +151,19 @@ const MapaMental: React.FC<Props> = ({
 
   const { nos, ligacoes } = useMemo(
     () =>
-      eCampoLivre ? montarMapaDeAnotacoes(campo, anotacoes) : montarMapa(registros, expandidos),
-    [eCampoLivre, campo, anotacoes, registros, expandidos],
+      eCampoContatos
+        ? montarMapaDeContatos(contatos, expandidos)
+        : eCampoLivre
+          ? montarMapaDeAnotacoes(campo, anotacoes)
+          : montarMapa(registros, expandidos),
+    [eCampoContatos, eCampoLivre, campo, anotacoes, contatos, registros, expandidos],
   );
 
   // As ligacoes por camada so existem no levantamento do SIG — um campo livre
-  // nao tem "informacoes acessadas" para cruzar.
+  // ou contatos nao tem "informacoes acessadas" para cruzar.
   const ligacoesExtras = useMemo(
-    () => (eCampoLivre ? [] : ligacoesPorCamada(nos)),
-    [eCampoLivre, nos],
+    () => (eCampoLivre || eCampoContatos ? [] : ligacoesPorCamada(nos)),
+    [eCampoLivre, eCampoContatos, nos],
   );
 
   // Busca da lupa: em vez de esconder nós (o que desmontaria o mapa a cada
@@ -154,6 +181,7 @@ const MapaMental: React.FC<Props> = ({
         no.subtitulo ?? '',
         no.registro ? textoPesquisavel(no.registro) : '',
         no.anotacao ? textoPesquisavelDaAnotacao(campo, no.anotacao) : '',
+        no.contato ? textoPesquisavelContato(no.contato) : '',
       ]
         .join(' ')
         .toLowerCase();
@@ -454,9 +482,11 @@ const MapaMental: React.FC<Props> = ({
                 selecionado={
                   no.registro
                     ? no.registro.id === idSelecionado || no.registro.id === idFocado
-                    : no.anotacao
-                      ? no.anotacao.id === idFocado
-                      : false
+                    : no.contato
+                      ? no.contato.id === idContatoSelecionado || no.contato.id === idFocado
+                      : no.anotacao
+                        ? no.anotacao.id === idFocado
+                        : false
                 }
                 aoSoltar={registrarPosicao}
                 aoTocar={() => {
@@ -465,6 +495,8 @@ const MapaMental: React.FC<Props> = ({
                   } else if (no.tipo === 'competencia' && no.registro) {
                     // 1 clique apenas destaca o card no mapa (nao abre o modal)
                     setIdFocado(no.registro.id);
+                  } else if (no.tipo === 'contato' && no.contato) {
+                    setIdFocado(no.contato.id);
                   } else if (no.tipo === 'anotacao' && no.anotacao) {
                     setIdFocado(no.anotacao.id);
                   }
@@ -474,6 +506,9 @@ const MapaMental: React.FC<Props> = ({
                     // 2 cliques ativa o evento de abertura do mesmo painel de detalhes da Lista
                     setIdFocado(no.registro.id);
                     aoSelecionar?.(no.registro);
+                  } else if (no.tipo === 'contato' && no.contato) {
+                    setIdFocado(no.contato.id);
+                    aoSelecionarContato?.(no.contato);
                   } else if (no.tipo === 'anotacao' && no.anotacao) {
                     setIdFocado(no.anotacao.id);
                     aoAbrirAnotacao(no.anotacao);
@@ -838,9 +873,11 @@ const NoArrastavel: React.FC<PropsNo> = ({
 
   const textoDicaTooltip = no.registro
     ? `${no.registro.competencia}\n\nSetor: ${no.registro.setor} (${no.registro.setorSigla})\nResponsável: ${no.registro.responsavel} (${no.registro.cargo})\nStatus: ${rotuloSituacao[calcularSituacao(no.registro)]}\n\n(Duplo clique para abrir os detalhes completos)`
-    : no.subtitulo
-      ? `${no.rotulo} — ${no.subtitulo}\n(Clique para expandir/recolher)`
-      : no.rotulo;
+    : no.contato
+      ? `${no.contato.nome}${no.contato.cargo ? ` (${no.contato.cargo})` : ''}\n${no.contato.secretaria}${no.contato.setorSigla ? ` · ${no.contato.setorSigla}` : ''}\n${no.contato.telefone ? `Tel: ${no.contato.telefone}\n` : ''}${no.contato.email ? `E-mail: ${no.contato.email}\n` : ''}\n(Duplo clique para abrir o card do contato)`
+      : no.subtitulo
+        ? `${no.rotulo} — ${no.subtitulo}\n(Clique para expandir/recolher)`
+        : no.rotulo;
 
   return (
     <GestureDetector gesture={gesto}>
@@ -853,7 +890,10 @@ const NoArrastavel: React.FC<PropsNo> = ({
               },
               onDoubleClick: (e: any) => {
                 e?.stopPropagation?.();
-                if (aoDuploClique && (no.tipo === 'competencia' || no.tipo === 'anotacao')) {
+                if (
+                  aoDuploClique &&
+                  (no.tipo === 'competencia' || no.tipo === 'anotacao' || no.tipo === 'contato')
+                ) {
                   dispararDuploClique();
                 } else {
                   dispararToque('dom', 1);

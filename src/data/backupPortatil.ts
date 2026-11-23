@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Anotacao, Campo } from './campos';
+import type { ContatoIntegrado } from './contatosIntegrados';
+import { CHAVE_CONTATOS_MANUAIS } from './useContatos';
 import type { Registro } from './registros';
 import type { AceiteExcelInfo } from './useRegistros';
 import { lerPosicoes, salvarPosicoes, type PosicoesSalvas } from '../mapa/posicoes';
@@ -20,6 +22,7 @@ export type PacoteBackupNotaDASI = {
   registros: Registro[];
   campos?: Campo[];
   anotacoes?: Record<string, Anotacao[]>;
+  contatosManuais?: ContatoIntegrado[];
   posicoesMapa?: PosicoesSalvas;
 };
 
@@ -44,9 +47,10 @@ export const gerarPacoteBackup = async (params: {
   aceiteExcel?: AceiteExcelInfo | null;
   nomePlanilhaAtiva?: string;
 }): Promise<PacoteBackupNotaDASI> => {
-  const [campos, anotacoes, posicoesMapa] = await Promise.all([
+  const [campos, anotacoes, contatosManuais, posicoesMapa] = await Promise.all([
     lerJsonSeguro<Campo[]>(CHAVE_CAMPOS, []),
     lerJsonSeguro<Record<string, Anotacao[]>>(CHAVE_ANOTACOES, {}),
+    lerJsonSeguro<ContatoIntegrado[]>(CHAVE_CONTATOS_MANUAIS, []),
     lerPosicoes(),
   ]);
 
@@ -68,6 +72,7 @@ export const gerarPacoteBackup = async (params: {
     registros: registrosLimpos,
     campos,
     anotacoes,
+    contatosManuais,
     posicoesMapa,
   };
 };
@@ -119,6 +124,11 @@ export const lerERestaurarBackupJson = async (
   }
   if (parsed?.anotacoes && typeof parsed.anotacoes === 'object') {
     await AsyncStorage.setItem(CHAVE_ANOTACOES, JSON.stringify(parsed.anotacoes)).catch(() => {});
+  }
+
+  // Restaura contatos manuais se presentes
+  if (Array.isArray(parsed?.contatosManuais)) {
+    await AsyncStorage.setItem(CHAVE_CONTATOS_MANUAIS, JSON.stringify(parsed.contatosManuais)).catch(() => {});
   }
 
   // Restaura posicoes do mapa mental se presentes

@@ -142,10 +142,12 @@ export function useRegistros() {
 
   const registros = useMemo(() => {
     const baseVisivel = baseEfetiva
-      .filter((registro) => !excluidos.has(registro.id))
+      .filter((registro): registro is Registro => Boolean(registro && registro.id && !excluidos.has(registro.id)))
       .map((registro) => edicoes[registro.id] ?? registro);
 
-    const criadosVisiveis = criados.filter((registro) => !excluidos.has(registro.id));
+    const criadosVisiveis = criados.filter(
+      (registro): registro is Registro => Boolean(registro && registro.id && !excluidos.has(registro.id)),
+    );
 
     return [...baseVisivel, ...criadosVisiveis].map((registro) => ({
       ...registro,
@@ -464,6 +466,78 @@ export function useRegistros() {
     AsyncStorage.removeItem(CHAVE_ACEITE_EXCEL).catch(() => {});
   }, []);
 
+  /**
+   * Sincronização bidirecional com a aba Contatos Institucionais:
+   * ao editar um contato vinculado ao SIG, atualiza `contatoInstitucional`
+   * (e opcionalmente nome/cargo) em todas as competências vinculadas.
+   */
+  const atualizarContatoNoSig = useCallback(
+    (
+      registroIds: string[],
+      dados: {
+        nome?: string;
+        cargo?: string;
+        email?: string;
+        telefone?: string;
+        ramal?: string;
+      },
+    ) => {
+      if (!registroIds.length) return;
+      const conjuntoIds = new Set(registroIds);
+      const email = dados.email?.trim() || undefined;
+      const telefone = dados.telefone?.trim() || undefined;
+      const ramal = dados.ramal?.trim() || undefined;
+      const contatoAtualizado =
+        email || telefone || ramal ? { email, telefone, ramal } : undefined;
+      const agora = new Date().toISOString();
+
+      const aplicar = (reg: Registro): Registro => ({
+        ...reg,
+        responsavel: dados.nome?.trim() || reg.responsavel,
+        cargo: dados.cargo !== undefined ? dados.cargo.trim() : reg.cargo,
+        contatoInstitucional: contatoAtualizado,
+        atualizadoEm: agora,
+      });
+
+      const idsCriados = new Set(
+        criados.filter((r) => Boolean(r && conjuntoIds.has(r.id))).map((r) => r.id),
+      );
+
+      if (idsCriados.size > 0) {
+        setCriados((atual) => {
+          let mudou = false;
+          const proximo = atual.map((r) => {
+            if (r && idsCriados.has(r.id)) {
+              mudou = true;
+              return aplicar(r);
+            }
+            return r;
+          });
+          if (mudou) gravarJson(CHAVE_CRIADOS, proximo);
+          return mudou ? proximo : atual;
+        });
+      }
+
+      const idsParaEdicao = registroIds.filter((id) => Boolean(id && !idsCriados.has(id)));
+      if (idsParaEdicao.length > 0) {
+        setEdicoes((atual) => {
+          let mudou = false;
+          const proximo = { ...atual };
+          for (const id of idsParaEdicao) {
+            const original = proximo[id] ?? baseEfetiva.find((r) => r && r.id === id);
+            if (original) {
+              proximo[id] = aplicar(original);
+              mudou = true;
+            }
+          }
+          if (mudou) gravarJson(CHAVE_EDICOES, proximo);
+          return mudou ? proximo : atual;
+        });
+      }
+    },
+    [baseEfetiva, criados],
+  );
+
   return {
     registros,
     origem,
@@ -472,6 +546,7 @@ export function useRegistros() {
     nomePlanilhaAtiva,
     criarRegistro,
     atualizarRegistro,
+    atualizarContatoNoSig,
     excluirRegistro,
     alternarFavorito,
     adicionarComentario,
