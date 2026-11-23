@@ -103,6 +103,7 @@ const MapaMental: React.FC<Props> = ({
   const alturaTela = area.altura;
 
   const [expandidos, setExpandidos] = useState<Set<string>>(() => new Set());
+  const [idFocado, setIdFocado] = useState<string | null>(null);
   const [posicoesSalvas, setPosicoesSalvas] = useState<PosicoesSalvas>({});
   const [carregado, setCarregado] = useState(false);
   const [termoBusca, setTermoBusca] = useState('');
@@ -450,14 +451,31 @@ const MapaMental: React.FC<Props> = ({
                 no={no}
                 posicaoInicial={posicaoDe(no)}
                 apagado={idsEncontrados !== null && !idsEncontrados.has(no.id)}
-                selecionado={no.registro?.id === idSelecionado}
+                selecionado={
+                  no.registro
+                    ? no.registro.id === idSelecionado || no.registro.id === idFocado
+                    : no.anotacao
+                      ? no.anotacao.id === idFocado
+                      : false
+                }
                 aoSoltar={registrarPosicao}
                 aoTocar={() => {
                   if (no.tipo === 'setor' || no.id.startsWith('sec-')) {
                     alternarSetor(no.rotulo);
                   } else if (no.tipo === 'competencia' && no.registro) {
+                    // 1 clique apenas destaca o card no mapa (nao abre o modal)
+                    setIdFocado(no.registro.id);
+                  } else if (no.tipo === 'anotacao' && no.anotacao) {
+                    setIdFocado(no.anotacao.id);
+                  }
+                }}
+                aoDuploClique={() => {
+                  if (no.tipo === 'competencia' && no.registro) {
+                    // 2 cliques ativa o evento de abertura do mesmo painel de detalhes da Lista
+                    setIdFocado(no.registro.id);
                     aoSelecionar?.(no.registro);
                   } else if (no.tipo === 'anotacao' && no.anotacao) {
+                    setIdFocado(no.anotacao.id);
                     aoAbrirAnotacao(no.anotacao);
                   }
                 }}
@@ -470,10 +488,10 @@ const MapaMental: React.FC<Props> = ({
       <View style={estilos.dica} pointerEvents="none">
         <Text style={estilos.textoDica}>
           {Platform.OS === 'web'
-            ? 'PC: Roda do mouse p/ zoom · Arraste p/ mover · [ + / − ] zoom · [ 0 ] centralizar · [ F ] ajustar'
+            ? 'PC: Duplo clique no card p/ abrir detalhes · Roda do mouse p/ zoom · Arraste p/ mover · [ + / − ] zoom · [ 0 ] centralizar · [ F ] ajustar'
             : eCampoLivre
-              ? 'Toque num item para editar · arraste os nós · pinça para zoom'
-              : 'Toque numa secretaria para abrir · arraste os nós · pinça ou +/− para zoom'}
+              ? 'Toque duplo num item para editar · arraste os nós · pinça para zoom'
+              : 'Toque na secretaria para expandir · toque duplo no card para detalhes'}
         </Text>
       </View>
 
@@ -693,6 +711,7 @@ type PropsNo = {
   selecionado?: boolean;
   aoSoltar: (id: string, x: number, y: number) => void;
   aoTocar: () => void;
+  aoDuploClique?: () => void;
 };
 
 const NoArrastavel: React.FC<PropsNo> = ({
@@ -703,6 +722,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
   selecionado,
   aoSoltar,
   aoTocar,
+  aoDuploClique,
 }) => {
   const estilos = criarEstilos(tema);
   const x = useSharedValue(posicaoInicial.x);
@@ -712,16 +732,49 @@ const NoArrastavel: React.FC<PropsNo> = ({
   const arrastando = useSharedValue(0);
   const arrastoMovimentou = useSharedValue(false);
 
-  // Debounce de 200ms para evitar duplo acionamento concorrente (ex: RNGH + DOM click)
-  const ultimoDisparo = useRef(0);
-  const dispararToque = useCallback(() => {
+  const ultimoDisparoToque = useRef(0);
+  const ultimaOrigemToque = useRef<'gesto' | 'dom' | null>(null);
+  const ultimoDisparoDuplo = useRef(0);
+
+  const dispararDuploClique = useCallback(() => {
     const agora = Date.now();
-    if (agora - ultimoDisparo.current < 200) {
+    if (agora - ultimoDisparoDuplo.current < 300) {
       return;
     }
-    ultimoDisparo.current = agora;
-    aoTocar();
-  }, [aoTocar]);
+    ultimoDisparoDuplo.current = agora;
+    ultimoDisparoToque.current = 0;
+    ultimaOrigemToque.current = null;
+    aoDuploClique?.();
+  }, [aoDuploClique]);
+
+  const dispararToque = useCallback(
+    (origem: 'gesto' | 'dom' = 'gesto', contagemNativa = 1) => {
+      // Contagem nativa do navegador (MouseEvent.detail >= 2): duplo clique imediato, qualquer velocidade
+      if (aoDuploClique && contagemNativa >= 2) {
+        dispararDuploClique();
+        return;
+      }
+
+      const agora = Date.now();
+      const delta = agora - ultimoDisparoToque.current;
+
+      // Ignora evento espelhado de outra fonte (RNGH + DOM) referente ao MESMO clique fisico
+      if (ultimaOrigemToque.current && ultimaOrigemToque.current !== origem && delta < 80) {
+        return;
+      }
+
+      // Dois cliques consecutivos em ate 500ms no mesmo card = duplo clique garantido
+      if (aoDuploClique && ultimoDisparoToque.current > 0 && delta <= 500) {
+        dispararDuploClique();
+        return;
+      }
+
+      ultimoDisparoToque.current = agora;
+      ultimaOrigemToque.current = origem;
+      aoTocar();
+    },
+    [aoTocar, aoDuploClique, dispararDuploClique],
+  );
 
   // Se o layout automatico recalcular (ex.: expandiu uma secretaria), acompanha.
   const referencia = useRef(posicaoInicial);
@@ -752,7 +805,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
       arrastando.value = 0;
       const moveu = Math.hypot(evento.translationX, evento.translationY);
       if (!arrastoMovimentou.value || moveu < 8) {
-        runOnJS(dispararToque)();
+        runOnJS(dispararToque)('gesto', 1);
       } else {
         runOnJS(aoSoltar)(no.id, x.value, y.value);
       }
@@ -761,7 +814,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
   const gestoToque = Gesture.Tap()
     .maxDuration(500)
     .onEnd(() => {
-      runOnJS(dispararToque)();
+      runOnJS(dispararToque)('gesto', 1);
     });
 
   const gesto = Gesture.Exclusive(gestoArrastar, gestoToque);
@@ -784,7 +837,7 @@ const NoArrastavel: React.FC<PropsNo> = ({
         : estilos.noCompetencia;
 
   const textoDicaTooltip = no.registro
-    ? `${no.registro.competencia}\n\nSetor: ${no.registro.setor} (${no.registro.setorSigla})\nResponsável: ${no.registro.responsavel} (${no.registro.cargo})\nStatus: ${rotuloSituacao[calcularSituacao(no.registro)]}\n\n(Clique ou duplo clique para abrir a visualização detalhada)`
+    ? `${no.registro.competencia}\n\nSetor: ${no.registro.setor} (${no.registro.setorSigla})\nResponsável: ${no.registro.responsavel} (${no.registro.cargo})\nStatus: ${rotuloSituacao[calcularSituacao(no.registro)]}\n\n(Duplo clique para abrir os detalhes completos)`
     : no.subtitulo
       ? `${no.rotulo} — ${no.subtitulo}\n(Clique para expandir/recolher)`
       : no.rotulo;
@@ -796,11 +849,15 @@ const NoArrastavel: React.FC<PropsNo> = ({
           ? {
               onClick: (e: any) => {
                 e?.stopPropagation?.();
-                dispararToque();
+                dispararToque('dom', e?.detail ?? 1);
               },
               onDoubleClick: (e: any) => {
                 e?.stopPropagation?.();
-                dispararToque();
+                if (aoDuploClique && (no.tipo === 'competencia' || no.tipo === 'anotacao')) {
+                  dispararDuploClique();
+                } else {
+                  dispararToque('dom', 1);
+                }
               },
               title: textoDicaTooltip,
               style: [

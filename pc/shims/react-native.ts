@@ -11,7 +11,85 @@
  * ESM), então se uma versão futura do react-native-web passar a exportar
  * Alert, este arquivo continua mandando — e é aqui que se remove o shim.
  */
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 export * from 'react-native-web';
+
+type PropsModalWeb = {
+  visible?: boolean;
+  transparent?: boolean;
+  animationType?: 'none' | 'slide' | 'fade';
+  onRequestClose?: () => void;
+  onDismiss?: () => void;
+  onShow?: () => void;
+  children?: React.ReactNode;
+};
+
+/**
+ * Modal compatível com React 19 + StrictMode.
+ *
+ * O `ModalPortal` interno do react-native-web remove o <div> do document.body
+ * no cleanup do useEffect([], []) disparado pelo StrictMode do React 19 sem
+ * forçar novo render, fazendo o modal sumir até outro estado da tela mudar.
+ * Usar `createPortal(..., document.body)` diretamente elimina esse bug por completo.
+ */
+export const Modal: React.FC<PropsModalWeb> = ({
+  visible = true,
+  transparent = false,
+  onRequestClose,
+  onShow,
+  children,
+}) => {
+  const [montado, setMontado] = useState(false);
+
+  useEffect(() => {
+    setMontado(true);
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    onShow?.();
+  }, [visible, onShow]);
+
+  useEffect(() => {
+    if (!visible || !onRequestClose || typeof document === 'undefined') return;
+    const aoTecla = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onRequestClose();
+      }
+    };
+    document.addEventListener('keydown', aoTecla);
+    return () => document.removeEventListener('keydown', aoTecla);
+  }, [visible, onRequestClose]);
+
+  if (!visible || !montado || typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(
+    React.createElement(
+      'div',
+      {
+        role: 'dialog',
+        'aria-modal': true,
+        style: {
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: transparent ? 'transparent' : '#ffffff',
+        },
+      },
+      children,
+    ),
+    document.body,
+  );
+};
 
 type BotaoAlerta = {
   text?: string;
