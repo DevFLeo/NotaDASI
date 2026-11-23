@@ -13,8 +13,14 @@ import PortaDeEntrada from './src/auth/PortaDeEntrada';
 import { SessaoProvider, useSessao } from './src/auth/useSessao';
 import { useSegurarParaAbrir } from './src/hooks/useSegurarParaAbrir';
 import { criarEstilos } from './src/tema/estilos';
-import { ThemeProvider, useEstilos, useMetricas, useTema } from './src/tema/ThemeContext';
-import { IconeEngrenagem, IconeLista, IconeMapa } from './src/tema/Icones';
+import {
+  ThemeProvider,
+  useEstilos,
+  useMetricas,
+  usePreferenciaTema,
+  useTema,
+} from './src/tema/ThemeContext';
+import { IconeEngrenagem, IconeLista, IconeLua, IconeMapa, IconeSol } from './src/tema/Icones';
 
 type Aba = 'lista' | 'mapa' | 'ajustes';
 
@@ -36,8 +42,14 @@ export const AppConteudo: React.FC = () => {
   const insets = useSafeAreaInsets();
   const app = useAplicacao();
   const { contaAtual } = useSessao();
+  const [preferencia, definirPreferencia] = usePreferenciaTema();
 
   const [aba, setAba] = useState<Aba>('lista');
+  const [listaUsaRolagemHorizontal, setListaUsaRolagemHorizontal] = useState(false);
+
+  const alternarTema = useCallback(() => {
+    definirPreferencia(preferencia === 'escuro' ? 'claro' : 'escuro');
+  }, [preferencia, definirPreferencia]);
 
   const trocarAbaRelativa = useCallback((delta: number) => {
     setAba((atual) => {
@@ -53,10 +65,10 @@ export const AppConteudo: React.FC = () => {
   const limiarSwipe = Math.max(48, Math.min(120, metricas.largura * 0.16));
 
   // Arrastar para o lado troca de aba (Lista ↔ Mapa mental ↔ Ajustes). Desativado
-  // na aba do mapa, que já usa arrasto horizontal para mover a câmera do mapa —
-  // os dois gestos disputariam o mesmo movimento.
+  // na aba do mapa e quando a Lista está em Kanban/Tabela (que usam rolagem
+  // horizontal própria), evitando trocar de aba por engano ao rolar colunas.
   const gestoTrocarAba = Gesture.Pan()
-    .enabled(aba !== 'mapa')
+    .enabled(aba !== 'mapa' && !(aba === 'lista' && listaUsaRolagemHorizontal))
     // Um dedo só: com dois, o gesto é a pinça que ajusta o tamanho do texto na
     // lista — sem este limite, beliscar a tela também trocaria de aba.
     .maxPointers(1)
@@ -73,6 +85,32 @@ export const AppConteudo: React.FC = () => {
   return (
     <SafeAreaView style={estilos.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={tema.modo === 'escuro' ? 'light-content' : 'dark-content'} />
+
+      {/* Barra superior compacta do celular: troca rápida de campo e tema com 1 toque */}
+      <View style={estilos.barraTopoMobile}>
+        <Text style={estilos.marcaTopoMobile}>NotaDASI</Text>
+        <Pressable
+          onPress={app.abrirMenuCampos}
+          accessibilityRole="button"
+          accessibilityLabel={`Campo ativo: ${app.campoAtivo.nome}. Toque para trocar.`}
+          style={estilos.pilulaCampoMobile}>
+          <Text style={estilos.textoPilulaCampoMobile} numberOfLines={1}>
+            {app.campoAtivo.nome} ▾
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={alternarTema}
+          accessibilityRole="button"
+          accessibilityLabel="Alternar tema claro e escuro"
+          hitSlop={6}
+          style={estilos.botaoTemaMobile}>
+          {tema.modo === 'escuro' ? (
+            <IconeSol tamanho={17} cor="#f59e0b" />
+          ) : (
+            <IconeLua tamanho={17} cor={tema.texto} />
+          )}
+        </Pressable>
+      </View>
 
       <GestureDetector gesture={gestoTrocarAba}>
         <View style={estilos.conteudo}>
@@ -92,6 +130,7 @@ export const AppConteudo: React.FC = () => {
                   aoSelecionar={app.setSelecionado}
                   aoAlternarFavorito={app.alternarFavoritoDoRegistro}
                   aoCriar={app.abrirCriacao}
+                  aoMudarModoHorizontal={setListaUsaRolagemHorizontal}
                   aoMoverColunaKanban={(id, coluna, responsavelContinuidade) =>
                     app.moverColunaKanban(id, coluna, {
                       usuarioNome: contaAtual?.nome || contaAtual?.usuario,
@@ -251,6 +290,50 @@ const criarEstilosApp = criarEstilos((tema, m) => ({
   container: {
     flex: 1,
     backgroundColor: tema.fundo,
+  },
+  barraTopoMobile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: m.margem,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: tema.borda,
+    backgroundColor: tema.fundoElevado,
+  },
+  marcaTopoMobile: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: tema.texto,
+    letterSpacing: -0.3,
+  },
+  pilulaCampoMobile: {
+    flex: 1,
+    maxWidth: 220,
+    minHeight: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: tema.superficie,
+    borderWidth: 1,
+    borderColor: tema.borda,
+  },
+  textoPilulaCampoMobile: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: tema.texto,
+  },
+  botaoTemaMobile: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tema.superficie,
+    borderWidth: 1,
+    borderColor: tema.borda,
   },
   conteudo: {
     flex: 1,

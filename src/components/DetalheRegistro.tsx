@@ -813,7 +813,7 @@ const DetalheRegistro: React.FC<Props> = ({
                 </Pressable>
               ) : null}
 
-              {aoNavegarAnterior && aoNavegarProximo && totalNoSetor && totalNoSetor > 1 ? (
+              {ePC && aoNavegarAnterior && aoNavegarProximo && totalNoSetor && totalNoSetor > 1 ? (
                 <View style={estilos.grupoNavRodape}>
                   <Pressable
                     onPress={aoNavegarAnterior}
@@ -1149,9 +1149,9 @@ const criarEstilosDetalhe = (
       color: '#f59e0b',
     },
     botaoIcone: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
+      width: ePC ? 32 : 38,
+      height: ePC ? 32 : 38,
+      borderRadius: 9,
       backgroundColor: tema.superficie,
       alignItems: 'center',
       justifyContent: 'center',
@@ -1164,9 +1164,9 @@ const criarEstilosDetalhe = (
       fontWeight: '700',
     },
     botaoIconeFechar: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
+      width: ePC ? 32 : 38,
+      height: ePC ? 32 : 38,
+      borderRadius: 9,
       backgroundColor: tema.superficie,
       alignItems: 'center',
       justifyContent: 'center',

@@ -998,13 +998,14 @@ const criarEstilos = (tema: Tema) =>
     dica: {
       position: 'absolute',
       bottom: 16,
-      left: 16,
-      right: 16,
+      left: 72,
+      right: 72,
       alignItems: 'center',
     },
     textoDica: {
       color: tema.textoSecundario,
       fontSize: 11,
+      textAlign: 'center',
       backgroundColor: tema.fundoElevado,
       paddingHorizontal: 12,
       paddingVertical: 6,

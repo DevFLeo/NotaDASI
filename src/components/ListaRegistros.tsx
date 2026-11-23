@@ -184,6 +184,8 @@ type Props = {
     responsavelContinuidade?: string,
   ) => void;
   aoRegistrarParecerUrgencia?: (id: string, dados: DadosParecerUrgencia) => void;
+  /** Informa à casca mobile quando a visão ativa usa rolagem horizontal (Kanban/Tabela). */
+  aoMudarModoHorizontal?: (ativo: boolean) => void;
 };
 
 const ListaRegistros: React.FC<Props> = ({
@@ -194,6 +196,7 @@ const ListaRegistros: React.FC<Props> = ({
   aoCriar,
   aoMoverColunaKanban,
   aoRegistrarParecerUrgencia,
+  aoMudarModoHorizontal,
 }) => {
   const metricas = useMetricas();
   const tema = useTema();
@@ -201,11 +204,19 @@ const ListaRegistros: React.FC<Props> = ({
   const [escalaTexto, definirEscalaTexto] = useEscalaTexto();
 
   const [modoVisualizacao, setModoVisualizacao] = useState<'cartoes' | 'tabela' | 'kanban'>('cartoes');
+  const [filtrosAvancadosAbertos, setFiltrosAvancadosAbertos] = useState(false);
   const [termoBusca, setTermoBusca] = useState('');
   const [secretariaFiltro, setSecretariaFiltro] = useState<string | null>(null);
   const [setorFiltro, setSetorFiltro] = useState<string | null>(null);
   const [statusFiltro, setStatusFiltro] = useState<'todos' | 'atendido' | 'pendente' | 'problema' | 'favoritos'>('todos');
   const [idsCorrespondentes, setIdsCorrespondentes] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    aoMudarModoHorizontal?.(modoVisualizacao !== 'cartoes');
+  }, [modoVisualizacao, aoMudarModoHorizontal]);
+
+  const totalFiltrosOrgao = (secretariaFiltro ? 1 : 0) + (setorFiltro ? 1 : 0);
+  const exibirFiltrosOrgao = !metricas.compacta || filtrosAvancadosAbertos;
 
   // Ordenação na visão de tabela
   const [ordemColuna, setOrdemColuna] = useState<'secretaria' | 'setor' | 'situacao' | 'competencia'>('secretaria');
@@ -458,8 +469,44 @@ const ListaRegistros: React.FC<Props> = ({
         })}
       </ScrollView>
 
+      {/* No celular (tela compacta), agrupa filtros de Secretaria/Setor sob um botão para liberar espaço vertical */}
+      {metricas.compacta && (secretarias.length > 0 || setores.length > 0) && (
+        <View style={estilos.linhaToggleFiltrosMobile}>
+          <Pressable
+            onPress={() => setFiltrosAvancadosAbertos((prev) => !prev)}
+            accessibilityRole="button"
+            style={[
+              estilos.botaoToggleFiltrosMobile,
+              (filtrosAvancadosAbertos || totalFiltrosOrgao > 0) && estilos.botaoToggleFiltrosMobileAtivo,
+            ]}>
+            <Text
+              style={[
+                estilos.textoToggleFiltrosMobile,
+                (filtrosAvancadosAbertos || totalFiltrosOrgao > 0) && estilos.textoToggleFiltrosMobileAtivo,
+              ]}>
+              {filtrosAvancadosAbertos
+                ? 'Ocultar filtros de secretaria e setor ▲'
+                : totalFiltrosOrgao > 0
+                  ? `Secretaria / Setor (${totalFiltrosOrgao} ativo${totalFiltrosOrgao > 1 ? 's' : ''}) ▼`
+                  : 'Filtrar por secretaria e setor ▼'}
+            </Text>
+          </Pressable>
+          {totalFiltrosOrgao > 0 && (
+            <Pressable
+              onPress={() => {
+                setSecretariaFiltro(null);
+                setSetorFiltro(null);
+              }}
+              accessibilityRole="button"
+              style={estilos.botaoLimparFiltrosMobile}>
+              <Text style={estilos.textoLimparFiltrosMobile}>Limpar</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+
       {/* Faixa 2: Filtros de Secretaria Municipal */}
-      {secretarias.length > 0 && (
+      {exibirFiltrosOrgao && secretarias.length > 0 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -497,7 +544,7 @@ const ListaRegistros: React.FC<Props> = ({
       )}
 
       {/* Faixa 3: Filtro de Setores (se secretaria selecionada ou geral) */}
-      {setores.length > 0 && (
+      {exibirFiltrosOrgao && setores.length > 0 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -766,9 +813,10 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
   conteudoTabela: { paddingHorizontal: 16, paddingBottom: 80 },
   cabecalho: { paddingTop: 12 },
   linhaTituloTopo: {
-    flexDirection: 'row',
+    flexDirection: m.compacta ? 'column' : 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: m.compacta ? 'stretch' : 'center',
+    gap: m.compacta ? 10 : 8,
     marginBottom: 8,
   },
   titulo: {
@@ -779,30 +827,76 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
   },
   subtitulo: { marginTop: 2, color: tema.textoSecundario, fontSize: 12 },
 
-  // Alternador de Visão
+  // Alternador de Visão (Cartões | Tabela | Kanban)
   alternadorModoVisao: {
     flexDirection: 'row',
     backgroundColor: tema.superficie,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: tema.borda,
-    padding: 2,
+    padding: 3,
   },
   botaoModoVisao: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 6,
+    flex: m.compacta ? 1 : undefined,
+    minHeight: m.compacta ? 38 : undefined,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: m.compacta ? 10 : 8,
+    paddingVertical: m.compacta ? 8 : 5,
+    borderRadius: 7,
   },
   botaoModoVisaoAtivo: {
     backgroundColor: tema.primariaFundo,
   },
   textoModoVisao: {
-    fontSize: 11,
+    fontSize: m.compacta ? 12 : 11,
     fontWeight: '700',
     color: tema.textoSecundario,
   },
   textoModoVisaoAtivo: {
     color: tema.primariaTexto,
+  },
+  linhaToggleFiltrosMobile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  botaoToggleFiltrosMobile: {
+    flex: 1,
+    minHeight: 38,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: tema.superficie,
+    borderWidth: 1,
+    borderColor: tema.borda,
+  },
+  botaoToggleFiltrosMobileAtivo: {
+    backgroundColor: tema.primariaFundo,
+    borderColor: tema.primaria,
+  },
+  textoToggleFiltrosMobile: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: tema.textoSecundario,
+  },
+  textoToggleFiltrosMobileAtivo: {
+    color: tema.primariaTexto,
+  },
+  botaoLimparFiltrosMobile: {
+    minHeight: 38,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: tema.erroFundo,
+  },
+  textoLimparFiltrosMobile: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: tema.erro,
   },
 
   rolagemFiltros: { marginHorizontal: -16 },

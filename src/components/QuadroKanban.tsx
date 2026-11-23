@@ -89,7 +89,14 @@ const QuadroKanban: React.FC<Props> = ({
     [colunaFocada],
   );
 
-  const larguraColuna = metricas.compacta ? 268 : 296;
+  // No celular, ajusta a largura da coluna para caber na tela deixando uma "espiada" da próxima
+  const larguraColuna = metricas.compacta
+    ? Math.min(Math.max(Math.round(metricas.largura - 56), 256), 312)
+    : 296;
+  const estiloLarguraColuna = useMemo(
+    () => (colunaFocada === 'todas' ? { width: larguraColuna } : estilos.colunaCheia),
+    [colunaFocada, larguraColuna, estilos.colunaCheia],
+  );
 
   const confirmarParecer = (registroId: string, dados: DadosParecerUrgencia) => {
     aoRegistrarParecerUrgencia?.(registroId, dados);
@@ -102,12 +109,7 @@ const QuadroKanban: React.FC<Props> = ({
       const cores = corDaColuna(col.id, tema);
 
       return (
-        <View
-          key={col.id}
-          style={[
-            estilos.coluna,
-            { width: colunaFocada === 'todas' ? larguraColuna : '100%' },
-          ]}>
+        <View key={col.id} style={[estilos.coluna, estiloLarguraColuna]}>
           {/* Cabeçalho da Coluna */}
           <View
             style={[
@@ -412,6 +414,9 @@ const QuadroKanban: React.FC<Props> = ({
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator
+          decelerationRate={metricas.compacta ? 'fast' : 'normal'}
+          snapToInterval={metricas.compacta ? larguraColuna + 12 : undefined}
+          snapToAlignment="start"
           contentContainerStyle={estilos.quadroConteudo}>
           {renderizarColunas()}
         </ScrollView>
@@ -488,6 +493,9 @@ const criarEstilos = (tema: Tema) =>
       borderWidth: 1,
       borderColor: tema.borda,
       overflow: 'hidden',
+    },
+    colunaCheia: {
+      width: '100%',
     },
     cabecalhoColuna: {
       paddingHorizontal: 12,
