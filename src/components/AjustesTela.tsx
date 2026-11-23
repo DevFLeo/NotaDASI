@@ -71,6 +71,7 @@ type Props = {
   aoReverterAceiteExcel?: () => void;
   aoCarregarBasePlanilha?: (novos: Registro[], nomeArquivo?: string) => void;
   aoRestaurarBasePadrao?: () => void;
+  aoSelecionarRegistro?: (registro: Registro) => void;
 };
 
 /** Abaixo desta largura, os dois botões de integração empilham em vez de dividir a linha. */
@@ -108,6 +109,7 @@ const AjustesTela: React.FC<Props> = ({
   aoReverterAceiteExcel,
   aoCarregarBasePlanilha,
   aoRestaurarBasePadrao,
+  aoSelecionarRegistro,
 }) => {
   const tema = useTema();
   const estilos = criarEstilos(tema);
@@ -127,6 +129,7 @@ const AjustesTela: React.FC<Props> = ({
     'Homologação do diagnóstico DASI para implantação piloto do SIG Geo 360 (pendências em processo de saneamento)',
   );
   const [mostrarQuebras, setMostrarQuebras] = useState(false);
+  const [mostrarTodasQuebras, setMostrarTodasQuebras] = useState(false);
   const [filtroTipoQuebra, setFiltroTipoQuebra] = useState<string>('todos');
   const [modalColarVisivel, setModalColarVisivel] = useState(false);
   const [textoColado, setTextoColado] = useState('');
@@ -149,6 +152,18 @@ const AjustesTela: React.FC<Props> = ({
     if (filtroTipoQuebra === 'todos') return relatorio.quebras;
     return relatorio.quebras.filter((q) => q.tipo === filtroTipoQuebra);
   }, [relatorio.quebras, filtroTipoQuebra]);
+
+  const registrosPorId = useMemo(
+    () => new Map(registros.map((r) => [r.id, r])),
+    [registros],
+  );
+
+  const abrirRegistroDaQuebra = (registroId: string) => {
+    const alvo = registrosPorId.get(registroId);
+    if (alvo && aoSelecionarRegistro) {
+      aoSelecionarRegistro(alvo);
+    }
+  };
 
   const salvarIntegracao = async () => {
     await salvarUrlServidor(urlServidor);
@@ -526,7 +541,22 @@ const AjustesTela: React.FC<Props> = ({
             <Text style={[estilos.valorMetrica, { color: '#10b981' }]}>{relatorio.totalConformes}</Text>
             <Text style={estilos.rotuloMetrica}>Conformes</Text>
           </View>
-          <View style={estilos.cardMetrica}>
+          <Pressable
+            onPress={() => {
+              if (relatorio.quebras.length > 0) {
+                setFiltroTipoQuebra('todos');
+                setMostrarQuebras((prev) => !prev);
+              }
+            }}
+            disabled={relatorio.quebras.length === 0}
+            accessibilityRole="button"
+            accessibilityLabel={`Ver ${relatorio.totalComQuebra} competências com ressalvas`}
+            style={({ pressed }) => [
+              estilos.cardMetrica,
+              relatorio.totalComQuebra > 0 && estilos.cardMetricaInterativo,
+              mostrarQuebras && estilos.cardMetricaAtivo,
+              pressed && { opacity: 0.8 },
+            ]}>
             <Text
               style={[
                 estilos.valorMetrica,
@@ -535,7 +565,12 @@ const AjustesTela: React.FC<Props> = ({
               {relatorio.totalComQuebra}
             </Text>
             <Text style={estilos.rotuloMetrica}>Com Ressalvas</Text>
-          </View>
+            {relatorio.totalComQuebra > 0 ? (
+              <Text style={estilos.dicaMetricaClicavel}>
+                {mostrarQuebras ? 'Ocultar ▲' : 'Ver itens ›'}
+              </Text>
+            ) : null}
+          </Pressable>
           <View style={estilos.cardMetrica}>
             <Text style={estilos.valorMetrica}>{relatorio.taxaConformidade}%</Text>
             <Text style={estilos.rotuloMetrica}>Adesão</Text>
@@ -584,11 +619,22 @@ const AjustesTela: React.FC<Props> = ({
             </ScrollView>
 
             <View style={estilos.listaItensQuebra}>
-              {quebrasFiltradas.slice(0, 10).map((q: QuebraRegra) => {
+              {(mostrarTodasQuebras ? quebrasFiltradas : quebrasFiltradas.slice(0, 15)).map((q: QuebraRegra) => {
                 const corGravidade =
                   q.gravidade === 'alta' ? '#ef4444' : q.gravidade === 'media' ? '#f59e0b' : '#3b82f6';
+                const podeAbrir = Boolean(aoSelecionarRegistro && registrosPorId.has(q.registroId));
                 return (
-                  <View key={q.id} style={estilos.itemQuebra}>
+                  <Pressable
+                    key={q.id}
+                    onPress={() => abrirRegistroDaQuebra(q.registroId)}
+                    disabled={!podeAbrir}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Abrir competência: ${q.titulo} (${q.secretaria} - ${q.setor})`}
+                    style={({ pressed }) => [
+                      estilos.itemQuebra,
+                      podeAbrir && estilos.itemQuebraClicavel,
+                      pressed && estilos.itemQuebraPressionado,
+                    ]}>
                     <View style={estilos.linhaItemQuebraTopo}>
                       <View style={[estilos.badgeGravidade, { backgroundColor: `${corGravidade}20` }]}>
                         <Text style={[estilos.textoBadgeGravidade, { color: corGravidade }]}>
@@ -596,19 +642,31 @@ const AjustesTela: React.FC<Props> = ({
                         </Text>
                       </View>
                       <Text style={estilos.tituloItemQuebra}>{q.titulo}</Text>
+                      {podeAbrir ? (
+                        <Text style={estilos.linkAbrirQuebra}>Abrir ›</Text>
+                      ) : null}
                     </View>
                     <Text style={estilos.contextoItemQuebra}>
                       {q.secretaria} • {q.setor}
                     </Text>
-                    <Text style={estilos.descItemQuebra}>{q.descricao}</Text>
-                    <Text style={estilos.sugestaoItemQuebra}>Ajuste: {q.sugestaoAjuste}</Text>
-                  </View>
+                    <Text style={estilos.descItemQuebra} numberOfLines={2}>
+                      {q.competencia}
+                    </Text>
+                    <Text style={estilos.sugestaoItemQuebra}>Pendência: {q.descricao} · Ajuste: {q.sugestaoAjuste}</Text>
+                  </Pressable>
                 );
               })}
-              {quebrasFiltradas.length > 10 && (
-                <Text style={estilos.avisoMaisItens}>
-                  + {quebrasFiltradas.length - 10} outras regras apontadas no relatório completo.
-                </Text>
+              {quebrasFiltradas.length > 15 && (
+                <Pressable
+                  onPress={() => setMostrarTodasQuebras((prev) => !prev)}
+                  style={estilos.botaoExpandirQuebras}
+                  accessibilityRole="button">
+                  <Text style={estilos.textoExpandirQuebras}>
+                    {mostrarTodasQuebras
+                      ? 'Mostrar menos itens ▲'
+                      : `Mostrar todos os ${quebrasFiltradas.length} apontamentos ▼`}
+                  </Text>
+                </Pressable>
               )}
             </View>
           </View>
@@ -1079,6 +1137,22 @@ const criarEstilos = (tema: Tema) =>
       paddingHorizontal: 8,
       alignItems: 'center',
     },
+    cardMetricaInterativo: {
+      borderColor: '#f59e0b66',
+      backgroundColor: '#f59e0b0d',
+      cursor: (Platform.OS === 'web' ? 'pointer' : undefined) as any,
+    },
+    cardMetricaAtivo: {
+      borderWidth: 1.5,
+      borderColor: '#f59e0b',
+      backgroundColor: '#f59e0b1a',
+    },
+    dicaMetricaClicavel: {
+      fontSize: 9,
+      fontWeight: '700',
+      color: '#b45309',
+      marginTop: 4,
+    },
     valorMetrica: { fontSize: 18, fontWeight: '800', color: tema.texto },
     rotuloMetrica: { fontSize: 10, fontWeight: '600', color: tema.textoTerciario, marginTop: 2, textTransform: 'uppercase' },
     botaoExpandirQuebras: {
@@ -1120,6 +1194,18 @@ const criarEstilos = (tema: Tema) =>
       backgroundColor: tema.fundoElevado,
       borderWidth: 1,
       borderColor: tema.borda,
+    },
+    itemQuebraClicavel: {
+      cursor: (Platform.OS === 'web' ? 'pointer' : undefined) as any,
+    },
+    itemQuebraPressionado: {
+      opacity: 0.78,
+      borderColor: tema.primaria,
+    },
+    linkAbrirQuebra: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.primaria,
     },
     linhaItemQuebraTopo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     badgeGravidade: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },

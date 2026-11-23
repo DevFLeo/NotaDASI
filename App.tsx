@@ -119,6 +119,7 @@ export const AppConteudo: React.FC = () => {
                 aoReverterAceiteExcel={app.reverterAceiteExcel}
                 aoCarregarBasePlanilha={app.carregarBasePlanilha}
                 aoRestaurarBasePadrao={app.restaurarBasePadrao}
+                aoSelecionarRegistro={app.setSelecionado}
               />
             )}
           </Animated.View>
