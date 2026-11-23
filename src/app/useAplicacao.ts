@@ -55,6 +55,8 @@ export function useAplicacao() {
     excluirRegistro,
     alternarFavorito,
     adicionarComentario,
+    moverColunaKanban,
+    registrarParecerUrgencia,
     salvarNotaPessoal,
     limparDadosLocais,
     salvarAceiteExcel,
@@ -163,24 +165,35 @@ export function useAplicacao() {
   );
 
   /**
+   * Mantém o registro selecionado sincronizado com a lista viva (`registros`),
+   * preservando `_stamp` para que novos comentários, números SEI e pareceres
+   * apareçam imediatamente no modal aberto sem precisar fechá-lo.
+   */
+  const selecionadoSincronizado = useMemo(() => {
+    if (!selecionado) return null;
+    const atualizado = registros.find((r) => r.id === selecionado.id);
+    return atualizado ? { ...atualizado, _stamp: selecionado._stamp } : selecionado;
+  }, [selecionado, registros]);
+
+  /**
    * Posição da competência selecionada dentro do seu próprio setor,
    * permitindo navegação instantânea no PC através de botões [← Anterior] [Próximo →] e setas do teclado.
    */
   const posicaoSelecionado = useMemo(() => {
-    if (!selecionado) {
+    if (!selecionadoSincronizado) {
       return { indice: 0, total: 0, lista: [] as Registro[] };
     }
-    const setorAlvo = (selecionado.setorSigla || selecionado.setor || '').trim().toUpperCase();
+    const setorAlvo = (selecionadoSincronizado.setorSigla || selecionadoSincronizado.setor || '').trim().toUpperCase();
     const lista = registros.filter(
       (r) => (r.setorSigla || r.setor || '').trim().toUpperCase() === setorAlvo,
     );
-    const indice = lista.findIndex((r) => r.id === selecionado.id);
+    const indice = lista.findIndex((r) => r.id === selecionadoSincronizado.id);
     return {
       indice: indice >= 0 ? indice : 0,
       total: lista.length,
       lista,
     };
-  }, [selecionado, registros]);
+  }, [selecionadoSincronizado, registros]);
 
   const navegarRegistroAnterior = useCallback(() => {
     if (!selecionado || posicaoSelecionado.total <= 1) return;
@@ -244,7 +257,7 @@ export function useAplicacao() {
     fecharMenuCampos,
 
     // Registro selecionado / formulário de competência
-    selecionado,
+    selecionado: selecionadoSincronizado,
     setSelecionado: selecionarRegistro,
     posicaoSelecionado,
     navegarRegistroAnterior,
@@ -258,6 +271,8 @@ export function useAplicacao() {
     pedirExclusao,
     alternarFavoritoDoRegistro,
     adicionarComentario,
+    moverColunaKanban,
+    registrarParecerUrgencia,
     salvarNotaPessoal,
 
     // Itens de campo livre

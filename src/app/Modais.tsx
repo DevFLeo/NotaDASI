@@ -5,6 +5,7 @@ import FormularioRegistro from '../components/FormularioRegistro';
 import LimiteDeErro from '../components/LimiteDeErro';
 import MenuCampos from '../components/MenuCampos';
 import { useSessao } from '../auth/useSessao';
+import type { ColunaKanban, DecisaoParecerUrgencia } from '../data/registros';
 import type { Aplicacao } from './useAplicacao';
 
 type Props = {
@@ -34,13 +35,43 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
     app.anotacaoEmEdicao?.modo === 'editar' ? app.anotacaoEmEdicao.anotacao : null;
   const registroEmEdicao = app.formulario?.modo === 'editar' ? app.formulario.registro : null;
 
-  const lidarComentario = (id: string, texto: string) => {
+  const lidarComentario = (id: string, texto: string, numeroSei?: string) => {
     if (!contaAtual) return;
     app.adicionarComentario(id, {
       usuario: contaAtual.usuario,
       nome: contaAtual.nome,
       papel: contaAtual.papel,
       texto,
+      numeroSei,
+    });
+  };
+
+  const lidarParecerUrgencia = (
+    id: string,
+    dados: {
+      decisao: DecisaoParecerUrgencia;
+      parecer: string;
+      responsavelContinuidade?: string;
+      numeroSei?: string;
+    },
+  ) => {
+    if (!contaAtual) return;
+    app.registrarParecerUrgencia(id, {
+      usuario: contaAtual.usuario,
+      nome: contaAtual.nome,
+      papel: contaAtual.papel,
+      ...dados,
+    });
+  };
+
+  const lidarMoverColunaKanban = (
+    id: string,
+    coluna: ColunaKanban | undefined,
+    responsavelContinuidade?: string,
+  ) => {
+    app.moverColunaKanban(id, coluna, {
+      usuarioNome: contaAtual?.nome || contaAtual?.usuario,
+      responsavelContinuidade,
     });
   };
 
@@ -62,6 +93,8 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
             aoAlternarFavorito={app.alternarFavoritoDoRegistro}
             aoAdicionarComentario={lidarComentario}
             aoSalvarNotaPessoal={lidarNotaPessoal}
+            aoRegistrarParecerUrgencia={lidarParecerUrgencia}
+            aoMoverColunaKanban={lidarMoverColunaKanban}
             aoNavegarAnterior={app.posicaoSelecionado.total > 1 ? app.navegarRegistroAnterior : undefined}
             aoNavegarProximo={app.posicaoSelecionado.total > 1 ? app.navegarProximoRegistro : undefined}
             indiceNoSetor={app.posicaoSelecionado.indice}
@@ -106,7 +139,9 @@ export const Modais: React.FC<Props> = ({ app, ocultarMenuCampos = false }) => {
           aoCancelar={app.fecharFormulario}
           aoExcluir={registroEmEdicao ? () => app.pedirExclusao(registroEmEdicao) : undefined}
           aoAdicionarComentario={
-            registroEmEdicao ? (texto) => lidarComentario(registroEmEdicao.id, texto) : undefined
+            registroEmEdicao
+              ? (texto, numeroSei) => lidarComentario(registroEmEdicao.id, texto, numeroSei)
+              : undefined
           }
         />
       </LimiteDeErro>

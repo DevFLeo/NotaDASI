@@ -1,7 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { carregarRegistros as carregarRegistrosBase, obterOrigemDados } from './fonte';
-import type { ComentarioRegistro, EntradaAuditoria, NovoRegistro, Registro } from './registros';
+import { normalizarNumeroSei, rotuloDecisaoParecer } from './kanban';
+import type {
+  ColunaKanban,
+  ComentarioRegistro,
+  DecisaoParecerUrgencia,
+  EntradaAuditoria,
+  NovoRegistro,
+  ParecerUrgencia,
+  Registro,
+} from './registros';
 
 const CHAVE_CRIADOS = '@notadasi:registros-criados';
 const CHAVE_EDICOES = '@notadasi:registros-edicoes';
@@ -145,7 +154,11 @@ export function useRegistros() {
   }, [baseEfetiva, edicoes, excluidos, criados, favoritos]);
 
   const criarRegistro = useCallback((dados: NovoRegistro): Registro => {
-    const registro: Registro = { ...dados, id: gerarIdRegistro() };
+    const registro: Registro = {
+      ...dados,
+      numeroSei: normalizarNumeroSei(dados.numeroSei),
+      id: gerarIdRegistro(),
+    };
     setCriados((atual) => {
       const proximo = [...atual, registro];
       gravarJson(CHAVE_CRIADOS, proximo);
@@ -156,7 +169,11 @@ export function useRegistros() {
 
   const atualizarRegistro = useCallback(
     (id: string, dados: NovoRegistro) => {
-      const registro: Registro = { ...dados, id };
+      const registro: Registro = {
+        ...dados,
+        numeroSei: normalizarNumeroSei(dados.numeroSei),
+        id,
+      };
       const éCriadoLocal = criados.some((item) => item.id === id);
 
       if (éCriadoLocal) {
@@ -206,6 +223,28 @@ export function useRegistros() {
     });
   }, []);
 
+  const aplicarTransformacao = useCallback(
+    (id: string, transformar: (registro: Registro) => Registro) => {
+      const éCriadoLocal = criados.some((item) => item.id === id);
+      if (éCriadoLocal) {
+        setCriados((atual) => {
+          const proximo = atual.map((item) => (item.id === id ? transformar(item) : item));
+          gravarJson(CHAVE_CRIADOS, proximo);
+          return proximo;
+        });
+      } else {
+        setEdicoes((atual) => {
+          const registroBase = atual[id] ?? baseEfetiva.find((r) => r.id === id);
+          if (!registroBase) return atual;
+          const proximo = { ...atual, [id]: transformar(registroBase) };
+          gravarJson(CHAVE_EDICOES, proximo);
+          return proximo;
+        });
+      }
+    },
+    [baseEfetiva, criados],
+  );
+
   const adicionarComentario = useCallback(
     (
       id: string,
@@ -214,65 +253,126 @@ export function useRegistros() {
         nome: string;
         papel: string;
         texto: string;
+        numeroSei?: string;
         destinatario?: 'dasi' | 'gerente' | 'secretario' | 'todos';
       },
     ) => {
+      const seiNormalizado = normalizarNumeroSei(comentario.numeroSei);
       const novoComentario: ComentarioRegistro = {
         ...comentario,
+        numeroSei: seiNormalizado,
         id: `coment-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         dataHora: new Date().toISOString(),
       };
 
-      const atualizarLista = (registro: Registro): Registro => ({
+      aplicarTransformacao(id, (registro) => ({
         ...registro,
         comentarios: [...(registro.comentarios ?? []), novoComentario],
-      });
-
-      const éCriadoLocal = criados.some((item) => item.id === id);
-      if (éCriadoLocal) {
-        setCriados((atual) => {
-          const proximo = atual.map((item) => (item.id === id ? atualizarLista(item) : item));
-          gravarJson(CHAVE_CRIADOS, proximo);
-          return proximo;
-        });
-      } else {
-        setEdicoes((atual) => {
-          const registroBase = atual[id] ?? base.find((r) => r.id === id);
-          if (!registroBase) return atual;
-          const proximo = { ...atual, [id]: atualizarLista(registroBase) };
-          gravarJson(CHAVE_EDICOES, proximo);
-          return proximo;
-        });
-      }
+      }));
     },
-    [base, criados],
+    [aplicarTransformacao],
+  );
+
+  const moverColunaKanban = useCallback(
+    (
+      id: string,
+      coluna: ColunaKanban | undefined,
+      opcoes?: { usuarioNome?: string; responsavelContinuidade?: string },
+    ) => {
+      const agora = new Date().toISOString();
+      aplicarTransformacao(id, (registro) => {
+        const responsavelLimpo = opcoes?.responsavelContinuidade?.trim();
+        return {
+          ...registro,
+          kanban: {
+            ...registro.kanban,
+            colunaManual: coluna,
+            responsavelContinuidade:
+              opcoes?.responsavelContinuidade !== undefined
+                ? responsavelLimpo || undefined
+                : registro.kanban?.responsavelContinuidade,
+            atualizadoEm: agora,
+            atualizadoPor: opcoes?.usuarioNome || registro.kanban?.atualizadoPor,
+          },
+        };
+      });
+    },
+    [aplicarTransformacao],
+  );
+
+  const registrarParecerUrgencia = useCallback(
+    (
+      id: string,
+      dados: {
+        usuario: string;
+        nome: string;
+        papel: string;
+        decisao: DecisaoParecerUrgencia;
+        parecer: string;
+        responsavelContinuidade?: string;
+        numeroSei?: string;
+      },
+    ) => {
+      const agora = new Date().toISOString();
+      const seiNormalizado = normalizarNumeroSei(dados.numeroSei);
+      const responsavelLimpo = dados.responsavelContinuidade?.trim() || undefined;
+      const textoParecer = dados.parecer.trim();
+      if (!textoParecer) return;
+
+      const novoParecer: ParecerUrgencia = {
+        id: `parecer-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        dataHora: agora,
+        usuario: dados.usuario,
+        nome: dados.nome,
+        papel: dados.papel,
+        decisao: dados.decisao,
+        parecer: textoParecer,
+        responsavelContinuidade: responsavelLimpo,
+        numeroSei: seiNormalizado,
+      };
+
+      const resumoDecisao = `Parecer de Urgência (${rotuloDecisaoParecer[dados.decisao]})${
+        responsavelLimpo ? ` · Continuidade: ${responsavelLimpo}` : ''
+      }: ${textoParecer}`;
+
+      const comentarioVinculado: ComentarioRegistro = {
+        id: `coment-parecer-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        dataHora: agora,
+        usuario: dados.usuario,
+        nome: dados.nome,
+        papel: dados.papel,
+        texto: resumoDecisao,
+        numeroSei: seiNormalizado,
+      };
+
+      aplicarTransformacao(id, (registro) => ({
+        ...registro,
+        numeroSei: registro.numeroSei || seiNormalizado,
+        kanban: {
+          ...registro.kanban,
+          colunaManual: dados.decisao,
+          responsavelContinuidade:
+            dados.responsavelContinuidade !== undefined
+              ? responsavelLimpo
+              : registro.kanban?.responsavelContinuidade,
+          atualizadoEm: agora,
+          atualizadoPor: dados.nome || dados.usuario,
+          pareceresUrgencia: [...(registro.kanban?.pareceresUrgencia ?? []), novoParecer],
+        },
+        comentarios: [...(registro.comentarios ?? []), comentarioVinculado],
+      }));
+    },
+    [aplicarTransformacao],
   );
 
   const salvarNotaPessoal = useCallback(
     (id: string, usuario: string, texto: string) => {
-      const atualizarLista = (registro: Registro): Registro => ({
+      aplicarTransformacao(id, (registro) => ({
         ...registro,
         notasPessoais: { ...(registro.notasPessoais ?? {}), [usuario]: texto },
-      });
-
-      const éCriadoLocal = criados.some((item) => item.id === id);
-      if (éCriadoLocal) {
-        setCriados((atual) => {
-          const proximo = atual.map((item) => (item.id === id ? atualizarLista(item) : item));
-          gravarJson(CHAVE_CRIADOS, proximo);
-          return proximo;
-        });
-      } else {
-        setEdicoes((atual) => {
-          const registroBase = atual[id] ?? base.find((r) => r.id === id);
-          if (!registroBase) return atual;
-          const proximo = { ...atual, [id]: atualizarLista(registroBase) };
-          gravarJson(CHAVE_EDICOES, proximo);
-          return proximo;
-        });
-      }
+      }));
     },
-    [base, criados],
+    [aplicarTransformacao],
   );
 
   /** Apaga tudo que foi criado/editado/excluído/favoritado localmente. A base importada não é afetada. */
@@ -375,6 +475,8 @@ export function useRegistros() {
     excluirRegistro,
     alternarFavorito,
     adicionarComentario,
+    moverColunaKanban,
+    registrarParecerUrgencia,
     salvarNotaPessoal,
     limparDadosLocais,
     salvarAceiteExcel,

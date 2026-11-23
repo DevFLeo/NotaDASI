@@ -14,7 +14,8 @@ import {
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { useSessao } from '../auth/useSessao';
-import { registroEmBranco, type NovoRegistro } from '../data/registros';
+import { normalizarNumeroSei } from '../data/kanban';
+import { registroEmBranco, type ComentarioRegistro, type NovoRegistro } from '../data/registros';
 import { useArrastarParaFechar } from '../hooks/useArrastarParaFechar';
 import { useMetricas, useTema } from '../tema/ThemeContext';
 import type { Tema } from '../tema/cores';
@@ -26,7 +27,7 @@ type Props = {
   aoSalvar: (dados: NovoRegistro) => void;
   aoCancelar: () => void;
   aoExcluir?: () => void;
-  aoAdicionarComentario?: (texto: string) => void;
+  aoAdicionarComentario?: (texto: string, numeroSei?: string) => void;
 };
 
 /** Cicla entre nao-respondido → Sim → Nao → nao-respondido, a cada toque. */
@@ -63,6 +64,7 @@ const FormularioRegistro: React.FC<Props> = ({
 
   const [dados, setDados] = useState<NovoRegistro>(() => valorInicial ?? registroEmBranco());
   const [novoComentario, setNovoComentario] = useState('');
+  const [seiComentario, setSeiComentario] = useState('');
 
   // Perfil Chefe do DGEO em registro existente não pode sobrescrever tabelas do DASI
   const eChefeDgeo = contaAtual?.papel === 'gerente';
@@ -80,6 +82,8 @@ const FormularioRegistro: React.FC<Props> = ({
   if (valorInicial !== ultimoValorInicial) {
     setUltimoValorInicial(valorInicial);
     setDados(valorInicial ?? registroEmBranco());
+    setNovoComentario('');
+    setSeiComentario('');
   }
 
   const definirCampo = <C extends keyof NovoRegistro>(campo: C, valor: NovoRegistro[C]) => {
@@ -102,8 +106,9 @@ const FormularioRegistro: React.FC<Props> = ({
   const confirmarSalvar = () => {
     if (edicaoBloqueada) {
       if (novoComentario.trim() && aoAdicionarComentario) {
-        aoAdicionarComentario(novoComentario.trim());
+        aoAdicionarComentario(novoComentario.trim(), seiComentario.trim() || undefined);
         setNovoComentario('');
+        setSeiComentario('');
         aoCancelar();
       } else {
         Alert.alert(
@@ -123,15 +128,35 @@ const FormularioRegistro: React.FC<Props> = ({
       return;
     }
 
-    // Carimbo de auditoria se DASI estiver salvando
-    const dadosComAuditoria = {
+    // Anexa comentário/despacho opcional (com número do SEI opcional) atomicamente no cadastro ou edição
+    const textoComentario = novoComentario.trim();
+    const comentariosAtualizados: ComentarioRegistro[] | undefined = textoComentario
+      ? [
+          ...(dados.comentarios ?? []),
+          {
+            id: `coment-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            dataHora: new Date().toISOString(),
+            usuario: contaAtual?.usuario ?? 'dasi',
+            nome: contaAtual?.nome ?? 'DASI',
+            papel: contaAtual?.papel ?? 'dasi',
+            texto: textoComentario,
+            numeroSei: normalizarNumeroSei(seiComentario),
+          },
+        ]
+      : dados.comentarios;
+
+    // Carimbo de auditoria ao salvar
+    const dadosComAuditoria: NovoRegistro = {
       ...dados,
+      comentarios: comentariosAtualizados,
       atualizadoPor: contaAtual
         ? { usuario: contaAtual.usuario, nome: contaAtual.nome, papel: contaAtual.papel }
         : undefined,
       atualizadoEm: new Date().toISOString(),
     };
 
+    setNovoComentario('');
+    setSeiComentario('');
     aoSalvar(dadosComAuditoria);
   };
 
@@ -151,9 +176,20 @@ const FormularioRegistro: React.FC<Props> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [visivel, aoCancelar, dados, edicaoBloqueada, novoComentario, aoAdicionarComentario, contaAtual, aoSalvar]);
+  }, [
+    visivel,
+    aoCancelar,
+    dados,
+    edicaoBloqueada,
+    novoComentario,
+    seiComentario,
+    aoAdicionarComentario,
+    contaAtual,
+    aoSalvar,
+  ]);
 
   const estilos = criarEstilos(tema, metricas, telaCheia);
+  const estilosBase = criarEstilosBase(tema);
 
   return (
     <Modal visible={visivel} animationType="slide" transparent onRequestClose={aoCancelar}>
@@ -191,7 +227,7 @@ const FormularioRegistro: React.FC<Props> = ({
                   accessibilityRole="button"
                   accessibilityLabel={telaCheia ? 'Restaurar altura' : 'Tela cheia'}
                   style={estilos.botaoTopo}>
-                  <Text style={estilos.textoBotaoTopo}>{telaCheia ? '🗕' : '⤢'}</Text>
+                  <Text style={estilos.textoBotaoTopo}>{telaCheia ? '[-]' : '[+]'}</Text>
                 </Pressable>
                 <Pressable
                   onPress={aoCancelar}
@@ -284,6 +320,14 @@ const FormularioRegistro: React.FC<Props> = ({
                 valor={dados.competencia}
                 aoAlterar={(v) => definirCampo('competencia', v)}
                 multilinha
+                desabilitado={edicaoBloqueada}
+              />
+              <CampoTexto
+                tema={tema}
+                rotulo="Número do SEI (opcional)"
+                valor={dados.numeroSei ?? ''}
+                aoAlterar={(v) => definirCampo('numeroSei', v)}
+                placeholder="Ex.: 00600-00012345/2026-01"
                 desabilitado={edicaoBloqueada}
               />
 
@@ -471,20 +515,25 @@ const FormularioRegistro: React.FC<Props> = ({
                 />
               </View>
 
-              {/* Se for Chefe do DGEO ou Secretaria, área para comentários */}
-              {(eChefeDgeo || eSecretaria) && (
-                <View style={estilos.blocoComentario}>
-                  <Secao tema={tema} titulo="Comentário / Despacho Oficial" />
-                  <TextInput
-                    value={novoComentario}
-                    onChangeText={setNovoComentario}
-                    placeholder="Adicionar parecer técnico ou despacho para o DASI..."
-                    placeholderTextColor={tema.textoTerciario}
-                    multiline
-                    style={[estilos.input, estilos.inputMultilinha]}
-                  />
-                </View>
-              )}
+              {/* Área opcional para comentário / despacho oficial com Número do SEI */}
+              <View style={estilos.blocoComentario}>
+                <Secao tema={tema} titulo="8. Comentário / Despacho Oficial (opcional)" />
+                <TextInput
+                  value={seiComentario}
+                  onChangeText={setSeiComentario}
+                  placeholder="Número do SEI do comentário (opcional) — Ex.: 00600-00012345/2026-01"
+                  placeholderTextColor={tema.textoTerciario}
+                  style={[estilosBase.input, { marginBottom: 8 }]}
+                />
+                <TextInput
+                  value={novoComentario}
+                  onChangeText={setNovoComentario}
+                  placeholder="Adicionar comentário, despacho ou parecer técnico opcional..."
+                  placeholderTextColor={tema.textoTerciario}
+                  multiline
+                  style={[estilosBase.input, estilosBase.inputMultilinha]}
+                />
+              </View>
             </ScrollView>
 
             {/* Rodapé de ações */}
@@ -529,7 +578,17 @@ const CampoTexto: React.FC<{
   multilinha?: boolean;
   desabilitado?: boolean;
   colunaDupla?: boolean;
-}> = ({ tema, rotulo, valor, aoAlterar, multilinha, desabilitado, colunaDupla }) => {
+  placeholder?: string;
+}> = ({
+  tema,
+  rotulo,
+  valor,
+  aoAlterar,
+  multilinha,
+  desabilitado,
+  colunaDupla,
+  placeholder = '—',
+}) => {
   const estilos = criarEstilosBase(tema);
   return (
     <View style={[estilos.bloco, colunaDupla && estilos.blocoColunaDupla]}>
@@ -543,7 +602,7 @@ const CampoTexto: React.FC<{
           multilinha && estilos.inputMultilinha,
           desabilitado && estilos.inputDesabilitado,
         ]}
-        placeholder="—"
+        placeholder={placeholder}
         placeholderTextColor={tema.textoTerciario}
         multiline={multilinha}
       />

@@ -15,10 +15,18 @@ import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSessao } from '../auth/useSessao';
 import ContatoProtegido from './ContatoProtegido';
+import ModalParecerUrgencia, { type DadosParecerUrgencia } from './ModalParecerUrgencia';
+import {
+  calcularUrgencia,
+  obterColunaKanban,
+  rotuloColunaKanban,
+  rotuloDecisaoParecer,
+} from '../data/kanban';
 import {
   calcularSituacao,
   corPorSituacao,
   rotuloSituacao,
+  type ColunaKanban,
   type Registro,
 } from '../data/registros';
 import { useArrastarParaFechar } from '../hooks/useArrastarParaFechar';
@@ -31,8 +39,14 @@ type Props = {
   aoEditar?: (registro: Registro) => void;
   aoExcluir?: (registro: Registro) => void;
   aoAlternarFavorito?: (registro: Registro) => void;
-  aoAdicionarComentario?: (id: string, texto: string) => void;
+  aoAdicionarComentario?: (id: string, texto: string, numeroSei?: string) => void;
   aoSalvarNotaPessoal?: (id: string, texto: string) => void;
+  aoRegistrarParecerUrgencia?: (id: string, dados: DadosParecerUrgencia) => void;
+  aoMoverColunaKanban?: (
+    id: string,
+    coluna: ColunaKanban | undefined,
+    responsavelContinuidade?: string,
+  ) => void;
   aoNavegarAnterior?: () => void;
   aoNavegarProximo?: () => void;
   indiceNoSetor?: number;
@@ -47,6 +61,8 @@ const DetalheRegistro: React.FC<Props> = ({
   aoAlternarFavorito,
   aoAdicionarComentario,
   aoSalvarNotaPessoal,
+  aoRegistrarParecerUrgencia,
+  aoMoverColunaKanban,
   aoNavegarAnterior,
   aoNavegarProximo,
   indiceNoSetor,
@@ -59,6 +75,8 @@ const DetalheRegistro: React.FC<Props> = ({
   const { gesto, estiloArrasto, telaCheia, alternarTelaCheia } = useArrastarParaFechar(aoFechar);
 
   const [novoComentario, setNovoComentario] = useState('');
+  const [seiComentario, setSeiComentario] = useState('');
+  const [modalParecerAberto, setModalParecerAberto] = useState(false);
   const [notaPessoal, setNotaPessoal] = useState(() =>
     registro && contaAtual ? registro.notasPessoais?.[contaAtual.usuario] ?? '' : '',
   );
@@ -68,7 +86,7 @@ const DetalheRegistro: React.FC<Props> = ({
   const eDasi = contaAtual?.papel === 'dasi' || (!eChefeDgeo && !eSecretaria);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || !registro) return;
+    if (Platform.OS !== 'web' || !registro || modalParecerAberto) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const isInput =
@@ -105,7 +123,7 @@ const DetalheRegistro: React.FC<Props> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [aoFechar, aoEditar, aoAlternarFavorito, aoNavegarAnterior, aoNavegarProximo, eChefeDgeo, registro]);
+  }, [aoFechar, aoEditar, aoAlternarFavorito, aoNavegarAnterior, aoNavegarProximo, eChefeDgeo, modalParecerAberto, registro]);
 
   if (!registro) {
     return null;
@@ -113,14 +131,21 @@ const DetalheRegistro: React.FC<Props> = ({
 
   const situacao = calcularSituacao(registro);
   const corSituacao = corPorSituacao[situacao];
+  const urgencia = calcularUrgencia(registro);
+  const colunaKanban = obterColunaKanban(registro);
 
   const ePC = metricas.expandida;
   const estilos = criarEstilosDetalhe(tema, metricas, telaCheia);
 
   const enviarComentario = () => {
     if (!novoComentario.trim() || !aoAdicionarComentario) return;
-    aoAdicionarComentario(registro.id, novoComentario.trim());
+    aoAdicionarComentario(
+      registro.id,
+      novoComentario.trim(),
+      seiComentario.trim() || undefined,
+    );
     setNovoComentario('');
+    setSeiComentario('');
   };
 
   const salvarMinhaNota = () => {
@@ -261,7 +286,16 @@ const DetalheRegistro: React.FC<Props> = ({
               <View style={estilos.cardHero}>
                 <View style={estilos.linhaHeroTopo}>
                   <Text style={estilos.tagHero}>ATRIBUIÇÃO REGIMENTAL AVALIADA</Text>
-                  <Text style={estilos.idRegistro}>ID: {registro.id}</Text>
+                  <View style={estilos.grupoHeroDireita}>
+                    {registro.numeroSei ? (
+                      <Pressable
+                        onPress={() => copiarTexto(registro.numeroSei || '', 'Número do SEI')}
+                        style={estilos.badgeSeiHero}>
+                        <Text style={estilos.textoBadgeSeiHero}>SEI: {registro.numeroSei}</Text>
+                      </Pressable>
+                    ) : null}
+                    <Text style={estilos.idRegistro}>ID: {registro.id}</Text>
+                  </View>
                 </View>
                 <Text style={estilos.tituloCompetencia} selectable>
                   {registro.competencia}
@@ -538,6 +572,102 @@ const DetalheRegistro: React.FC<Props> = ({
                     </View>
                   </View>
 
+                  {/* Card: Fluxo Kanban & Urgência */}
+                  <View style={estilos.card}>
+                    <View style={estilos.cabecalhoCard}>
+                      <View style={estilos.titulosCard}>
+                        <Text style={estilos.tituloSecao}>Fluxo Kanban & Urgência</Text>
+                        <Text style={estilos.subtituloSecao}>
+                          Etapa atual, índice calculado e encaminhamento
+                        </Text>
+                      </View>
+                      <View style={estilos.badgeEtapaKanban}>
+                        <Text style={estilos.textoBadgeEtapaKanban}>
+                          {rotuloColunaKanban[colunaKanban]}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={estilos.blocoResumoKanban}>
+                      <Text style={estilos.textoIndiceKanban}>
+                        Índice de urgência calculado: {urgencia.pontuacao} pts
+                      </Text>
+                      {urgencia.fatores.length > 0 ? (
+                        <View style={estilos.faixaFatoresDetalhe}>
+                          {urgencia.fatores.map((f) => (
+                            <View key={f.codigo} style={estilos.tagFatorDetalhe}>
+                              <Text style={estilos.textoTagFatorDetalhe}>
+                                {f.rotulo} (+{f.peso})
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      ) : (
+                        <Text style={estilos.textoSemFatoresDetalhe}>
+                          Sem fatores negativos pendentes.
+                        </Text>
+                      )}
+
+                      {registro.kanban?.responsavelContinuidade ? (
+                        <Text style={estilos.textoContinuidadeDetalhe}>
+                          Responsável pela continuidade: {registro.kanban.responsavelContinuidade}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    {registro.kanban?.pareceresUrgencia &&
+                    registro.kanban.pareceresUrgencia.length > 0 ? (
+                      <View style={estilos.listaPareceresKanban}>
+                        {registro.kanban.pareceresUrgencia.map((p) => (
+                          <View key={p.id} style={estilos.itemParecerKanban}>
+                            <View style={estilos.linhaTopoParecerKanban}>
+                              <Text style={estilos.decisaoParecerKanban}>
+                                {rotuloDecisaoParecer[p.decisao]}
+                              </Text>
+                              <Text style={estilos.dataComentario}>
+                                {new Date(p.dataHora).toLocaleDateString('pt-BR')} · {p.nome}
+                              </Text>
+                            </View>
+                            {p.numeroSei ? (
+                              <Text style={estilos.seiParecerKanban}>SEI: {p.numeroSei}</Text>
+                            ) : null}
+                            {p.responsavelContinuidade ? (
+                              <Text style={estilos.continuidadeParecerKanban}>
+                                Continuidade: {p.responsavelContinuidade}
+                              </Text>
+                            ) : null}
+                            <Text style={estilos.textoComentario} selectable>
+                              {p.parecer}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    ) : null}
+
+                    {aoRegistrarParecerUrgencia || aoMoverColunaKanban ? (
+                      <View style={estilos.faixaAcoesKanban}>
+                        {aoRegistrarParecerUrgencia ? (
+                          <Pressable
+                            onPress={() => setModalParecerAberto(true)}
+                            style={estilos.botaoParecerDetalhe}>
+                            <Text style={estilos.textoBotaoParecerDetalhe}>
+                              Emitir Parecer / Encaminhar
+                            </Text>
+                          </Pressable>
+                        ) : null}
+                        {aoMoverColunaKanban && registro.kanban?.colunaManual ? (
+                          <Pressable
+                            onPress={() => aoMoverColunaKanban(registro.id, undefined)}
+                            style={estilos.botaoAutoKanban}>
+                            <Text style={estilos.textoBotaoAutoKanban}>
+                              Restaurar cálculo automático
+                            </Text>
+                          </Pressable>
+                        ) : null}
+                      </View>
+                    ) : null}
+                  </View>
+
                   {/* Card: Pareceres & Comentários Oficiais */}
                   <View style={estilos.card}>
                     <View style={estilos.cabecalhoCard}>
@@ -577,6 +707,15 @@ const DetalheRegistro: React.FC<Props> = ({
                                   {new Date(c.dataHora).toLocaleDateString('pt-BR')}
                                 </Text>
                               </View>
+                              {c.numeroSei ? (
+                                <Pressable
+                                  onPress={() => copiarTexto(c.numeroSei || '', 'Número do SEI')}
+                                  style={estilos.badgeSeiComentario}>
+                                  <Text style={estilos.textoBadgeSeiComentario}>
+                                    SEI: {c.numeroSei}
+                                  </Text>
+                                </Pressable>
+                              ) : null}
                               <Text style={estilos.textoComentario} selectable>
                                 {c.texto}
                               </Text>
@@ -594,6 +733,13 @@ const DetalheRegistro: React.FC<Props> = ({
 
                     {/* Caixa para novo comentário */}
                     <View style={estilos.areaNovoComentario}>
+                      <TextInput
+                        value={seiComentario}
+                        onChangeText={setSeiComentario}
+                        placeholder="Número do SEI (opcional) — Ex.: 00600-00012345/2026-01"
+                        placeholderTextColor={tema.textoTerciario}
+                        style={estilos.inputSeiComentario}
+                      />
                       <TextInput
                         value={novoComentario}
                         onChangeText={setNovoComentario}
@@ -711,6 +857,18 @@ const DetalheRegistro: React.FC<Props> = ({
           </View>
         </Animated.View>
       </GestureHandlerRootView>
+
+      {aoRegistrarParecerUrgencia ? (
+        <ModalParecerUrgencia
+          registro={registro}
+          visivel={modalParecerAberto}
+          aoFechar={() => setModalParecerAberto(false)}
+          aoConfirmar={(id, dados) => {
+            aoRegistrarParecerUrgencia(id, dados);
+            setModalParecerAberto(false);
+          }}
+        />
+      ) : null}
     </Modal>
   );
 };
@@ -1560,6 +1718,167 @@ const criarEstilosDetalhe = (
       fontSize: 12,
       fontWeight: '800',
       letterSpacing: 0.5,
+    },
+    grupoHeroDireita: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    badgeSeiHero: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      backgroundColor: tema.primariaFundo,
+      borderWidth: 1,
+      borderColor: tema.primaria,
+    },
+    textoBadgeSeiHero: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.primariaTexto,
+    },
+    badgeEtapaKanban: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      backgroundColor: tema.primariaFundo,
+      borderWidth: 1,
+      borderColor: tema.primaria,
+    },
+    textoBadgeEtapaKanban: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: tema.primariaTexto,
+      textTransform: 'uppercase',
+    },
+    blocoResumoKanban: {
+      gap: 8,
+      padding: 10,
+      borderRadius: 10,
+      backgroundColor: tema.superficie,
+      borderWidth: 1,
+      borderColor: tema.borda,
+    },
+    textoIndiceKanban: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: tema.texto,
+    },
+    faixaFatoresDetalhe: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    tagFatorDetalhe: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      backgroundColor: tema.erroFundo,
+    },
+    textoTagFatorDetalhe: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.erro,
+    },
+    textoSemFatoresDetalhe: {
+      fontSize: 12,
+      color: tema.sucesso,
+      fontWeight: '600',
+    },
+    textoContinuidadeDetalhe: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: tema.alerta,
+    },
+    listaPareceresKanban: {
+      marginTop: 10,
+      gap: 8,
+    },
+    itemParecerKanban: {
+      padding: 10,
+      borderRadius: 10,
+      backgroundColor: tema.superficie,
+      borderWidth: 1,
+      borderColor: tema.borda,
+      gap: 4,
+    },
+    linhaTopoParecerKanban: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    decisaoParecerKanban: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: tema.primariaTexto,
+      textTransform: 'uppercase',
+    },
+    seiParecerKanban: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.primaria,
+    },
+    continuidadeParecerKanban: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.alerta,
+    },
+    faixaAcoesKanban: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginTop: 10,
+    },
+    botaoParecerDetalhe: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: tema.primaria,
+    },
+    textoBotaoParecerDetalhe: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: tema.textoInvertido,
+    },
+    botaoAutoKanban: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: tema.superficie,
+      borderWidth: 1,
+      borderColor: tema.borda,
+    },
+    textoBotaoAutoKanban: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tema.textoSecundario,
+    },
+    badgeSeiComentario: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+      borderRadius: 6,
+      backgroundColor: tema.primariaFundo,
+      borderWidth: 1,
+      borderColor: tema.primaria,
+      marginBottom: 4,
+    },
+    textoBadgeSeiComentario: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: tema.primariaTexto,
+    },
+    inputSeiComentario: {
+      backgroundColor: tema.superficie,
+      borderWidth: 1,
+      borderColor: tema.borda,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      color: tema.texto,
+      fontSize: 12,
+      marginBottom: 8,
     },
   });
 };

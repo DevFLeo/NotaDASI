@@ -33,7 +33,37 @@ export type ComentarioRegistro = {
   nome: string;
   papel: string;
   texto: string;
+  numeroSei?: string;
   destinatario?: 'dasi' | 'gerente' | 'secretario' | 'todos';
+};
+
+export type ColunaKanban =
+  | 'nao_iniciado'
+  | 'em_processo'
+  | 'urgencia'
+  | 'revisao'
+  | 'concluido';
+
+export type DecisaoParecerUrgencia = 'concluido' | 'revisao' | 'em_processo';
+
+export type ParecerUrgencia = {
+  id: string;
+  dataHora: string;
+  usuario: string;
+  nome: string;
+  papel: string;
+  decisao: DecisaoParecerUrgencia;
+  parecer: string;
+  responsavelContinuidade?: string;
+  numeroSei?: string;
+};
+
+export type KanbanRegistro = {
+  colunaManual?: ColunaKanban;
+  responsavelContinuidade?: string;
+  atualizadoEm?: string;
+  atualizadoPor?: string;
+  pareceresUrgencia?: ParecerUrgencia[];
 };
 
 export type Registro = {
@@ -52,6 +82,7 @@ export type Registro = {
 
   // Competência avaliada
   competencia: string;
+  numeroSei?: string;
 
   // Respostas sobre o SIG (undefined = não respondido / "-")
   sistemaAtende?: boolean;
@@ -84,6 +115,7 @@ export type Registro = {
   historicoAuditoria?: EntradaAuditoria[];
   comentarios?: ComentarioRegistro[];
   notasPessoais?: Record<string, string>;
+  kanban?: KanbanRegistro;
 
   // Estado local do app (favoritar) — NAO existe na planilha, gerenciado
   // inteiramente pelo useRegistros/AsyncStorage. Excecao a regra acima.
@@ -107,6 +139,7 @@ export const registroEmBranco = (base?: Partial<NovoRegistro>): NovoRegistro => 
   responsavel: base?.responsavel ?? '',
   cargo: base?.cargo ?? '',
   competencia: base?.competencia ?? '',
+  numeroSei: base?.numeroSei ?? '',
   sistemaAtende: base?.sistemaAtende,
   comoAtende: base?.comoAtende ?? '',
   estruturadoNoSistema: base?.estruturadoNoSistema,
@@ -124,6 +157,7 @@ export const registroEmBranco = (base?: Partial<NovoRegistro>): NovoRegistro => 
   observacao: base?.observacao ?? '',
   contatoInstitucional: base?.contatoInstitucional,
   contatoPessoal: base?.contatoPessoal,
+  kanban: base?.kanban,
 });
 
 /** Situação derivada das respostas — usada para colorir o cartão. */
@@ -163,7 +197,7 @@ export const calcularSituacao = (registro: Registro): SituacaoAdesao => {
   return 'parcial';
 };
 
-/** Texto varrido pela busca: setor, responsável, cargo, competência e módulo. */
+/** Texto varrido pela busca: setor, responsável, cargo, competência, módulo e SEI. */
 export const textoPesquisavel = (registro: Registro): string =>
   [
     registro.responsavel,
@@ -174,9 +208,12 @@ export const textoPesquisavel = (registro: Registro): string =>
     registro.departamentoSigla,
     registro.departamentoResponsavel,
     registro.competencia,
+    registro.numeroSei ?? '',
     registro.moduloSig,
     registro.informacoesAcessadas,
     registro.observacao,
+    registro.kanban?.responsavelContinuidade ?? '',
+    ...(registro.comentarios ?? []).map((c) => `${c.numeroSei ?? ''} ${c.texto}`),
   ].join(' ');
 
 /**

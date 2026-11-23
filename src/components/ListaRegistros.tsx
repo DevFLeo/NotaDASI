@@ -13,12 +13,15 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, LinearTransition, runOnJS, useSharedValue } from 'react-native-reanimated';
 import BarraBusca from './BarraBusca';
 import ContatoProtegido from './ContatoProtegido';
+import type { DadosParecerUrgencia } from './ModalParecerUrgencia';
+import QuadroKanban from './QuadroKanban';
 import NotaBuscaRapida from '../native/NotaBuscaRapida';
 import {
   calcularSituacao,
   corPorSituacao,
   rotuloSituacao,
   textoPesquisavel,
+  type ColunaKanban,
   type Registro,
 } from '../data/registros';
 import { criarEstilosEscalaveis } from '../tema/estilos';
@@ -144,10 +147,18 @@ const CartaoRegistroBase: React.FC<PropsCartao> = ({
           </Text>
         )}
 
+        {registro.numeroSei ? (
+          <View style={estilos.badgeSeiCartao}>
+            <Text style={estilos.textoBadgeSeiCartao} numberOfLines={1}>
+              SEI: {registro.numeroSei}
+            </Text>
+          </View>
+        ) : null}
+
         {registro.temProblema === true && (
           <View style={estilos.avisoProblema}>
             <Text style={estilos.textoAvisoProblema}>
-              ⚠ {registro.detalheProblema || 'Problema relatado no SIG'}
+              Problema: {registro.detalheProblema || 'Problema relatado no SIG'}
               {registro.temChamado === false ? ' · sem chamado aberto' : ''}
             </Text>
           </View>
@@ -167,6 +178,12 @@ type Props = {
   aoSelecionar?: (registro: Registro) => void;
   aoAlternarFavorito: (registro: Registro) => void;
   aoCriar: () => void;
+  aoMoverColunaKanban?: (
+    id: string,
+    coluna: ColunaKanban | undefined,
+    responsavelContinuidade?: string,
+  ) => void;
+  aoRegistrarParecerUrgencia?: (id: string, dados: DadosParecerUrgencia) => void;
 };
 
 const ListaRegistros: React.FC<Props> = ({
@@ -175,13 +192,15 @@ const ListaRegistros: React.FC<Props> = ({
   aoSelecionar,
   aoAlternarFavorito,
   aoCriar,
+  aoMoverColunaKanban,
+  aoRegistrarParecerUrgencia,
 }) => {
   const metricas = useMetricas();
   const tema = useTema();
   const estilos = useEstilos(criarEstilosLista);
   const [escalaTexto, definirEscalaTexto] = useEscalaTexto();
 
-  const [modoVisualizacao, setModoVisualizacao] = useState<'cartoes' | 'tabela'>('cartoes');
+  const [modoVisualizacao, setModoVisualizacao] = useState<'cartoes' | 'tabela' | 'kanban'>('cartoes');
   const [termoBusca, setTermoBusca] = useState('');
   const [secretariaFiltro, setSecretariaFiltro] = useState<string | null>(null);
   const [setorFiltro, setSetorFiltro] = useState<string | null>(null);
@@ -356,7 +375,7 @@ const ListaRegistros: React.FC<Props> = ({
           </Text>
         </View>
 
-        {/* Alternador de Visão no PC (Cartões vs Tabela) */}
+        {/* Alternador de Visão (Cartões, Tabela e Kanban) */}
         <View style={estilos.alternadorModoVisao}>
           <Pressable
             onPress={() => setModoVisualizacao('cartoes')}
@@ -369,7 +388,7 @@ const ListaRegistros: React.FC<Props> = ({
                 estilos.textoModoVisao,
                 modoVisualizacao === 'cartoes' && estilos.textoModoVisaoAtivo,
               ]}>
-              🗇 Cartões
+              Cartões
             </Text>
           </Pressable>
 
@@ -384,7 +403,22 @@ const ListaRegistros: React.FC<Props> = ({
                 estilos.textoModoVisao,
                 modoVisualizacao === 'tabela' && estilos.textoModoVisaoAtivo,
               ]}>
-              ☷ Tabela
+              Tabela
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setModoVisualizacao('kanban')}
+            style={[
+              estilos.botaoModoVisao,
+              modoVisualizacao === 'kanban' && estilos.botaoModoVisaoAtivo,
+            ]}>
+            <Text
+              style={[
+                estilos.textoModoVisao,
+                modoVisualizacao === 'kanban' && estilos.textoModoVisaoAtivo,
+              ]}>
+              Kanban
             </Text>
           </Pressable>
         </View>
@@ -405,10 +439,10 @@ const ListaRegistros: React.FC<Props> = ({
         contentContainerStyle={estilos.faixaFiltros}>
         {[
           { id: 'todos', label: 'Todos' },
-          { id: 'atendido', label: '✓ Atendido' },
-          { id: 'pendente', label: '⏳ Pendente' },
-          { id: 'problema', label: '⚠ Problemas' },
-          { id: 'favoritos', label: '★ Favoritos' },
+          { id: 'atendido', label: 'Atendido' },
+          { id: 'pendente', label: 'Pendente' },
+          { id: 'problema', label: 'Problemas' },
+          { id: 'favoritos', label: 'Favoritos' },
         ].map((f) => {
           const ativo = statusFiltro === f.id;
           return (
@@ -531,6 +565,20 @@ const ListaRegistros: React.FC<Props> = ({
             removeClippedSubviews={Platform.OS === 'android'}
           />
         </GestureDetector>
+      ) : modoVisualizacao === 'kanban' ? (
+        /* VISÃO KANBAN (Não iniciado, Em processo, Urgência, Revisão, Concluído) */
+        <ScrollView
+          style={estilos.containerTabela}
+          contentContainerStyle={estilos.conteudoTabela}
+          showsVerticalScrollIndicator>
+          {cabecalho}
+          <QuadroKanban
+            registros={visiveis}
+            aoSelecionar={abrir}
+            aoMoverColuna={aoMoverColunaKanban}
+            aoRegistrarParecerUrgencia={aoRegistrarParecerUrgencia}
+          />
+        </ScrollView>
       ) : (
         /* VISÃO DE TABELA DE ALTA DENSIDADE NO PC */
         <ScrollView
@@ -641,6 +689,11 @@ const ListaRegistros: React.FC<Props> = ({
                       <Text style={estilos.textoCompTabela} numberOfLines={2}>
                         {item.competencia}
                       </Text>
+                      {item.numeroSei ? (
+                        <Text style={estilos.textoSeiTabela} numberOfLines={1}>
+                          SEI: {item.numeroSei}
+                        </Text>
+                      ) : null}
                     </View>
 
                     {/* Atende SIG */}
@@ -650,7 +703,7 @@ const ListaRegistros: React.FC<Props> = ({
                           estilos.textoBooleanoTabela,
                           { color: item.sistemaAtende ? '#059669' : '#64748b' },
                         ]}>
-                        {item.sistemaAtende ? '✓ Sim' : '✕ Não'}
+                        {item.sistemaAtende ? 'Sim' : 'Não'}
                       </Text>
                     </View>
 
@@ -661,7 +714,7 @@ const ListaRegistros: React.FC<Props> = ({
                           estilos.textoBooleanoTabela,
                           { color: item.houveTreinamento ? '#059669' : '#d97706' },
                         ]}>
-                        {item.houveTreinamento ? '✓ Sim' : '⏳ Pend.'}
+                        {item.houveTreinamento ? 'Sim' : 'Pend.'}
                       </Text>
                     </View>
 
@@ -877,6 +930,22 @@ const criarEstilosLista = criarEstilosEscalaveis((tema, m) => ({
   textoSecTabela: { fontSize: 11, fontWeight: '800', color: tema.primaria },
   textoSetorTabela: { fontSize: 11, fontWeight: '700', color: tema.texto },
   textoCompTabela: { fontSize: 11, color: tema.texto, lineHeight: 15 },
+  textoSeiTabela: { fontSize: 10, fontWeight: '700', color: tema.primariaTexto, marginTop: 2 },
+  badgeSeiCartao: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: tema.primariaFundo,
+    borderWidth: 1,
+    borderColor: tema.primaria,
+  },
+  textoBadgeSeiCartao: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: tema.primariaTexto,
+  },
   textoBooleanoTabela: { fontSize: 11, fontWeight: '700' },
   textoRespTabela: { fontSize: 11, fontWeight: '600', color: tema.texto },
   textoCargoTabela: { fontSize: 9, color: tema.textoTerciario },

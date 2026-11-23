@@ -245,7 +245,8 @@ const CascaPC: React.FC = () => {
     if (!termo) return [];
     return app.registros
       .filter((r) => {
-        const texto = `${r.competencia} ${r.departamento} ${r.departamentoSigla} ${r.setor} ${r.setorSigla} ${r.responsavel} ${r.moduloSig}`.toLowerCase();
+        const seiComentarios = (r.comentarios ?? []).map((c) => c.numeroSei ?? '').join(' ');
+        const texto = `${r.competencia} ${r.numeroSei ?? ''} ${seiComentarios} ${r.kanban?.responsavelContinuidade ?? ''} ${r.departamento} ${r.departamentoSigla} ${r.setor} ${r.setorSigla} ${r.responsavel} ${r.moduloSig}`.toLowerCase();
         return texto.includes(termo);
       })
       .slice(0, 8);
@@ -363,6 +364,11 @@ const CascaPC: React.FC = () => {
                       <Text style={estilos.textoCompResultado} numberOfLines={2}>
                         {r.competencia}
                       </Text>
+                      {r.numeroSei ? (
+                        <Text style={estilos.textoSeiResultado} numberOfLines={1}>
+                          SEI: {r.numeroSei}
+                        </Text>
+                      ) : null}
                     </Pressable>
                   ))
                 ) : (
@@ -518,6 +524,21 @@ const CascaPC: React.FC = () => {
                       aoSelecionar={app.setSelecionado}
                       aoAlternarFavorito={app.alternarFavoritoDoRegistro}
                       aoCriar={app.abrirCriacao}
+                      aoMoverColunaKanban={(id, coluna, responsavelContinuidade) =>
+                        app.moverColunaKanban(id, coluna, {
+                          usuarioNome: contaAtual?.nome || contaAtual?.usuario,
+                          responsavelContinuidade,
+                        })
+                      }
+                      aoRegistrarParecerUrgencia={(id, dados) => {
+                        if (!contaAtual) return;
+                        app.registrarParecerUrgencia(id, {
+                          usuario: contaAtual.usuario,
+                          nome: contaAtual.nome,
+                          papel: contaAtual.papel,
+                          ...dados,
+                        });
+                      }}
                     />
                   )
                 ) : painel === 'ajustes' ? (
@@ -819,6 +840,7 @@ const criarEstilosPC = criarEstilos((tema) => ({
   },
   nomeRespResultado: { fontSize: 11, color: tema.textoTerciario },
   textoCompResultado: { fontSize: 12, color: tema.texto, lineHeight: 17 },
+  textoSeiResultado: { fontSize: 10, fontWeight: '700', color: tema.primariaTexto, marginTop: 3 },
   caixaVaziaBusca: { padding: 16, alignItems: 'center' },
   textoVaziaBusca: { fontSize: 12, color: tema.textoTerciario, fontStyle: 'italic' },
 

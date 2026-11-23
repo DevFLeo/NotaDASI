@@ -10,7 +10,7 @@ import MapaMental from './src/mapa/MapaMental';
 import Modais from './src/app/Modais';
 import { useAplicacao } from './src/app/useAplicacao';
 import PortaDeEntrada from './src/auth/PortaDeEntrada';
-import { SessaoProvider } from './src/auth/useSessao';
+import { SessaoProvider, useSessao } from './src/auth/useSessao';
 import { useSegurarParaAbrir } from './src/hooks/useSegurarParaAbrir';
 import { criarEstilos } from './src/tema/estilos';
 import { ThemeProvider, useEstilos, useMetricas, useTema } from './src/tema/ThemeContext';
@@ -35,6 +35,7 @@ export const AppConteudo: React.FC = () => {
   const estilos = useEstilos(criarEstilosApp);
   const insets = useSafeAreaInsets();
   const app = useAplicacao();
+  const { contaAtual } = useSessao();
 
   const [aba, setAba] = useState<Aba>('lista');
 
@@ -91,6 +92,21 @@ export const AppConteudo: React.FC = () => {
                   aoSelecionar={app.setSelecionado}
                   aoAlternarFavorito={app.alternarFavoritoDoRegistro}
                   aoCriar={app.abrirCriacao}
+                  aoMoverColunaKanban={(id, coluna, responsavelContinuidade) =>
+                    app.moverColunaKanban(id, coluna, {
+                      usuarioNome: contaAtual?.nome || contaAtual?.usuario,
+                      responsavelContinuidade,
+                    })
+                  }
+                  aoRegistrarParecerUrgencia={(id, dados) => {
+                    if (!contaAtual) return;
+                    app.registrarParecerUrgencia(id, {
+                      usuario: contaAtual.usuario,
+                      nome: contaAtual.nome,
+                      papel: contaAtual.papel,
+                      ...dados,
+                    });
+                  }}
                 />
               )
             ) : aba === 'mapa' ? (
